@@ -17,7 +17,8 @@ const server = http.createServer(async (req, res) => {
   } catch { res.writeHead(404); res.end(); }
 }).listen(8099);
 await mkdir(out, { recursive: true });
-const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader'] });
+// The runner's own Chrome (no browser download needed).
+const browser = await chromium.launch({ channel: 'chrome', args: ['--enable-unsafe-swiftshader'] });
 const report = {};
 for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop', { width: 1280, height: 800 }]]) {
   for (const screen of ['', 'morning', 'calm', 'week', 'design-system']) {

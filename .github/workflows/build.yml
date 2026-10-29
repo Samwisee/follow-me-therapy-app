@@ -43,8 +43,7 @@ jobs:
         run: |
           set -o pipefail
           {
-            npm install --no-save playwright@1.56.1 &&
-            npx playwright install --with-deps chromium &&
+            PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-save playwright@1.56.1 &&
             node tools/ci/screens.mjs composeApp/build/dist/wasmJs/productionExecutable ci-screens
           } > screens.log 2>&1 || { tail -25 screens.log | sed 's/^/::warning::/'; exit 1; }
           tail -5 screens.log
