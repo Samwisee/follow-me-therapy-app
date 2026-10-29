@@ -84,7 +84,12 @@ private val tabs = listOf(
 @Composable
 fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (String) -> Unit = {}) {
     val store = remember { AppStore(platform) }
-    val nav = remember { Nav(Route.parse(startAt), onNavigate) }
+    // In a phone's or tablet's browser the app opens on its install page first
+    // (it works best from the Home Screen); installed, or once skipped, it opens on Today.
+    val nav = remember {
+        val welcome = startAt.isEmpty() && !platform.installed() && platform.device() != Device.Computer && !store.installSkipped
+        Nav(if (welcome) Route(Area.Install, WELCOME) else Route.parse(startAt), onNavigate)
+    }
     val actions = remember { FmtActionHost() }
     val safeBottom = remember { platform.safeBottom().dp }
     FmtTheme {
@@ -118,7 +123,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                             Area.WeekSetup -> WeekSetupFlow(store, nav)
                             Area.Week -> WeekFlow(store, nav)
                             Area.DesignSystem -> DesignSystemScreen(nav)
-                            Area.Install -> InstallScreen(platform, nav)
+                            Area.Install -> InstallScreen(platform, nav, store, welcome = r.step == WELCOME)
                             else -> Unit
                         }
                     }
@@ -158,7 +163,7 @@ private fun barFor(r: Route, store: AppStore, nav: Nav): Bar {
         }
         Area.WeekSetup, Area.Week -> Bar("Practice week", home)
         Area.DesignSystem -> Bar("Design system", { nav.go(Route(Area.GrownUps)) })
-        Area.Install -> Bar("Add to your Home Screen", { nav.go(Route(Area.GrownUps)) })
+        Area.Install -> if (r.step == WELCOME) Bar("Follow Me Therapy", brand = true) else Bar("Add to your Home Screen", { nav.go(Route(Area.GrownUps)) })
     }
 }
 

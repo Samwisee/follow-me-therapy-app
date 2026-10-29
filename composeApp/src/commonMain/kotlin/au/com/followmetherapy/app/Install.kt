@@ -28,7 +28,7 @@ private val STEPS = mapOf(
         "Open this page in Safari.",
         "Tap Share (the square with an arrow) at the bottom of the screen, or at the top on an iPad.",
         "Scroll down and tap Add to Home Screen.",
-        "Tap Add, then open Follow Me from your Home Screen.",
+        "Leave Open as Web App on, tap Add, then open Follow Me from your Home Screen.",
     )),
     Device.Android to ("On an Android phone or tablet" to listOf(
         "Open this page in Chrome.",
@@ -48,23 +48,37 @@ private val STEPS = mapOf(
  * device's steps first, then the others. Where the browser can install it in
  * one tap (Chrome, Edge), the action bar offers Install now.
  */
+/** The install page's step when it's the welcome (opened in a phone's browser), not the guide under For grown-ups. */
+const val WELCOME = 1
+
 @Composable
-fun InstallScreen(platform: Platform, nav: Nav) {
+fun InstallScreen(platform: Platform, nav: Nav, store: AppStore, welcome: Boolean = false) {
     val device = remember { platform.device() }
     val installed = remember { platform.installed() }
     var canInstall by remember { mutableStateOf(platform.canInstall()) }
     val back = { nav.go(Route(Area.GrownUps)) }
+    val useBrowser = { store.skipInstall(); nav.home() }
     FmtFlowScaffold(
-        start = if (canInstall && !installed) FmtAction("Not now", ButtonKind.Outline) { back() } else null,
-        end = if (canInstall && !installed) FmtAction("Install now") { platform.install { ok -> if (ok) canInstall = false } }
-        else FmtAction("Done") { back() },
+        start = when {
+            canInstall && !installed -> FmtAction(if (welcome) "Use in the browser" else "Not now", ButtonKind.Outline) { if (welcome) useBrowser() else back() }
+            else -> null
+        },
+        end = when {
+            canInstall && !installed -> FmtAction("Install now") { platform.install { ok -> if (ok) canInstall = false } }
+            welcome -> FmtAction("Use in the browser", ButtonKind.Outline, chevron = true) { useBrowser() }
+            else -> FmtAction("Done") { back() }
+        },
     ) {
-        FmtHead("Add to your Home Screen", swash = "Home", tag = "For grown-ups", tone = Tone.Purple)
+        FmtHead(
+            if (welcome) "Add Follow Me to your Home Screen" else "Add to your Home Screen",
+            swash = "Home", tag = if (welcome) "Start here" else "For grown-ups", tone = Tone.Purple,
+        )
         if (installed) {
             FmtInfoNote("you're using the app from your Home Screen.", leadIn = "All set:", tone = Tone.Teal, icon = FmtIcons.tick)
         } else {
             FmtText(
-                "Then Follow Me opens like an app, without the browser around it, works without the internet, and your progress is less likely to be cleared.",
+                if (welcome) "Follow Me works best from your Home Screen: it opens like an app, works without the internet, and your progress is less likely to be cleared. It takes a few taps."
+                else "Then Follow Me opens like an app, without the browser around it, works without the internet, and your progress is less likely to be cleared.",
                 FmtTheme.type.lead,
             )
         }

@@ -145,6 +145,12 @@ class AppStore(private val p: Platform) {
     val activities: List<Pair<Int, String>> get() = weekNames.withIndex().filter { it.value.isNotBlank() }.map { it.index to it.value }
     val starsThisWeek: Int get() = weekDone.count { (r, _) -> weekNames.getOrNull(r)?.isNotBlank() == true }
 
+    // ── Install ──
+    /** Chose to use the app in the browser instead of adding it to the Home Screen. */
+    var installSkipped by mutableStateOf(false)
+        private set
+    fun skipInstall() { installSkipped = true; put("install.skipped", "1") }
+
     init { readAll() }
 
     /** Fills the on-screen state from the record (at start, and after a restore). */
@@ -165,6 +171,7 @@ class AppStore(private val p: Platform) {
         }
         weekSetUp = get("week.setup") == "1"
         weekProud = get("week.proud.$week") ?: ""
+        installSkipped = get("install.skipped") == "1"
     }
 
     // ── Backup and restore ──

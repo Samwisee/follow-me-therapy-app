@@ -1,6 +1,8 @@
 package au.com.followmetherapy.design.theme
 
+import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -212,10 +214,14 @@ fun FmtTheme(content: @Composable () -> Unit) {
         val width = maxWidth.value
         val metrics = remember(width) { FmtMetrics.forWidth(width) }
         val type = remember(metrics, fonts) { fmtTypeScale(metrics, fonts) }
+        val density = LocalDensity.current
+        val bounce = remember(density) { FmtBounceFactory(density) }
         CompositionLocalProvider(
             LocalFmtMetrics provides metrics,
             LocalFmtType provides type,
             LocalFmtFonts provides fonts,
+            // Elastic edges on every scrolling area (FmtOverscroll.kt).
+            LocalOverscrollFactory provides bounce,
         ) {
             content()
         }
