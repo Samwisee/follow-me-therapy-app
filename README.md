@@ -10,7 +10,7 @@ later without changing the shared code.
 | `design/tokens.json` | A copy of the design tokens. The single source is `design/tokens.json` in the website repo (Samwisee/follow-me-therapy). Sync with `tools/sync_tokens.sh` |
 | `tools/gen_tokens.py` | Generates `FmtTokens.kt` from the tokens. CI fails if it's stale |
 | `designsystem/` | The design system as a Compose library: tokens, theme (fluid sizes by window width, like the site), fonts, icons and components |
-| `composeApp/` | The app: home, the three activities, and a design-system page |
+| `composeApp/` | The app: tabs (Today, Activities, For grown-ups), the guided flows, the on-device store (`Store.kt`) and a design-system page |
 
 ## Run it
 
@@ -22,8 +22,12 @@ later without changing the shared code.
 CI builds every push and publishes `main` to GitHub Pages:
 https://samwisee.github.io/follow-me-therapy-app/
 
-Each activity has its own address, so a link can go straight to it:
-`#morning`, `#calm`, `#week` (and `#design-system`).
+Every screen has its own address, so a link can go straight to it:
+`#activities`, `#morning`, `#calm`, `#calm-now`, `#week`, `#grown-ups`,
+`#design-system` (flow steps add `/n`, e.g. `#morning/2`).
+
+Progress, the calm-down plan and the week's stars are saved in the browser's
+local storage on the device. Nothing is sent anywhere.
 
 After each build on `main`, CI also screenshots every screen at phone (390) and
 laptop (1280) width, times scrolling, and pushes the results to the

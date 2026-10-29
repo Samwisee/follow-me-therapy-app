@@ -16,6 +16,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -211,13 +212,17 @@ fun FmtFlowScaffold(
     Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
         appBar()
         FmtWave(FmtColors.purpleTint, down = true)
-        Box(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()), contentAlignment = Alignment.TopCenter) {
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            val viewport = maxHeight
+            Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), contentAlignment = Alignment.TopCenter) {
             Column(
-                Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter).padding(bottom = m.stack),
+                // At least the visible height, so a centred screen sits in the middle.
+                Modifier.widthIn(max = m.content).fillMaxWidth().heightIn(min = viewport).padding(horizontal = m.gutter).padding(bottom = m.stack),
                 verticalArrangement = if (centre) Arrangement.spacedBy(m.stack, Alignment.CenterVertically) else Arrangement.spacedBy(m.stack),
                 horizontalAlignment = if (centre) Alignment.CenterHorizontally else Alignment.Start,
                 content = content,
             )
+            }
         }
         if (actions != null) {
             Box(
