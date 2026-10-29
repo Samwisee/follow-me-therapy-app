@@ -549,6 +549,9 @@ fun FmtListRow(
     tone: Tone = Tone.Purple,
     onClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
+    /** Progress through what the row opens (0–1), shown inside the row under its words. */
+    progress: Float? = null,
+    progressLabel: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val m = FmtTheme.metrics
@@ -574,6 +577,7 @@ fun FmtListRow(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(FmtSpace.s1)) {
             FmtText(title, FmtTheme.type.subheading.copy(fontSize = m.textLg, fontWeight = FontWeight.SemiBold))
             if (subtitle != null) FmtText(subtitle, FmtTheme.type.small)
+            if (progress != null) FmtProgressBar(progress, Modifier.padding(top = FmtSpace.s2), progressLabel ?: "Progress")
         }
         trailing?.invoke()
         if (onClick != null && trailing == null) FmtIcon(FmtIcons.chevron, t.more, FmtSize.iconSm)

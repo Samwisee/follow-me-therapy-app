@@ -144,8 +144,8 @@ private data class Bar(val title: String, val back: (() -> Unit)? = null, val pr
 private fun barFor(r: Route, store: AppStore, nav: Nav): Bar {
     val home = nav::home
     return when (r.area) {
-        Area.Today -> Bar(tabs[0].label, brand = true)
-        Area.Activities, Area.GrownUps -> Bar(tabs[r.area.tab ?: 0].label)
+        // The three tabs share one bar with the lockup: the tab bar says where you are.
+        Area.Today, Area.Activities, Area.GrownUps -> Bar(tabs[r.area.tab ?: 0].label, brand = true)
         Area.Morning -> {
             val total = store.routineSteps.size
             val last = total + 2

@@ -55,7 +55,7 @@ fun TodayTab(store: AppStore, nav: Nav) {
     // Morning routine, with today's progress.
     val done = store.routineDone.size
     val total = store.routineSteps.size
-    Column(verticalArrangement = Arrangement.spacedBy(m.groupGap)) {
+    run {
         FmtListRow(
             title = "My morning routine",
             subtitle = if (store.routineComplete) "All done today. Great job!" else if (done == 0) "Six steps, one at a time" else "$done of $total steps done",
@@ -64,8 +64,9 @@ fun TodayTab(store: AppStore, nav: Nav) {
                 val next = store.routineSteps.indices.firstOrNull { it !in store.routineDone }
                 nav.go(Route(Area.Morning, if (next == null || done == 0) 0 else next + 1))
             },
+            progress = if (done > 0) done / total.toFloat() else null,
+            progressLabel = "$done of $total steps done",
         )
-        if (done > 0) FmtProgressBar(done / total.toFloat(), Modifier.padding(horizontal = m.textInset), label = "$done of $total steps done")
     }
 
     // Calm-down plan: use it, or make it.
@@ -123,7 +124,6 @@ fun GrownUpsTab(store: AppStore, nav: Nav, platform: Platform) {
     val installed = remember { platform.installed() }
     // Ask the device to keep this app's data even when it's short of space.
     LaunchedEffect(Unit) { platform.keepData { kept = it } }
-    FmtLockup()
     FmtText(
         "I'm Simone, a paediatric occupational therapist. These activities are the ones we practise in our sessions, for you and your child to keep going with at home. Short and often is best: five minutes a day is plenty.",
         FmtTheme.type.body,

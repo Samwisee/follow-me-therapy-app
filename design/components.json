@@ -128,7 +128,8 @@
    "rules": [
     "Tappable containers are outlined in the tone's solid colour; static ones in its line colour.",
     "Paper fill; lifts on hover, presses in on tap.",
-    "Corner nests round what sits in it: the tile, or the button (button/2 + card-pad + outline)."
+    "Corner nests round what sits in it: the tile, or the button (button/2 + card-pad + outline).",
+    "A row can show progress through what it opens, inside the row under its words (never floating outside it)."
    ],
    "website": [
     ".service-item",
@@ -279,6 +280,7 @@
    "tokens": "bar",
    "rules": [
     "Lilac fill; the wave (bar.wave) is outlined in bar.line.",
+    "The tabs share one bar with the lockup (the tab bar says where you are); a flow shows its title, a back button and its progress.",
     "Persistent: its parts animate, it never rebuilds."
    ],
    "website": {
