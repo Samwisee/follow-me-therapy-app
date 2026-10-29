@@ -138,4 +138,7 @@ fun GrownUpsTab(store: AppStore, nav: Nav) {
             FmtText("Simone · Paediatric OT · followmetherapy.com.au", FmtTheme.type.small)
         }
     }
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        FmtText("Version ${store.build}", FmtTheme.type.small.copy(fontSize = FmtTheme.metrics.textXs))
+    }
 }

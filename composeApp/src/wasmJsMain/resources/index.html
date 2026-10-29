@@ -2,17 +2,35 @@
 <html lang="en-AU">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Follow Me Therapy · Activities</title>
   <meta name="theme-color" content="#efe9ff" />
   <style>
-    html, body { height: 100%; margin: 0; background: #ffffff; }
+    html, body { height: 100%; margin: 0; background: #efe9ff; overscroll-behavior: none; }
     #app { width: 100%; height: 100%; }
-    .loading { position: fixed; inset: 0; display: grid; place-items: center; font: 600 18px system-ui, sans-serif; color: #504b5e; }
   </style>
-  <script type="application/javascript" src="composeApp.js"></script>
+  <script>
+    // Always the newest build. GitHub Pages lets browsers keep files for ten
+    // minutes, so the page checks a version file that is never cached; if a
+    // newer build is live it reloads under a fresh address (?v=<build>).
+    window.FMT_BUILD = "__BUILD__";
+    (function () {
+      if (window.FMT_BUILD.indexOf("__") === 0) return; // local dev
+      fetch("version.json?t=" + Date.now(), { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function (v) {
+          if (!v.build || v.build === window.FMT_BUILD) return;
+          var u = new URL(location.href);
+          if (u.searchParams.get("v") === v.build) return;
+          u.searchParams.set("v", v.build);
+          location.replace(u.toString());
+        })
+        .catch(function () {});
+    })();
+  </script>
+  <script type="application/javascript" src="composeApp.js?v=__BUILD__"></script>
 </head>
 <body>
-  <div id="app"><p class="loading">Loading…</p></div>
+  <div id="app"></div>
 </body>
 </html>

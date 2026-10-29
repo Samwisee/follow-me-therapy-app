@@ -21,6 +21,8 @@ interface Platform {
     fun hour(): Int
     /** The date of this week's Monday, as yyyy-mm-dd. */
     fun weekStart(): String
+    /** Which build is running (shown under For grown-ups). */
+    fun build(): String = "dev"
 }
 
 /** A platform that keeps nothing (previews and tests). */
@@ -47,6 +49,7 @@ class AppStore(private val p: Platform) {
     val weekday: Int = p.weekday()
     val hour: Int = p.hour()
     private val week: String = p.weekStart()
+    val build: String = p.build()
 
     // ── Morning routine ──
     val routineSteps = listOf("Toilet and wash hands", "Get dressed", "Eat breakfast", "Brush teeth", "Shoes on", "Bag on, out the door")

@@ -31,6 +31,13 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew --no-configuration-cache :composeApp:wasmJsBrowserDistribution 2>&1 | tee build.log
+      - name: Stamp the build (always load the newest version)
+        run: |
+          D=composeApp/build/dist/wasmJs/productionExecutable
+          B="${GITHUB_SHA::7}"
+          sed -i "s/__BUILD__/$B/g" "$D/index.html"
+          printf '{"build":"%s"}\n' "$B" > "$D/version.json"
+          echo "::notice::Built $B: $(ls $D | tr '\n' ' ')"
       - name: Report compile errors
         if: failure()
         run: |
