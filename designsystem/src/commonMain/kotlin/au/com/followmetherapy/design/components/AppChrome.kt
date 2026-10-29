@@ -98,7 +98,7 @@ object FmtAppChrome {
     /** Height of the wave under the app bar (shallower than the website's, so it covers less). */
     val wave: Dp = FmtSpace.s4
     /** How far the tab bar's crest rises over the chosen tab. */
-    val crest: Dp = FmtSpace.s4
+    val crest: Dp = FmtSpace.s5
 }
 
 /** A round icon button (size-target), outlined in purple-line on paper. Needs a [label] for screen readers. */
@@ -242,7 +242,7 @@ fun FmtTabBar(tabs: List<FmtTab>, selected: Int, onSelect: (Int) -> Unit) {
                         // The crest: a smooth hump one tab wide, centred on the chosen tab.
                         val tabW = size.width / tabs.size
                         val cx = tabW * (at + 0.5f)
-                        val half = tabW * 0.75f
+                        val half = tabW * 0.6f
                         val top = -FmtAppChrome.crest.toPx()
                         val p = Path().apply {
                             moveTo(cx - half, 0.5f)
