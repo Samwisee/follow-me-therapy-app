@@ -208,7 +208,7 @@ fun CalmNowFlow(store: AppStore, nav: Nav, step: Int) {
             FmtText("Take 5 slow breaths. Follow the circle.", FmtTheme.type.kid, align = TextAlign.Center)
         } else {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(FmtTheme.metrics.stack)) {
-                if (c.icon != null) FmtIconTile(c.icon, Tone.Teal)
+                c.icon?.let { FmtIconTile(it, Tone.Teal) }
                 FmtText(c.label, FmtTheme.type.title, align = TextAlign.Center)
             }
         }
