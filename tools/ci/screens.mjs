@@ -9,9 +9,10 @@ import { extname, join } from 'node:path';
 const [dist, out] = process.argv.slice(2);
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.json': 'application/json', '.cvr': 'application/octet-stream' };
 const server = http.createServer(async (req, res) => {
-  const path = decodeURIComponent(req.url.split('?')[0]);
+  const raw = decodeURIComponent(req.url.split('?')[0]);
+  const path = raw.endsWith('/') ? raw + 'index.html' : raw;
   try {
-    const body = await readFile(join(dist, path === '/' ? 'index.html' : path));
+    const body = await readFile(join(dist, path));
     res.writeHead(200, { 'content-type': types[extname(path)] || 'application/octet-stream' });
     res.end(body);
   } catch { res.writeHead(404); res.end(); }
