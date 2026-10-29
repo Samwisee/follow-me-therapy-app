@@ -96,7 +96,7 @@ private fun ChoiceTile(choice: Choice, on: Boolean, toggle: () -> Unit, tone: To
     val source = remember { MutableInteractionSource() }
     val hovered by source.collectIsHoveredAsState()
     val pressed by source.collectIsPressedAsState()
-    val focused by source.collectIsFocusedAsState()
+    val focused by source.collectIsFocusVisibleAsState()
     val scale by animateFloatAsState(if (pressed) 0.97f else 1f, tween(FmtMotion.durBase, easing = FmtMotion.easeSpring))
     val ground by animateColorAsState(if (on) c.tint else FmtColors.paper, tween(FmtMotion.durFast, easing = FmtMotion.easeStandard))
     val line = if (on || hovered) c.solid else c.line
@@ -135,7 +135,7 @@ fun FmtStepList(steps: List<String>, done: Set<Int>, onToggle: (Int) -> Unit, mo
 @Composable
 private fun StepRow(n: Int, label: String, on: Boolean, toggle: () -> Unit) {
     val source = remember { MutableInteractionSource() }
-    val focused by source.collectIsFocusedAsState()
+    val focused by source.collectIsFocusVisibleAsState()
     val pressed by source.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) 0.97f else 1f, tween(FmtMotion.durBase, easing = FmtMotion.easeSpring))
     val disc by animateColorAsState(if (on) FmtColors.teal else FmtColors.purpleTint, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
@@ -207,7 +207,7 @@ fun FmtTracker(
 @Composable
 private fun StarToggle(on: Boolean, label: String, toggle: () -> Unit) {
     val source = remember { MutableInteractionSource() }
-    val focused by source.collectIsFocusedAsState()
+    val focused by source.collectIsFocusVisibleAsState()
     val pressed by source.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) 0.85f else if (on) 1.08f else 1f, tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
     Box(

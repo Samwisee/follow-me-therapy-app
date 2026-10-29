@@ -1,5 +1,11 @@
 package au.com.followmetherapy.app
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +17,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,12 +25,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import au.com.followmetherapy.design.components.ButtonKind
 import au.com.followmetherapy.design.components.Choice
+import au.com.followmetherapy.design.components.FmtBand
 import au.com.followmetherapy.design.components.FmtButton
 import au.com.followmetherapy.design.components.FmtCard
 import au.com.followmetherapy.design.components.FmtChip
@@ -35,19 +43,22 @@ import au.com.followmetherapy.design.components.FmtHead
 import au.com.followmetherapy.design.components.FmtIconTile
 import au.com.followmetherapy.design.components.FmtInfoNote
 import au.com.followmetherapy.design.components.FmtKidText
-import au.com.followmetherapy.design.components.FmtLockup
+import au.com.followmetherapy.design.components.FmtPage
 import au.com.followmetherapy.design.components.FmtScreen
 import au.com.followmetherapy.design.components.FmtSectionTitle
 import au.com.followmetherapy.design.components.FmtStepList
+import au.com.followmetherapy.design.components.FmtSwashTitle
 import au.com.followmetherapy.design.components.FmtTag
 import au.com.followmetherapy.design.components.FmtText
 import au.com.followmetherapy.design.components.FmtTracker
+import au.com.followmetherapy.design.components.FmtWave
 import au.com.followmetherapy.design.components.Tone
 import au.com.followmetherapy.design.components.WriteField
 import au.com.followmetherapy.design.icons.FmtIcons
 import au.com.followmetherapy.design.theme.FmtTheme
 import au.com.followmetherapy.design.tokens.FmtBorder
 import au.com.followmetherapy.design.tokens.FmtColors
+import au.com.followmetherapy.design.tokens.FmtMotion
 import au.com.followmetherapy.design.tokens.FmtRadius
 import au.com.followmetherapy.design.tokens.FmtSpace
 
@@ -56,78 +67,78 @@ private enum class Screen { Home, Morning, Calm, Week, DesignSystem }
 @Composable
 fun App() {
     FmtTheme {
-        var screen by remember { mutableStateOf(Screen.Home) }
-        Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
-            TopBar(onHome = { screen = Screen.Home })
-            Box(Modifier.weight(1f)) {
-                when (screen) {
+        var screen by rememberSaveable { mutableStateOf(Screen.Home) }
+        val home = { screen = Screen.Home }
+        // Moving between screens cross-fades with a small rise, as pages do on the website.
+        AnimatedContent(
+            targetState = screen,
+            modifier = Modifier.fillMaxSize().background(FmtColors.paper),
+            transitionSpec = {
+                (fadeIn(tween(FmtMotion.durSlower, easing = FmtMotion.easeOut)) +
+                    slideInVertically(tween(FmtMotion.durSlower, easing = FmtMotion.easeOut)) { it / 40 }) togetherWith
+                    fadeOut(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
+            },
+        ) { s ->
+            FmtPage(key = s, back = if (s == Screen.Home) null else home, backLabel = "All activities") {
+                when (s) {
                     Screen.Home -> HomeScreen(open = { screen = it })
-                    Screen.Morning -> MorningRoutineScreen(back = { screen = Screen.Home })
-                    Screen.Calm -> CalmPlanScreen(back = { screen = Screen.Home })
-                    Screen.Week -> PracticeWeekScreen(back = { screen = Screen.Home })
-                    Screen.DesignSystem -> DesignSystemScreen(back = { screen = Screen.Home })
+                    Screen.Morning -> MorningRoutineScreen()
+                    Screen.Calm -> CalmPlanScreen()
+                    Screen.Week -> PracticeWeekScreen()
+                    Screen.DesignSystem -> DesignSystemScreen()
                 }
             }
         }
     }
 }
 
-@Composable
-private fun TopBar(onHome: () -> Unit) {
-    val m = FmtTheme.metrics
-    Row(
-        Modifier.fillMaxWidth().background(FmtColors.purpleTint).padding(horizontal = m.gutter, vertical = FmtSpace.s3),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(Modifier.weight(1f)) { FmtLockup() }
-        FmtButton("Home", onHome, kind = ButtonKind.Outline)
-    }
-}
-
-@Composable
-private fun BackButton(back: () -> Unit) {
-    Row { FmtButton("‹ All activities", back, kind = ButtonKind.Outline) }
-}
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun HomeScreen(open: (Screen) -> Unit) {
     val m = FmtTheme.metrics
-    FmtScreen {
-        FmtSectionTitle("Activities for home", subtitle = "Small, everyday practice between our sessions.")
+    // The hero: lilac, like the website's top band.
+    FmtBand(FmtColors.purpleTint) {
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(m.groupGap)) {
+            FmtSwashTitle("Activities for home", swash = "home", style = FmtTheme.type.title.copy(textAlign = TextAlign.Center))
+            FmtText("Small, everyday practice between our sessions, for you and your child to do together.", FmtTheme.type.lead, align = TextAlign.Center)
+        }
         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
             FmtChip("Ages 0–18", Tone.Purple, FmtIcons.smile)
             FmtChip("Telehealth Australia-wide", Tone.Teal, FmtIcons.video)
         }
+    }
+    // The white band rises into the lilac hero in the website's wave.
+    FmtWave(FmtColors.paper, Modifier.background(FmtColors.purpleTint))
+    FmtScreen {
+        FmtSectionTitle("Choose an activity")
         Column(verticalArrangement = Arrangement.spacedBy(m.gridGap)) {
             FmtCard("My morning routine", "Six steps from waking up to out the door. Tap each one when it's done.", FmtIcons.sunrise, Tone.Purple, more = "Start", onClick = { open(Screen.Morning) })
             FmtCard("My calm-down plan", "Choose the things that help when feelings get big, so they're easy to reach for.", FmtIcons.breathe, Tone.Teal, more = "Start", onClick = { open(Screen.Calm) })
             FmtCard("My practice week", "Write in the activities we chose together and tap a star each day you practise.", FmtIcons.calendar, Tone.Sun, more = "Start", onClick = { open(Screen.Week) })
         }
         FmtInfoNote(
-            "these are the same activities as my printed worksheets. Use whichever suits your family: paper on the fridge, or this on a phone or tablet.",
+            "these are the same activities as my printed worksheets. Use whichever suits your family: paper on the fridge, or this on a phone or tablet. Nothing you enter here leaves your device.",
             leadIn = "For grown-ups:",
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            FmtButton("See the design system", { open(Screen.DesignSystem) }, kind = ButtonKind.Quiet, trailingChevron = true)
+            FmtButton("See the design system", { open(Screen.DesignSystem) }, kind = ButtonKind.Outline, trailingChevron = true)
         }
     }
 }
 
 @Composable
-private fun MorningRoutineScreen(back: () -> Unit) {
+private fun MorningRoutineScreen() {
     val done = remember { mutableStateListOf<Int>() }
     var tricky by remember { mutableStateOf("") }
     val steps = listOf("Toilet and wash hands", "Get dressed", "Eat breakfast", "Brush teeth", "Shoes on", "Bag on, out the door")
     FmtScreen {
-        BackButton(back)
         FmtHead("My morning routine", swash = "morning", tag = "Self-care", tone = Tone.Purple)
         FmtGroup {
             FmtKidText(if (done.size == steps.size) "All done. Great job!" else "Tap each step when it's done.")
             FmtStepList(steps, done.toSet(), onToggle = { if (it in done) done.remove(it) else done.add(it) })
         }
         FmtGroup("What was tricky today?") {
-            WriteField(tricky, { tricky = it }, placeholder = "Type or tell a grown-up", minLines = 2)
+            WriteField(tricky, { tricky = it }, placeholder = "Type it, or tell a grown-up", minLines = 2)
         }
         FmtInfoNote(
             "keep this where your child gets ready. Point to the next step instead of saying it, and let them do the tapping. Change the steps to match your mornings.",
@@ -137,7 +148,7 @@ private fun MorningRoutineScreen(back: () -> Unit) {
 }
 
 @Composable
-private fun CalmPlanScreen(back: () -> Unit) {
+private fun CalmPlanScreen() {
     val chosen = remember { mutableStateListOf<Int>() }
     var idea by remember { mutableStateOf("") }
     var body by remember { mutableStateOf("") }
@@ -150,7 +161,6 @@ private fun CalmPlanScreen(back: () -> Unit) {
         Choice("Go to my quiet spot", FmtIcons.quietSpot),
     )
     FmtScreen {
-        BackButton(back)
         FmtHead("My calm-down plan", swash = "calm-down", tag = "Feelings", tone = Tone.Teal)
         FmtGroup("When my feelings get big, I can…") {
             FmtKidText("Tap the ones that help you.")
@@ -168,12 +178,11 @@ private fun CalmPlanScreen(back: () -> Unit) {
 }
 
 @Composable
-private fun PracticeWeekScreen(back: () -> Unit) {
+private fun PracticeWeekScreen() {
     val names = remember { mutableStateListOf("", "", "", "") }
     val done = remember { mutableStateListOf<Pair<Int, Int>>() }
     var proud by remember { mutableStateOf("") }
     FmtScreen {
-        BackButton(back)
         FmtHead("My practice week", swash = "week", tag = "Home practice", tone = Tone.Sun)
         FmtGroup {
             FmtKidText("Tap a star each day you practise.")
@@ -189,11 +198,10 @@ private fun PracticeWeekScreen(back: () -> Unit) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DesignSystemScreen(back: () -> Unit) {
+private fun DesignSystemScreen() {
     val m = FmtTheme.metrics
     val type = FmtTheme.type
     FmtScreen {
-        Row { FmtButton("‹ Home", back, kind = ButtonKind.Outline) }
         FmtSectionTitle("Design system", subtitle = "The same tokens and components as the website and worksheets, in Compose.")
 
         FmtGroup("Colour") {
@@ -259,4 +267,3 @@ private fun Swatch(name: String, color: Color) {
         FmtText(name, FmtTheme.type.small.copy(fontSize = FmtTheme.metrics.textXs))
     }
 }
-

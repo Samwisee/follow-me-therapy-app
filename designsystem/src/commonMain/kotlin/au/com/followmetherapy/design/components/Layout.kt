@@ -1,9 +1,17 @@
 package au.com.followmetherapy.design.components
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.draw.scale
+import au.com.followmetherapy.design.tokens.FmtMotion
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,10 +21,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,16 +53,16 @@ import au.com.followmetherapy.design.tokens.FmtShadow
 import au.com.followmetherapy.design.tokens.FmtSpace
 
 /**
- * One activity as a scrolling screen (phone, iPad, laptop, the app): the
- * screen counterpart of a worksheet. Blocks sit `stack` apart, the column is
- * at most `content` wide with `gutter` at the edges.
+ * One activity on a screen (phone, iPad, laptop, the app): the screen
+ * counterpart of a worksheet. Blocks sit `stack` apart, the column is at most
+ * `content` wide with `gutter` at the edges. Put it in an [FmtPage] to scroll.
  */
 @Composable
 fun FmtScreen(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     val m = FmtTheme.metrics
-    Box(modifier.fillMaxWidth().verticalScroll(rememberScrollState()), contentAlignment = Alignment.TopCenter) {
+    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
         Column(
-            Modifier.widthIn(max = m.content).fillMaxWidth().padding(m.gutter),
+            Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter).padding(top = m.stack, bottom = m.sectionSpace),
             verticalArrangement = Arrangement.spacedBy(m.stack),
             content = content,
         )
@@ -203,14 +209,21 @@ fun FmtCard(title: String, body: String, icon: ImageVector, tone: Tone = Tone.Pu
     val c = tone.colors
     val shape = RoundedCornerShape(m.containerRadius)
     val source = remember { MutableInteractionSource() }
-    val focused by source.collectIsFocusedAsState()
+    val focused by source.collectIsFocusVisibleAsState()
+    val hovered by source.collectIsHoveredAsState()
+    val pressed by source.collectIsPressedAsState()
+    val active = onClick != null && (hovered || focused) && !pressed
+    val lift by animateDpAsState(if (active) -FmtSpace.s1 else 0.dp, tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
+    val scale by animateFloatAsState(if (pressed) 0.98f else 1f, tween(FmtMotion.durBase, easing = FmtMotion.easeSpring))
     Column(
         modifier.fillMaxWidth()
+            .offset(y = lift)
+            .scale(scale)
             .fmtFocusRing(focused, shape)
-            .fmtShadow(FmtShadow.rest, shape)
+            .fmtShadow(if (active) FmtShadow.raised else FmtShadow.rest, shape)
             .background(FmtColors.paper, shape)
             .border(FmtBorder.outline, c.solid, shape)
-            .then(if (onClick != null) Modifier.clickableNoRipple(source, onClick) else Modifier)
+            .then(if (onClick != null) Modifier.hoverable(source).clickableNoRipple(source, onClick) else Modifier)
             .padding(m.cardPad + FmtBorder.outline),
         verticalArrangement = Arrangement.spacedBy(m.groupGap),
     ) {

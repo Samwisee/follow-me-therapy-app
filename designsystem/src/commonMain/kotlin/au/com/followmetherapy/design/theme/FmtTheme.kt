@@ -35,7 +35,11 @@ import au.com.followmetherapy.design.tokens.FmtTypeToken
 import au.com.followmetherapy.design.tokens.FmtTypography
 import au.com.followmetherapy.design.tokens.FmtWeight
 import au.com.followmetherapy.design.tokens.Fluid
-import org.jetbrains.compose.resources.Font
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.getValue
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.preloadFont
 
 /**
  * The semantic tokens resolved for the current window width. On screens they
@@ -123,20 +127,28 @@ object FmtTheme {
     val fonts: FmtFonts @Composable get() = LocalFmtFonts.current
 }
 
+/**
+ * Loads the fonts, returning null until all of them are ready, so nothing is
+ * drawn (or tapped) in a fallback font and then reflowed.
+ */
+@OptIn(ExperimentalResourceApi::class)
 @Composable
-fun rememberFmtFonts(): FmtFonts {
-    val display = FontFamily(
-        Font(Res.font.fredoka_400, FontWeight.Normal),
-        Font(Res.font.fredoka_500, FontWeight.Medium),
-        Font(Res.font.fredoka_600, FontWeight.SemiBold),
-        Font(Res.font.fredoka_700, FontWeight.Bold),
-    )
-    val body = FontFamily(
-        Font(Res.font.quicksand_500, FontWeight.Medium),
-        Font(Res.font.quicksand_600, FontWeight.SemiBold),
-        Font(Res.font.quicksand_700, FontWeight.Bold),
-    )
-    return remember(display, body) { FmtFonts(display, body) }
+fun rememberFmtFonts(): FmtFonts? {
+    val f400 by preloadFont(Res.font.fredoka_400, FontWeight.Normal)
+    val f500 by preloadFont(Res.font.fredoka_500, FontWeight.Medium)
+    val f600 by preloadFont(Res.font.fredoka_600, FontWeight.SemiBold)
+    val f700 by preloadFont(Res.font.fredoka_700, FontWeight.Bold)
+    val q500 by preloadFont(Res.font.quicksand_500, FontWeight.Medium)
+    val q600 by preloadFont(Res.font.quicksand_600, FontWeight.SemiBold)
+    val q700 by preloadFont(Res.font.quicksand_700, FontWeight.Bold)
+    val all = listOf(f400, f500, f600, f700, q500, q600, q700)
+    if (all.any { it == null }) return null
+    return remember(all) {
+        FmtFonts(
+            display = FontFamily(f400!!, f500!!, f600!!, f700!!),
+            body = FontFamily(q500!!, q600!!, q700!!),
+        )
+    }
 }
 
 private fun style(token: FmtTypeToken, fonts: FmtFonts, widthDp: Float, color: androidx.compose.ui.graphics.Color = FmtColors.ink): TextStyle {
@@ -191,6 +203,11 @@ fun fmtTypeScale(m: FmtMetrics, fonts: FmtFonts): FmtTypeScale {
 @Composable
 fun FmtTheme(content: @Composable () -> Unit) {
     val fonts = rememberFmtFonts()
+    if (fonts == null) {
+        // The page's own lilac until the fonts arrive (a moment on first load).
+        Box(Modifier.fillMaxSize().background(FmtColors.purpleTint))
+        return
+    }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val width = maxWidth.value
         val metrics = remember(width) { FmtMetrics.forWidth(width) }

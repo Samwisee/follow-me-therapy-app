@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -33,6 +35,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -92,6 +96,17 @@ fun Modifier.fmtShadow(token: FmtShadowToken, shape: Shape): Modifier =
     shadow(elevation = (token.blur / 2f).dp, shape = shape, clip = false, ambientColor = token.color, spotColor = token.color)
 
 /**
+ * True while focused from the keyboard only, like the website's
+ * :focus-visible: a mouse click or a tap focuses without drawing the ring.
+ */
+@Composable
+fun MutableInteractionSource.collectIsFocusVisibleAsState(): State<Boolean> {
+    val focused = collectIsFocusedAsState()
+    val mode = LocalInputModeManager.current
+    return remember(focused, mode) { derivedStateOf { focused.value && mode.inputMode == InputMode.Keyboard } }
+}
+
+/**
  * The focus ring: border-focus wide in `focus`, offset by the same amount,
  * on everything interactive (WCAG 2.2 AAA focus appearance).
  */
@@ -122,7 +137,7 @@ fun FmtButton(
     val source = remember { MutableInteractionSource() }
     val hovered by source.collectIsHoveredAsState()
     val pressed by source.collectIsPressedAsState()
-    val focused by source.collectIsFocusedAsState()
+    val focused by source.collectIsFocusVisibleAsState()
     val scale by animateFloatAsState(if (pressed) 0.97f else 1f, tween(FmtMotion.durBase, easing = FmtMotion.easeSpring))
     val lift by animateFloatAsState(if (hovered && !pressed) 1f else 0f, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
 
