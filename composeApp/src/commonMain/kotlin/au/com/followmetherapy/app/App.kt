@@ -95,7 +95,7 @@ fun App(startAt: String = "", onNavigate: (String) -> Unit = {}) {
                     fadeOut(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
             },
         ) { s ->
-            FmtPage(key = s, back = if (s == Screen.Home) null else home, backLabel = "All activities") {
+            FmtPage(key = s, back = if (s == Screen.Home) null else home, backLabel = "All activities", heroBelow = s == Screen.Home) {
                 when (s) {
                     Screen.Home -> HomeScreen(open = go)
                     Screen.Morning -> MorningRoutineScreen()

@@ -40,6 +40,7 @@ import au.com.followmetherapy.design.icons.FmtIcon
 import au.com.followmetherapy.design.icons.FmtIcons
 import au.com.followmetherapy.design.theme.FmtTheme
 import au.com.followmetherapy.design.tokens.FmtBorder
+import au.com.followmetherapy.design.tokens.FmtBreakpoint
 import au.com.followmetherapy.design.tokens.FmtColors
 import au.com.followmetherapy.design.tokens.FmtLayout
 import au.com.followmetherapy.design.tokens.FmtMotion
@@ -140,7 +141,7 @@ fun FmtBackButton(label: String, onClick: () -> Unit, modifier: Modifier = Modif
  * an optional back button, and the wave hanging beneath it.
  */
 @Composable
-fun FmtSiteHead(back: (() -> Unit)? = null, backLabel: String = "Back", modifier: Modifier = Modifier) {
+fun FmtSiteHead(back: (() -> Unit)? = null, backLabel: String = "Back", modifier: Modifier = Modifier, wave: Boolean = true) {
     val m = FmtTheme.metrics
     Column(modifier.fillMaxWidth()) {
         Box(Modifier.fillMaxWidth().background(FmtColors.purpleTint), contentAlignment = Alignment.Center) {
@@ -150,10 +151,11 @@ fun FmtSiteHead(back: (() -> Unit)? = null, backLabel: String = "Back", modifier
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (back != null) FmtBackButton(backLabel, back)
-                FmtLockup(Modifier.semantics { contentDescription = "Follow Me Therapy" })
+                // The name stays on one line; on a narrow phone it steps down a size.
+                FmtLockup(Modifier.semantics { contentDescription = "Follow Me Therapy" }, compact = m.widthDp < FmtBreakpoint.xs.value)
             }
         }
-        FmtWave(FmtColors.purpleTint, Modifier.offset(y = (-1).dp), down = true)
+        if (wave) FmtWave(FmtColors.purpleTint, Modifier.offset(y = (-1).dp), down = true)
     }
 }
 
@@ -185,12 +187,14 @@ fun FmtPage(
     key: Any?,
     back: (() -> Unit)? = null,
     backLabel: String = "Back",
+    heroBelow: Boolean = false,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scroll = androidx.compose.runtime.key(key) { androidx.compose.foundation.rememberScrollState() }
     Column(modifier.fillMaxWidth().background(FmtColors.paper).verticalScroll(scroll)) {
-        FmtSiteHead(back, backLabel)
+        // On a page that opens with a lilac hero, the bar runs straight into it (no wave).
+        FmtSiteHead(back, backLabel, wave = !heroBelow)
         Column(Modifier.fillMaxWidth(), content = content)
         FmtFooter()
     }
