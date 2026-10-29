@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -34,6 +35,8 @@ import au.com.followmetherapy.design.icons.FmtIcons
 import au.com.followmetherapy.design.theme.FmtTheme
 import au.com.followmetherapy.design.tokens.FmtColors
 import au.com.followmetherapy.design.tokens.FmtMotion
+import au.com.followmetherapy.design.tokens.FmtLayout
+import androidx.compose.ui.unit.dp
 
 /** Where the app is: an area, and for flows the step within it. */
 enum class Area(val slug: String, val tab: Int?) {
@@ -82,10 +85,10 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
             contentKey = { if (it.area.tab != null) "tabs" else "${it.area}/${it.step}" },
         ) { r ->
             if (r.area.tab != null) {
-                TabShell(nav, r.area.tab) {
-                    when (r.area) {
-                        Area.Activities -> ActivitiesTab(store, nav)
-                        Area.GrownUps -> GrownUpsTab(store, nav)
+                TabShell(nav, r.area.tab) { t ->
+                    when (t) {
+                        1 -> ActivitiesTab(store, nav)
+                        2 -> GrownUpsTab(store, nav)
                         else -> TodayTab(store, nav)
                     }
                 }
@@ -119,17 +122,29 @@ private fun transitionFor(from: Route, to: Route): ContentTransform {
 
 /** The three tabs share a lilac app bar, the wave, a scrolling column, and the tab bar. */
 @Composable
-private fun TabShell(nav: Nav, tab: Int, content: @Composable ColumnScope.() -> Unit) {
+private fun TabShell(nav: Nav, tab: Int, content: @Composable ColumnScope.(Int) -> Unit) {
     val m = FmtTheme.metrics
     Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
-        FmtAppBar(title = tabs[tab].label, trailing = null)
-        FmtWave(FmtColors.purpleTint, down = true)
-        Box(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()), contentAlignment = Alignment.TopCenter) {
-            Column(
-                Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter).padding(bottom = m.stack),
-                verticalArrangement = Arrangement.spacedBy(m.stack),
-                content = content,
-            )
+        FmtAppBar(title = tabs[tab].label)
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            // A new tab's content fades and rises in; the bars stay put.
+            AnimatedContent(
+                targetState = tab,
+                transitionSpec = {
+                    (fadeIn(tween(FmtMotion.durSlow, easing = FmtMotion.easeOut)) +
+                        slideInVertically(tween(FmtMotion.durSlow, easing = FmtMotion.easeOut)) { h -> h / 30 }) togetherWith
+                        fadeOut(tween(FmtMotion.durFast))
+                },
+            ) { t ->
+                Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), contentAlignment = Alignment.TopCenter) {
+                    Column(
+                        Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter).padding(top = FmtLayout.wave.max.dp, bottom = m.stack),
+                        verticalArrangement = Arrangement.spacedBy(m.stack),
+                    ) { content(t) }
+                }
+            }
+            // The wave floats over the content, so it scrolls up behind the lilac curve.
+            FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true)
         }
         FmtTabBar(tabs, tab, nav::tab)
     }

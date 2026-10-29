@@ -60,9 +60,10 @@ import au.com.followmetherapy.design.icons.FmtIcons
 import au.com.followmetherapy.design.theme.FmtTheme
 import au.com.followmetherapy.design.tokens.FmtBorder
 import au.com.followmetherapy.design.tokens.FmtColors
+import au.com.followmetherapy.design.tokens.FmtLayout
+import androidx.compose.ui.unit.dp
 import au.com.followmetherapy.design.tokens.FmtMotion
 import au.com.followmetherapy.design.tokens.FmtRadius
-import au.com.followmetherapy.design.tokens.FmtShadow
 import au.com.followmetherapy.design.tokens.FmtSize
 import au.com.followmetherapy.design.tokens.FmtSpace
 
@@ -213,18 +214,20 @@ fun FmtFlowScaffold(
     val m = FmtTheme.metrics
     Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
         appBar()
-        FmtWave(FmtColors.purpleTint, down = true)
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             val viewport = maxHeight
+            val wave = FmtLayout.wave.max.dp
             Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), contentAlignment = Alignment.TopCenter) {
             Column(
-                // At least the visible height, so a centred screen sits in the middle.
-                Modifier.widthIn(max = m.content).fillMaxWidth().heightIn(min = viewport).padding(horizontal = m.gutter).padding(bottom = m.stack),
+                // At least the visible height, so a centred screen sits in the middle;
+                // the top clears the wave, which floats over the content as it scrolls.
+                Modifier.widthIn(max = m.content).fillMaxWidth().heightIn(min = viewport).padding(horizontal = m.gutter).padding(top = wave, bottom = m.stack),
                 verticalArrangement = if (centre) Arrangement.spacedBy(m.stack, Alignment.CenterVertically) else Arrangement.spacedBy(m.stack),
                 horizontalAlignment = if (centre) Alignment.CenterHorizontally else Alignment.Start,
                 content = content,
             )
             }
+            FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true)
         }
         if (actions != null) {
             Box(
@@ -347,7 +350,6 @@ fun FmtListRow(
         modifier.fillMaxWidth()
             .scale(scale)
             .fmtFocusRing(focused, shape)
-            .fmtShadow(FmtShadow.rest, shape)
             .background(FmtColors.paper, shape)
             .border(FmtBorder.outline, c.line, shape)
             .then(if (onClick != null) Modifier.clickable(interactionSource = source, indication = null, role = Role.Button, onClick = onClick) else Modifier)
