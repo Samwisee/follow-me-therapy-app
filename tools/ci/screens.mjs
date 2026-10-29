@@ -74,6 +74,21 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   report.pwa = pwa;
   await ctx.close();
 }
+// Data saved by older versions (one key per entry) moves into the record, once.
+{
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  await page.goto('http://localhost:8099/version.json');
+  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('fmt.calm.idea', 'Hug my dog'); localStorage.setItem('fmt.calm.chosen', '0,2'); });
+  await page.goto('http://localhost:8099/');
+  await page.waitForTimeout(5000);
+  report.migration = await page.evaluate(() => {
+    const r = JSON.parse(localStorage.getItem('fmt.record') || 'null');
+    return { schema: r && r.schema, idea: r && r.entries['calm.idea'] && r.entries['calm.idea'].v, chosen: r && r.entries['calm.chosen'] && r.entries['calm.chosen'].v,
+             oldKeysLeft: Object.keys(localStorage).filter(k => k !== 'fmt.record' && k.startsWith('fmt.')).length };
+  });
+  await ctx.close();
+}
 await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 1));
 console.log(JSON.stringify(report, null, 1));
 await browser.close();
