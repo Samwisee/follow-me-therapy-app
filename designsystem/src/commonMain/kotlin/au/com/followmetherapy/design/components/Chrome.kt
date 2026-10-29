@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import au.com.followmetherapy.design.icons.FmtIcon
 import au.com.followmetherapy.design.icons.FmtIcons
@@ -54,8 +55,8 @@ import au.com.followmetherapy.design.tokens.FmtSpace
  * (the inner pages' top bar); otherwise it rises into the band above.
  */
 @Composable
-fun FmtWave(color: Color, modifier: Modifier = Modifier, down: Boolean = false) {
-    val h = FmtLayout.wave.max.dp
+fun FmtWave(color: Color, modifier: Modifier = Modifier, down: Boolean = false, height: Dp = FmtLayout.wave.max.dp) {
+    val h = height
     Canvas(modifier.fillMaxWidth().height(h)) {
         val tileW = h.toPx() * 12
         val sx = tileW / 240f

@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import au.com.followmetherapy.design.components.FmtAppBar
+import au.com.followmetherapy.design.components.FmtAppChrome
 import au.com.followmetherapy.design.components.FmtTab
 import au.com.followmetherapy.design.components.FmtTabBar
 import au.com.followmetherapy.design.components.FmtWave
@@ -82,7 +83,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
         // screens slide beneath, and only their parts animate.
         val bar = barFor(nav.route, store, nav)
         Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
-            FmtAppBar(bar.title, onBack = bar.back, progress = bar.progress, progressLabel = bar.label)
+            FmtAppBar(bar.title, onBack = bar.back, brand = bar.brand, progress = bar.progress, progressLabel = bar.label)
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 AnimatedContent(
                     targetState = nav.route,
@@ -110,19 +111,20 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                         }
                     }
                 }
-                FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true)
+                FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true, height = FmtAppChrome.wave)
             }
         }
     }
 }
 
 /** What the app bar shows for a place in the app. */
-private data class Bar(val title: String, val back: (() -> Unit)? = null, val progress: Float? = null, val label: String? = null)
+private data class Bar(val title: String, val back: (() -> Unit)? = null, val progress: Float? = null, val label: String? = null, val brand: Boolean = false)
 
 private fun barFor(r: Route, store: AppStore, nav: Nav): Bar {
     val home = nav::home
     return when (r.area) {
-        Area.Today, Area.Activities, Area.GrownUps -> Bar(tabs[r.area.tab ?: 0].label)
+        Area.Today -> Bar(tabs[0].label, brand = true)
+        Area.Activities, Area.GrownUps -> Bar(tabs[r.area.tab ?: 0].label)
         Area.Morning -> {
             val total = store.routineSteps.size
             val last = total + 2
@@ -157,14 +159,12 @@ private fun transitionFor(from: Route, to: Route): ContentTransform {
 }
 
 /**
- * The three tabs share a scrolling column and the lilac tab bar, with an
- * upward wave floating over the bottom of the content (the app bar and its
- * wave sit above, in [App]).
+ * The three tabs share a scrolling column and the lilac tab bar, whose crest
+ * marks the chosen tab (the app bar and its wave sit above, in [App]).
  */
 @Composable
 private fun TabShell(nav: Nav, tab: Int, content: @Composable ColumnScope.(Int) -> Unit) {
     val m = FmtTheme.metrics
-    val wave = FmtLayout.wave.max.dp
     Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             // A new tab's content fades and rises in; the bars stay put.
@@ -178,12 +178,11 @@ private fun TabShell(nav: Nav, tab: Int, content: @Composable ColumnScope.(Int) 
             ) { t ->
                 Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), contentAlignment = Alignment.TopCenter) {
                     Column(
-                        Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter).padding(top = wave, bottom = wave + m.stack),
+                        Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter).padding(top = FmtAppChrome.wave + m.stack, bottom = FmtAppChrome.crest + m.stack),
                         verticalArrangement = Arrangement.spacedBy(m.stack),
                     ) { content(t) }
                 }
             }
-            FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.BottomCenter))
         }
         FmtTabBar(tabs, tab, nav::tab)
     }

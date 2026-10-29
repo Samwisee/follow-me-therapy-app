@@ -13,6 +13,13 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.zIndex
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -86,6 +93,14 @@ import au.com.followmetherapy.design.tokens.FmtSpace
  * containers with nested corners, pill buttons, 44dp targets, focus rings.
  */
 
+/** Sizes of the app's bars: a shallow wave under the app bar, and the crest over the chosen tab. */
+object FmtAppChrome {
+    /** Height of the wave under the app bar (shallower than the website's, so it covers less). */
+    val wave: Dp = FmtSpace.s4
+    /** How far the tab bar's crest rises over the chosen tab. */
+    val crest: Dp = FmtSpace.s4
+}
+
 /** A round icon button (size-target), outlined in purple-line on paper. Needs a [label] for screen readers. */
 @Composable
 fun FmtIconButton(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -133,7 +148,8 @@ fun FmtProgressBar(progress: Float, modifier: Modifier = Modifier, label: String
 
 /**
  * The app bar: lilac, an optional round back button, the screen's title in
- * Fredoka, and an optional progress bar beneath (for flows). Put it once
+ * Fredoka (or, with [brand], the Follow Me Therapy lockup, for the home
+ * screen), and an optional progress bar beneath (for flows). Put it once
  * above the screens, not inside them: it stays put while screens change, and
  * its parts animate (the title cross-fades, the back button and the progress
  * bar slide in and out, the progress glides to its new length).
@@ -142,6 +158,7 @@ fun FmtProgressBar(progress: Float, modifier: Modifier = Modifier, label: String
 fun FmtAppBar(
     title: String,
     onBack: (() -> Unit)? = null,
+    brand: Boolean = false,
     progress: Float? = null,
     progressLabel: String? = null,
     trailing: (@Composable () -> Unit)? = null,
@@ -161,7 +178,7 @@ fun FmtAppBar(
     Column(Modifier.fillMaxWidth().background(FmtColors.purpleTint)) {
         FmtOnGround(FmtColors.purpleTint) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Column(Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = FmtSpace.s2)) {
+            Column(Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = FmtSpace.s1)) {
                 Row(Modifier.fillMaxWidth().heightIn(min = FmtSize.target), verticalAlignment = Alignment.CenterVertically) {
                     AnimatedVisibility(
                         onBack != null,
@@ -171,14 +188,15 @@ fun FmtAppBar(
                         Row { FmtIconButton(FmtIcons.back, "Back", { (onBack ?: lastBack)?.invoke() }); Spacer(Modifier.width(FmtSpace.s3)) }
                     }
                     AnimatedContent(
-                        targetState = title,
+                        targetState = if (brand) null else title,
                         modifier = Modifier.weight(1f),
                         transitionSpec = {
                             (enter + slideInVertically(tween(FmtMotion.durBase, easing = FmtMotion.easeOut)) { h -> h / 4 }) togetherWith exit
                         },
                         contentAlignment = Alignment.CenterStart,
                     ) { t ->
-                        FmtText(t, FmtTheme.type.subheading.copy(fontSize = m.textLg, fontWeight = FontWeight.SemiBold), Modifier.fillMaxWidth().semantics { heading() })
+                        if (t == null) FmtLockup(Modifier.semantics { heading() }, compact = true)
+                        else FmtText(t, FmtTheme.type.subheading.copy(fontSize = m.textLg, fontWeight = FontWeight.SemiBold), Modifier.fillMaxWidth().semantics { heading() })
                     }
                     trailing?.invoke()
                 }
@@ -187,7 +205,7 @@ fun FmtAppBar(
                     enter = enter + expandVertically(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard), expandFrom = Alignment.Top),
                     exit = exit + shrinkVertically(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard), shrinkTowards = Alignment.Top),
                 ) {
-                    Row(Modifier.padding(top = FmtSpace.s2, bottom = FmtSpace.s1), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtSpace.s3)) {
+                    Row(Modifier.padding(top = FmtSpace.s1, bottom = FmtSpace.s1), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtSpace.s3)) {
                         FmtProgressBar(progress ?: lastProgress, Modifier.weight(1f), progressLabel ?: lastLabel ?: "Progress")
                         AnimatedVisibility(progressLabel != null, enter = enter, exit = exit) {
                             FmtText(progressLabel ?: lastLabel ?: "", FmtTheme.type.chip, color = FmtColors.purpleInk)
@@ -203,18 +221,39 @@ fun FmtAppBar(
 data class FmtTab(val label: String, val icon: ImageVector)
 
 /**
- * The bottom tab bar: lilac, like the app bar, so the screen sits between two
- * bands. Each tab is an icon and its label (never an icon alone); the chosen
- * one sits in a paper pill outlined in purple-line and its label turns bold
- * purple-ink, so it doesn't rely on colour alone. Pair it with an upward
- * [FmtWave] floating over the bottom of the content.
+ * The bottom tab bar: lilac, like the app bar. Its top edge rises in a wave
+ * crest over the chosen tab and glides to the next one; the chosen tab's
+ * icon turns purple and its label bold purple-ink, so it doesn't rely on
+ * colour alone. The crest draws above the bar, over the content's last
+ * [FmtAppChrome.crest] of space (leave that much room at the bottom).
  */
 @Composable
 fun FmtTabBar(tabs: List<FmtTab>, selected: Int, onSelect: (Int) -> Unit) {
     val m = FmtTheme.metrics
+    val at by animateFloatAsState(selected.toFloat(), tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
     FmtOnGround(FmtColors.purpleTint) {
-        Box(Modifier.fillMaxWidth().background(FmtColors.purpleTint), contentAlignment = Alignment.Center) {
-            Row(Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter / 2).padding(bottom = FmtSpace.s2)) {
+        Box(
+            Modifier.fillMaxWidth().zIndex(1f).background(FmtColors.purpleTint),
+            contentAlignment = Alignment.Center,
+        ) {
+            Row(
+                Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter / 2)
+                    .drawBehind {
+                        // The crest: a smooth hump one tab wide, centred on the chosen tab.
+                        val tabW = size.width / tabs.size
+                        val cx = tabW * (at + 0.5f)
+                        val half = tabW * 0.75f
+                        val top = -FmtAppChrome.crest.toPx()
+                        val p = Path().apply {
+                            moveTo(cx - half, 0.5f)
+                            cubicTo(cx - half / 2, 0.5f, cx - half / 2, top, cx, top)
+                            cubicTo(cx + half / 2, top, cx + half / 2, 0.5f, cx + half, 0.5f)
+                            close()
+                        }
+                        drawPath(p, FmtColors.purpleTint)
+                    }
+                    .padding(bottom = FmtSpace.s1),
+            ) {
                 tabs.forEachIndexed { i, tab -> TabItem(tab, i == selected, { onSelect(i) }) }
             }
         }
@@ -225,33 +264,32 @@ fun FmtTabBar(tabs: List<FmtTab>, selected: Int, onSelect: (Int) -> Unit) {
 private fun RowScope.TabItem(tab: FmtTab, on: Boolean, select: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusVisibleAsState()
-    val pill by animateColorAsState(if (on) FmtColors.paper else FmtColors.purpleTint, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
-    val rim by animateColorAsState(if (on) FmtColors.purpleLine else FmtColors.purpleTint, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
-    val pop by animateFloatAsState(if (on) 1f else 0.9f, tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
+    val pressed by source.collectIsPressedAsState()
     val ink = if (on) FmtColors.purpleInk else FmtColors.inkSoft
+    val lift by animateDpAsState(if (on) -FmtSpace.s1 else 0.dp, tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
+    val scale by animateFloatAsState(if (pressed) 0.92f else 1f, tween(FmtMotion.durBase, easing = FmtMotion.easeSpring))
     Column(
         Modifier.weight(1f)
             .fmtFocusRing(focused, RoundedCornerShape(FmtRadius.tile))
             .selectable(selected = on, interactionSource = source, indication = null, role = Role.Tab, onClick = select)
-            .heightIn(min = FmtSize.target + FmtSpace.s4)
-            .padding(vertical = FmtSpace.s1),
+            .heightIn(min = FmtSize.target)
+            .scale(scale),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(FmtSpace.s1, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(FmtSpace.s1 / 2, Alignment.CenterVertically),
     ) {
-        Box(Modifier.width(FmtSpace.s16).height(FmtSpace.s8).scale(pop).background(pill, CircleShape).border(FmtBorder.outline, rim, CircleShape), contentAlignment = Alignment.Center) {
-            FmtIcon(tab.icon, if (on) FmtColors.purple else FmtColors.inkSoft, FmtSize.icon)
-        }
+        Box(Modifier.offset(y = lift)) { FmtIcon(tab.icon, if (on) FmtColors.purple else FmtColors.inkSoft, FmtSize.icon) }
         FmtText(tab.label, FmtTheme.type.chip.copy(fontSize = FmtTheme.metrics.textXs, fontWeight = if (on) FontWeight.Bold else FontWeight.SemiBold), color = ink, align = TextAlign.Center)
     }
 }
 
 /**
- * One screen of a flow. Its content starts below the wave. In an app, leave
- * [appBar] out and keep one [FmtAppBar] and wave above all the screens (so
- * they stay put while screens change); pass one for a screen on its own.
- * The app bar on top, the content scrolling in the
- * centred column, and the actions pinned at the bottom (Back and the next
- * step), always in the same place so a child learns where to tap.
+ * One screen of a flow. The content scrolls in the centred column, starting
+ * below the app bar's wave; the actions (Back and the next step) float at the
+ * bottom with no panel behind them, always in the same place so a child
+ * learns where to tap. The content leaves room for them at its end.
+ * In an app, leave [appBar] out and keep one [FmtAppBar] and wave above all
+ * the screens (so they stay put while screens change); pass one for a
+ * screen on its own.
  */
 @Composable
 fun FmtFlowScaffold(
@@ -261,32 +299,30 @@ fun FmtFlowScaffold(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val m = FmtTheme.metrics
+    val density = LocalDensity.current
+    var actionsHeight by remember { mutableStateOf(0.dp) }
     Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
         appBar?.invoke()
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             val viewport = maxHeight
-            val wave = FmtLayout.wave.max.dp
+            val wave = FmtAppChrome.wave
             Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), contentAlignment = Alignment.TopCenter) {
-            Column(
-                // At least the visible height, so a centred screen sits in the middle;
-                // the top clears the wave, which floats over the content as it scrolls.
-                Modifier.widthIn(max = m.content).fillMaxWidth().heightIn(min = viewport).padding(horizontal = m.gutter).padding(top = wave, bottom = m.stack),
-                verticalArrangement = if (centre) Arrangement.spacedBy(m.stack, Alignment.CenterVertically) else Arrangement.spacedBy(m.stack),
-                horizontalAlignment = if (centre) Alignment.CenterHorizontally else Alignment.Start,
-                content = content,
-            )
+                Column(
+                    // At least the visible height, so a centred screen sits in the middle;
+                    // the top clears the wave, the bottom clears the floating actions.
+                    Modifier.widthIn(max = m.content).fillMaxWidth().heightIn(min = viewport)
+                        .padding(horizontal = m.gutter).padding(top = wave + m.stack, bottom = actionsHeight + m.stack),
+                    verticalArrangement = if (centre) Arrangement.spacedBy(m.stack, Alignment.CenterVertically) else Arrangement.spacedBy(m.stack),
+                    horizontalAlignment = if (centre) Alignment.CenterHorizontally else Alignment.Start,
+                    content = content,
+                )
             }
-            if (appBar != null) FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true)
-        }
-        if (actions != null) {
-            Box(
-                Modifier.fillMaxWidth().background(FmtColors.paper).drawBehind {
-                    drawLine(FmtColors.purpleLine, Offset(0f, 0f), Offset(size.width, 0f), FmtBorder.outline.toPx())
-                },
-                contentAlignment = Alignment.Center,
-            ) {
+            if (appBar != null) FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true, height = wave)
+            if (actions != null) {
                 Row(
-                    Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = FmtSpace.s4),
+                    Modifier.align(Alignment.BottomCenter).widthIn(max = m.content).fillMaxWidth()
+                        .onSizeChanged { actionsHeight = with(density) { it.height.toDp() } }
+                        .padding(horizontal = m.gutter, vertical = FmtSpace.s3),
                     horizontalArrangement = Arrangement.spacedBy(m.gridGap),
                     verticalAlignment = Alignment.CenterVertically,
                     content = actions,
