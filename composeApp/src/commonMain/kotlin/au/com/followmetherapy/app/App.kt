@@ -30,6 +30,8 @@ import androidx.compose.ui.Modifier
 import au.com.followmetherapy.design.components.FmtAppBar
 import au.com.followmetherapy.design.components.FmtAppChrome
 import au.com.followmetherapy.design.components.FmtActionBarHost
+import au.com.followmetherapy.design.components.LocalFmtSafeBottom
+import au.com.followmetherapy.design.tokens.FmtBarTokens
 import au.com.followmetherapy.design.components.FmtActionHost
 import au.com.followmetherapy.design.components.FmtActionSlot
 import au.com.followmetherapy.design.components.LocalFmtActionSlot
@@ -48,7 +50,7 @@ import androidx.compose.ui.unit.dp
 enum class Area(val slug: String, val tab: Int?) {
     Today("today", 0), Activities("activities", 1), GrownUps("grown-ups", 2),
     Morning("morning", null), Calm("calm", null), CalmNow("calm-now", null),
-    WeekSetup("week-setup", null), Week("week", null), DesignSystem("design-system", null),
+    WeekSetup("week-setup", null), Week("week", null), DesignSystem("design-system", null), Install("install", null),
 }
 
 data class Route(val area: Area, val step: Int = 0) {
@@ -84,7 +86,9 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
     val store = remember { AppStore(platform) }
     val nav = remember { Nav(Route.parse(startAt), onNavigate) }
     val actions = remember { FmtActionHost() }
+    val safeBottom = remember { platform.safeBottom().dp }
     FmtTheme {
+      CompositionLocalProvider(LocalFmtSafeBottom provides safeBottom) {
         // One app bar and wave above every screen: they stay put while the
         // screens slide beneath, and only their parts animate.
         val bar = barFor(nav.route, store, nav)
@@ -102,7 +106,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                         TabShell(nav, r.area.tab) { t ->
                             when (t) {
                                 1 -> ActivitiesTab(store, nav)
-                                2 -> GrownUpsTab(store, nav)
+                                2 -> GrownUpsTab(store, nav, platform)
                                 else -> TodayTab(store, nav)
                             }
                         }
@@ -114,6 +118,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                             Area.WeekSetup -> WeekSetupFlow(store, nav)
                             Area.Week -> WeekFlow(store, nav)
                             Area.DesignSystem -> DesignSystemScreen(nav)
+                            Area.Install -> InstallScreen(platform, nav)
                             else -> Unit
                         }
                     }
@@ -121,9 +126,10 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                 }
                 // The flow's buttons stay on screen between steps, like the app bar.
                 FmtActionBarHost(actions, nav.route, visible = nav.route.area.tab == null)
-                FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true, height = FmtAppChrome.wave, stroke = FmtColors.purpleLine)
+                FmtWave(FmtBarTokens.fill, Modifier.align(Alignment.TopCenter), down = true, height = FmtAppChrome.wave, stroke = FmtBarTokens.line)
             }
         }
+      }
     }
 }
 
@@ -152,6 +158,7 @@ private fun barFor(r: Route, store: AppStore, nav: Nav): Bar {
         }
         Area.WeekSetup, Area.Week -> Bar("Practice week", home)
         Area.DesignSystem -> Bar("Design system", { nav.go(Route(Area.GrownUps)) })
+        Area.Install -> Bar("Add to your Home Screen", { nav.go(Route(Area.GrownUps)) })
     }
 }
 

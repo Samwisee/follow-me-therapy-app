@@ -7,7 +7,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 
 const [dist, out] = process.argv.slice(2);
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.json': 'application/json', '.cvr': 'application/octet-stream' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.cvr': 'application/octet-stream' };
 const server = http.createServer(async (req, res) => {
   const raw = decodeURIComponent(req.url.split('?')[0]);
   const path = raw.endsWith('/') ? raw + 'index.html' : raw;
@@ -22,7 +22,7 @@ await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', args: ['--enable-unsafe-swiftshader'] });
 const report = {};
 for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop', { width: 1280, height: 800 }]]) {
-  for (const screen of ['', 'activities', 'grown-ups', 'morning', 'morning/2', 'calm/1', 'calm-now', 'week-setup', 'design-system']) {
+  for (const screen of ['', 'activities', 'grown-ups', 'morning', 'morning/2', 'calm/1', 'calm-now', 'week-setup', 'design-system', 'install']) {
     const page = await browser.newPage({ viewport, deviceScaleFactor: name === 'phone' ? 2 : 1 });
     const errors = [];
     page.on('pageerror', e => errors.push(String(e)));
@@ -51,6 +51,27 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
     report[label] = { scrollFrames: s.length, medianMs: pct(0.5), p90Ms: pct(0.9), maxMs: s.length ? Math.round(s[s.length - 1]) : null, idleFrames: timing.length, errors };
     await page.close();
   }
+}
+// Installable and offline: the manifest and service worker are in place, and
+// after one visit the app opens with the network off.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  const page = await ctx.newPage();
+  await page.goto('http://localhost:8099/');
+  await page.waitForTimeout(5000);
+  const pwa = await page.evaluate(async () => {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const m = await fetch('manifest.webmanifest').then(r => r.json()).catch(() => null);
+    return { serviceWorker: !!reg, controlled: !!navigator.serviceWorker.controller, manifest: m && { name: m.name, display: m.display, icons: m.icons.length, theme: m.theme_color } };
+  });
+  await page.reload(); await page.waitForTimeout(4000); // now under the worker's control, caching everything
+  await ctx.setOffline(true);
+  await page.reload().catch(() => {});
+  await page.waitForTimeout(5000);
+  pwa.offlineCanvas = await page.evaluate(() => !!document.querySelector('canvas')).catch(() => false);
+  await page.screenshot({ path: join(out, 'phone-offline.png') });
+  report.pwa = pwa;
+  await ctx.close();
 }
 await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 1));
 console.log(JSON.stringify(report, null, 1));

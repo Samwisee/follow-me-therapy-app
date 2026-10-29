@@ -32,7 +32,7 @@ jobs:
           SITE=$(curl -fsSL https://api.github.com/repos/Samwisee/follow-me-therapy/commits/${DESIGN_REF:-preview} | python3 -c "import json,sys; print(json.load(sys.stdin)['sha'][:7])")
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add -A design tools designsystem
+          git add -A design tools designsystem composeApp/src/wasmJsMain/resources
           git commit -m "Design from the website (follow-me-therapy@$SITE)"
           git push
           gh workflow run build.yml --ref main

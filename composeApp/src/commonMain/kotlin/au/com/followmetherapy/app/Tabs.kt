@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -112,17 +116,52 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
 
 /** For grown-ups: what this is, privacy, and a way to clear the device. */
 @Composable
-fun GrownUpsTab(store: AppStore, nav: Nav) {
+fun GrownUpsTab(store: AppStore, nav: Nav, platform: Platform) {
     var confirm by remember { mutableStateOf(false) }
+    var kept by remember { mutableStateOf<Boolean?>(null) }
+    var message by remember { mutableStateOf<String?>(null) }
+    val installed = remember { platform.installed() }
+    // Ask the device to keep this app's data even when it's short of space.
+    LaunchedEffect(Unit) { platform.keepData { kept = it } }
     FmtLockup()
     FmtText(
         "I'm Simone, a paediatric occupational therapist. These activities are the ones we practise in our sessions, for you and your child to keep going with at home. Short and often is best: five minutes a day is plenty.",
         FmtTheme.type.body,
     )
+    if (!installed) {
+        FmtListRow("Add the app to your Home Screen", "It opens like an app, works without the internet, and keeps your progress safer", FmtIcons.addToHome, Tone.Purple, onClick = { nav.go(Route(Area.Install)) })
+    }
     FmtInfoNote(
-        "everything you enter stays on this device. Nothing is sent to me or anyone else, and there's no account. Clearing your browser's data (or using a private window) clears it too.",
+        "everything you enter stays on this device. Nothing is sent to me or anyone else, and there's no account.",
         leadIn = "Your privacy:", tone = Tone.Teal, icon = FmtIcons.shieldTick,
     )
+    FmtGroup("Keep a backup") {
+        FmtText(
+            when (kept) {
+                true -> "This device will keep your progress even when it's short of space. Clearing your browser's data still clears it, so keep a backup too."
+                else -> "Your browser can clear your progress when you clear its data, or when the device is short of space." +
+                    (if (installed) "" else " Adding the app to your Home Screen helps.") + " A backup keeps it safe."
+            },
+            FmtTheme.type.small,
+        )
+        FmtText(
+            "A backup is one small file with everything you've saved here (${store.savedCount} ${if (store.savedCount == 1) "thing" else "things"}). Keep it in Files or Downloads, and restore it after clearing your browser or on a new phone.",
+            FmtTheme.type.small,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(FmtTheme.metrics.gridGap)) {
+            FmtButton("Save a backup", { store.saveBackup(); message = null }, kind = ButtonKind.Outline)
+            FmtButton("Restore", {
+                platform.openFile { text ->
+                    message = when (val r = store.restore(text)) {
+                        RestoreResult.NotABackup -> "That file isn't a Follow Me Therapy backup. Nothing was changed."
+                        is RestoreResult.Restored -> if (r.changed == 0) "Nothing new in that backup: this device already has everything in it."
+                            else "Restored ${r.changed} ${if (r.changed == 1) "thing" else "things"} from your backup."
+                    }
+                }
+            }, kind = ButtonKind.Outline)
+        }
+        message?.let { FmtText(it, FmtTheme.type.small, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, color = FmtColors.ink) }
+    }
     FmtGroup("Start again") {
         FmtText("Clear the routine, the calm-down plan and this week's stars from this device.", FmtTheme.type.small)
         Row {

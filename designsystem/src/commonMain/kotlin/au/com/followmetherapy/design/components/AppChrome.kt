@@ -111,6 +111,13 @@ object FmtAppChrome {
     val crest: Dp get() = FmtBarTokens.crest
 }
 
+/**
+ * Space the device keeps at its bottom edge (an iPhone's home indicator when
+ * the app runs from the Home Screen). The tab bar and the action bar add it
+ * below themselves, so nothing sits under the indicator. The app provides it.
+ */
+val LocalFmtSafeBottom = staticCompositionLocalOf { 0.dp }
+
 /** A round icon button (size-target), outlined in purple-line on paper. Needs a [label] for screen readers. */
 @Composable
 fun FmtIconButton(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -271,7 +278,7 @@ fun FmtTabBar(tabs: List<FmtTab>, selected: Int, onSelect: (Int) -> Unit) {
         ) {
             Row(
                 Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter / 2)
-                    .padding(bottom = FmtSpace.s1),
+                    .padding(bottom = FmtSpace.s1 + LocalFmtSafeBottom.current),
             ) {
                 tabs.forEachIndexed { i, tab -> TabItem(tab, i == selected, { onSelect(i) }) }
             }
@@ -355,7 +362,7 @@ fun FmtActionBar(actions: FmtActions, modifier: Modifier = Modifier) {
     val enter = fadeIn(tween(FmtMotion.durBase, easing = FmtMotion.easeOut)) + scaleIn(tween(FmtMotion.durBase, easing = FmtMotion.easeSpring), initialScale = 0.9f)
     val exit = fadeOut(tween(FmtMotion.durFast)) + scaleOut(tween(FmtMotion.durFast), targetScale = 0.9f)
     Row(
-        modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = FmtSpace.s3),
+        modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter).padding(top = FmtSpace.s3, bottom = FmtSpace.s3 + LocalFmtSafeBottom.current),
         horizontalArrangement = Arrangement.spacedBy(m.gridGap),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -57,4 +57,5 @@ object FmtIcons {
     val quietSpot = icon("quiet-spot", 40f, 2.6f, listOf("M 5,32 L 20,8 l 15,24 z", "M 15,32 l 5,-8 l 5,8"))
     val starFilled = icon("star-filled", 24f, 2.2f, listOf("M 12,3 l 2.7,5.6 l 6.1,0.9 l -4.4,4.3 l 1,6.1 L 12,17 l -5.4,2.9 l 1,-6.1 L 3.2,9.8 l 6.1,-0.9 z"), filled = true)
     val calendar = icon("calendar", 40f, 2.6f, listOf("M 11,9 L 29,9 A 4,4 0 0,1 33,13 L 33,29 A 4,4 0 0,1 29,33 L 11,33 A 4,4 0 0,1 7,29 L 7,13 A 4,4 0 0,1 11,9 Z", "M 7,16 l 26,0", "M 14,6 l 0,6 M 26,6 l 0,6", "M 14,23 l 3,3 l 6,-6"))
+    val addToHome = icon("add-to-home", 40f, 2.6f, listOf("M 15,4 L 25,4 A 4,4 0 0,1 29,8 L 29,32 A 4,4 0 0,1 25,36 L 15,36 A 4,4 0 0,1 11,32 L 11,8 A 4,4 0 0,1 15,4 Z", "M 20,13 l 0,10 M 15,18 l 10,0", "M 17,31 l 6,0"))
 }

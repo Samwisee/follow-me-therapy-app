@@ -1,0 +1,27 @@
+{
+ "name": "Follow Me Therapy",
+ "short_name": "Follow Me",
+ "description": "Simone's home activities: a morning routine, a calm-down plan and a practice week, for you and your child.",
+ "id": "./",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#efe9ff",
+ "theme_color": "#efe9ff",
+ "lang": "en-AU",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  }
+ ]
+}

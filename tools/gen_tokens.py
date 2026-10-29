@@ -279,6 +279,39 @@ for comp, parts in T["component"].items():
     w("}")
     w("")
 
+# The web app's install manifest and page colours come from the tokens too:
+# the bars' lilac (component.bar.fill) is the splash, the theme and the page edge.
+def hex_of(path):
+    v = resolve_path(path)
+    while isinstance(v, str) and v.startswith("{"):
+        v = resolve_path(v[1:-1])
+    return v
+BAR = hex_of("component.bar.fill")
+RES = ROOT / "composeApp/src/wasmJsMain/resources"
+manifest = {
+    "name": "Follow Me Therapy",
+    "short_name": "Follow Me",
+    "description": "Simone's home activities: a morning routine, a calm-down plan and a practice week, for you and your child.",
+    "id": "./",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": BAR,
+    "theme_color": BAR,
+    "lang": "en-AU",
+    "icons": [
+        {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+        {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    ],
+}
+(RES / "manifest.webmanifest").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n")
+page = RES / "index.html"
+html = page.read_text()
+html = re.sub(r'(<meta name="theme-color" content=")[^"]*(" data-token="bar-fill")', lambda m: m.group(1) + BAR + m.group(2), html)
+html = re.sub(r"(/\* token:bar-fill \*/ )#[0-9a-fA-F]{3,8}", lambda m: m.group(1) + BAR, html)
+page.write_text(html)
+
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text("\n".join(L) + "\n")
 print(f"wrote {OUT.relative_to(ROOT)}")
