@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import au.com.followmetherapy.design.components.ButtonKind
 import au.com.followmetherapy.design.components.Choice
-import au.com.followmetherapy.design.components.FmtActionSpacer
+import au.com.followmetherapy.design.components.FmtAction
 import au.com.followmetherapy.design.components.FmtBreathing
 import au.com.followmetherapy.design.components.FmtButton
 import au.com.followmetherapy.design.components.FmtCelebration
@@ -42,7 +42,7 @@ fun MorningFlow(store: AppStore, nav: Nav, step: Int) {
     val go = { s: Int -> nav.go(Route(Area.Morning, s)) }
     when (step) {
         0 -> FmtFlowScaffold(
-            actions = { FmtActionSpacer(); FmtButton("Start", { go(1) }, trailingChevron = true) },
+            end = FmtAction("Start", chevron = true) { go(1) },
         ) {
             FmtHead("My morning routine", swash = "morning", tag = "Self-care", tone = Tone.Purple)
             FmtGroup {
@@ -55,14 +55,11 @@ fun MorningFlow(store: AppStore, nav: Nav, step: Int) {
             val i = step - 1
             val done = i in store.routineDone
             FmtFlowScaffold(
-                actions = {
-                    FmtButton("Back", { go(step - 1) }, kind = ButtonKind.Outline)
-                    FmtActionSpacer()
-                    if (done) FmtButton("Next", { go(if (store.routineComplete) MORNING_CELEBRATE else step + 1) }, trailingChevron = true)
-                    else FmtButton("Done", {
-                        store.toggleRoutineStep(i, true)
-                        go(if (store.routineComplete) MORNING_CELEBRATE else step + 1)
-                    }, kind = ButtonKind.Teal, trailingChevron = true)
+                start = FmtAction("Back", ButtonKind.Outline) { go(step - 1) },
+                end = if (done) FmtAction("Next", chevron = true) { go(if (store.routineComplete) MORNING_CELEBRATE else step + 1) }
+                else FmtAction("Done", ButtonKind.Teal, chevron = true) {
+                    store.toggleRoutineStep(i, true)
+                    go(if (store.routineComplete) MORNING_CELEBRATE else step + 1)
                 },
                 centre = true,
             ) {
@@ -70,13 +67,14 @@ fun MorningFlow(store: AppStore, nav: Nav, step: Int) {
             }
         }
         MORNING_CELEBRATE -> FmtFlowScaffold(
-            actions = { FmtActionSpacer(); FmtButton("Next", { go(MORNING_REFLECT) }, trailingChevron = true) },
+            end = FmtAction("Next", chevron = true) { go(MORNING_REFLECT) },
             centre = true,
         ) {
             FmtCelebration("All done!", swash = "done", message = "You did your whole morning routine.")
         }
         else -> FmtFlowScaffold(
-            actions = { FmtButton("Back", { go(MORNING_CELEBRATE) }, kind = ButtonKind.Outline); FmtActionSpacer(); FmtButton("Finish", nav::home) },
+            start = FmtAction("Back", ButtonKind.Outline) { go(MORNING_CELEBRATE) },
+            end = FmtAction("Finish") { nav.home() },
         ) {
             FmtGroup("What was tricky today?", inset = false) {
                 FmtKidText("You can skip this.")
@@ -104,18 +102,15 @@ fun CalmFlow(store: AppStore, nav: Nav, step: Int) {
     val go = { s: Int -> nav.go(Route(Area.Calm, s)) }
     when (step) {
         0 -> FmtFlowScaffold(
-            actions = { FmtActionSpacer(); FmtButton("Start", { go(1) }, kind = ButtonKind.Teal, trailingChevron = true) },
+            end = FmtAction("Start", ButtonKind.Teal, chevron = true) { go(1) },
         ) {
             FmtHead("My calm-down plan", swash = "calm-down", tag = "Feelings", tone = Tone.Teal)
             FmtKidText("Let's make a plan for when your feelings get big. It takes four short steps.")
             FmtInfoNote("make the plan together when your child is already calm, so it's easy to reach for when feelings run high.", leadIn = "For grown-ups:", tone = Tone.Teal)
         }
         1 -> FmtFlowScaffold(
-            actions = {
-                FmtButton("Back", { go(0) }, kind = ButtonKind.Outline)
-                FmtActionSpacer()
-                FmtButton("Next", { go(2) }, kind = ButtonKind.Teal, trailingChevron = true, enabled = store.calmChosen.isNotEmpty())
-            },
+            start = FmtAction("Back", ButtonKind.Outline) { go(0) },
+            end = FmtAction("Next", ButtonKind.Teal, chevron = true, enabled = store.calmChosen.isNotEmpty()) { go(2) },
         ) {
             FmtGroup("When my feelings get big, I can…", inset = false) {
                 FmtKidText("Tap the ones that help you.")
@@ -123,11 +118,8 @@ fun CalmFlow(store: AppStore, nav: Nav, step: Int) {
             }
         }
         2 -> FmtFlowScaffold(
-            actions = {
-                FmtButton("Back", { go(1) }, kind = ButtonKind.Outline)
-                FmtActionSpacer()
-                FmtButton(if (store.calmIdea.isBlank()) "Skip" else "Next", { go(3) }, kind = ButtonKind.Teal, trailingChevron = true)
-            },
+            start = FmtAction("Back", ButtonKind.Outline) { go(1) },
+            end = FmtAction(if (store.calmIdea.isBlank()) "Skip" else "Next", ButtonKind.Teal, chevron = true) { go(3) },
         ) {
             FmtGroup("My own idea", inset = false) {
                 FmtKidText("Is there something else that helps you?")
@@ -135,11 +127,8 @@ fun CalmFlow(store: AppStore, nav: Nav, step: Int) {
             }
         }
         3 -> FmtFlowScaffold(
-            actions = {
-                FmtButton("Back", { go(2) }, kind = ButtonKind.Outline)
-                FmtActionSpacer()
-                FmtButton("See my plan", { store.saveCalmPlan(); go(CALM_PLAN_STEP) }, kind = ButtonKind.Teal, trailingChevron = true)
-            },
+            start = FmtAction("Back", ButtonKind.Outline) { go(2) },
+            end = FmtAction("See my plan", ButtonKind.Teal, chevron = true) { store.saveCalmPlan(); go(CALM_PLAN_STEP) },
         ) {
             FmtGroup("My body tells me my feelings are getting big when…", inset = false) {
                 FmtKidText("What do you notice? Hot face, tight tummy, fast heart?")
@@ -147,11 +136,8 @@ fun CalmFlow(store: AppStore, nav: Nav, step: Int) {
             }
         }
         else -> FmtFlowScaffold(
-            actions = {
-                FmtButton("Change", { go(1) }, kind = ButtonKind.Outline)
-                FmtActionSpacer()
-                FmtButton("Use my plan now", { nav.go(Route(Area.CalmNow)) }, kind = ButtonKind.Teal, trailingChevron = true)
-            },
+            start = FmtAction("Change", ButtonKind.Outline) { go(1) },
+            end = FmtAction("Use my plan now", ButtonKind.Teal, chevron = true) { nav.go(Route(Area.CalmNow)) },
         ) {
             FmtHead("My calm-down plan", swash = "calm-down", tag = "Feelings", tone = Tone.Teal)
             if (store.calmBody.isNotBlank()) {
@@ -173,7 +159,8 @@ fun CalmNowFlow(store: AppStore, nav: Nav, step: Int) {
     if (items.isEmpty()) { CalmFlow(store, nav, 0); return }
     if (step >= items.size) {
         FmtFlowScaffold(
-            actions = { FmtButton("Again", { go(0) }, kind = ButtonKind.Outline); FmtActionSpacer(); FmtButton("Done", nav::home, kind = ButtonKind.Teal) },
+            start = FmtAction("Again", ButtonKind.Outline) { go(0) },
+            end = FmtAction("Done", ButtonKind.Teal) { nav.home() },
             centre = true,
         ) {
             FmtCelebration("Well done", swash = "done", message = "You used your plan. Feelings come and go, and you know what helps.")
@@ -182,11 +169,8 @@ fun CalmNowFlow(store: AppStore, nav: Nav, step: Int) {
     }
     val c = items[step]
     FmtFlowScaffold(
-        actions = {
-            if (step > 0) FmtButton("Back", { go(step - 1) }, kind = ButtonKind.Outline)
-            FmtActionSpacer()
-            FmtButton(if (step == items.size - 1) "I feel calmer" else "Try the next one", { go(step + 1) }, kind = ButtonKind.Teal, trailingChevron = true)
-        },
+        start = if (step > 0) FmtAction("Back", ButtonKind.Outline) { go(step - 1) } else null,
+        end = FmtAction(if (step == items.size - 1) "I feel calmer" else "Try the next one", ButtonKind.Teal, chevron = true) { go(step + 1) },
         centre = true,
     ) {
         if (c.icon == FmtIcons.breathe) {
@@ -206,10 +190,7 @@ fun CalmNowFlow(store: AppStore, nav: Nav, step: Int) {
 @Composable
 fun WeekSetupFlow(store: AppStore, nav: Nav) {
     FmtFlowScaffold(
-        actions = {
-            FmtActionSpacer()
-            FmtButton("Save", { store.finishWeekSetup(); nav.go(Route(Area.Week)) }, kind = ButtonKind.Primary, trailingChevron = true, enabled = store.activities.isNotEmpty())
-        },
+        end = FmtAction("Save", chevron = true, enabled = store.activities.isNotEmpty()) { store.finishWeekSetup(); nav.go(Route(Area.Week)) },
     ) {
         FmtHead("My practice week", swash = "week", tag = "Home practice", tone = Tone.Sun)
         FmtGroup("What are we practising?") {
@@ -225,11 +206,8 @@ fun WeekSetupFlow(store: AppStore, nav: Nav) {
 fun WeekFlow(store: AppStore, nav: Nav) {
     if (!store.weekSetUp) { WeekSetupFlow(store, nav); return }
     FmtFlowScaffold(
-        actions = {
-            FmtButton("Change activities", { nav.go(Route(Area.WeekSetup)) }, kind = ButtonKind.Outline)
-            FmtActionSpacer()
-            FmtButton("Done", nav::home)
-        },
+        start = FmtAction("Change activities", ButtonKind.Outline) { nav.go(Route(Area.WeekSetup)) },
+        end = FmtAction("Done") { nav.home() },
     ) {
         FmtHead("My practice week", swash = "week", tag = "Home practice", tone = Tone.Sun)
         FmtGroup {

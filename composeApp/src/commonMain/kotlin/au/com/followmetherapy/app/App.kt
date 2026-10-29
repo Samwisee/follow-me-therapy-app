@@ -29,6 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import au.com.followmetherapy.design.components.FmtAppBar
 import au.com.followmetherapy.design.components.FmtAppChrome
+import au.com.followmetherapy.design.components.FmtActionBarHost
+import au.com.followmetherapy.design.components.FmtActionHost
+import au.com.followmetherapy.design.components.FmtActionSlot
+import au.com.followmetherapy.design.components.LocalFmtActionSlot
+import androidx.compose.runtime.CompositionLocalProvider
 import au.com.followmetherapy.design.components.FmtTab
 import au.com.followmetherapy.design.components.FmtTabBar
 import au.com.followmetherapy.design.components.FmtWave
@@ -78,6 +83,7 @@ private val tabs = listOf(
 fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (String) -> Unit = {}) {
     val store = remember { AppStore(platform) }
     val nav = remember { Nav(Route.parse(startAt), onNavigate) }
+    val actions = remember { FmtActionHost() }
     FmtTheme {
         // One app bar and wave above every screen: they stay put while the
         // screens slide beneath, and only their parts animate.
@@ -91,6 +97,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                     transitionSpec = { transitionFor(initialState, targetState) },
                     contentKey = { if (it.area.tab != null) "tabs" else "${it.area}/${it.step}" },
                 ) { r ->
+                    CompositionLocalProvider(LocalFmtActionSlot provides FmtActionSlot(actions, r)) {
                     if (r.area.tab != null) {
                         TabShell(nav, r.area.tab) { t ->
                             when (t) {
@@ -110,7 +117,10 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                             else -> Unit
                         }
                     }
+                    }
                 }
+                // The flow's buttons stay on screen between steps, like the app bar.
+                FmtActionBarHost(actions, nav.route, visible = nav.route.area.tab == null)
                 FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true, height = FmtAppChrome.wave, stroke = FmtColors.purpleLine)
             }
         }

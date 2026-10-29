@@ -1,5 +1,12 @@
 package au.com.followmetherapy.design.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -163,6 +170,11 @@ fun FmtButton(
         ButtonKind.OutlineTeal -> Triple(if (hovered) FmtColors.tealTint else FmtColors.paper, FmtColors.tealInk, FmtColors.teal)
         ButtonKind.Quiet -> Triple(FmtColors.sunTint, FmtColors.ink, FmtColors.sunLine)
     }
+    // Colours, width and words change smoothly, so a button that stays on
+    // screen between steps (Done → Next) morphs rather than flickers.
+    val bgA by animateColorAsState(bg, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
+    val fgA by animateColorAsState(fg, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
+    val lineA by animateColorAsState(line, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
     val shadow = if (!enabled) null else when (kind) {
         ButtonKind.Primary -> FmtShadow.glowPurple
         ButtonKind.Teal -> FmtShadow.glowTeal
@@ -174,17 +186,22 @@ fun FmtButton(
             .padding(top = (2 * (1 - lift)).dp, bottom = (2 * lift).dp)
             .fmtFocusRing(focused, shape)
             .then(if (shadow != null) Modifier.fmtShadow(shadow, shape) else Modifier)
-            .background(bg, shape)
-            .border(FmtBorder.outline, line, shape)
+            .background(bgA, shape)
+            .border(FmtBorder.outline, lineA, shape)
             .hoverable(source)
             .clickable(interactionSource = source, indication = null, role = Role.Button, enabled = enabled, onClick = onClick)
             .heightIn(min = FmtSize.button)
+            .animateContentSize(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
             .padding(horizontal = FmtSpace.s6, vertical = FmtSpace.s2),
         horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        FmtText(text, FmtTheme.type.button, color = fg, align = TextAlign.Center)
-        if (trailingChevron) FmtIcon(FmtIcons.chevron, fg, FmtSize.iconSm)
+        AnimatedContent(
+            targetState = text,
+            transitionSpec = { fadeIn(tween(FmtMotion.durBase, easing = FmtMotion.easeOut)) togetherWith fadeOut(tween(FmtMotion.durFast)) },
+            contentAlignment = Alignment.Center,
+        ) { t -> FmtText(t, FmtTheme.type.button, color = fgA, align = TextAlign.Center) }
+        if (trailingChevron) FmtIcon(FmtIcons.chevron, fgA, FmtSize.iconSm)
     }
 }
 

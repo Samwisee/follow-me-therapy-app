@@ -1,6 +1,13 @@
 package au.com.followmetherapy.design.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
@@ -293,24 +300,130 @@ private fun RowScope.TabItem(tab: FmtTab, on: Boolean, select: () -> Unit) {
 }
 
 /**
+ * A button in a flow's action bar. Two actions are equal when they look the
+ * same (label, kind, chevron, enabled), whatever they do.
+ */
+class FmtAction(
+    val label: String,
+    val kind: ButtonKind = ButtonKind.Primary,
+    val chevron: Boolean = false,
+    val enabled: Boolean = true,
+    val onClick: () -> Unit,
+) {
+    internal fun calling(f: () -> Unit) = FmtAction(label, kind, chevron, enabled, f)
+    override fun equals(other: Any?) = other is FmtAction && other.label == label && other.kind == kind && other.chevron == chevron && other.enabled == enabled
+    override fun hashCode() = ((label.hashCode() * 31 + kind.hashCode()) * 31 + chevron.hashCode()) * 31 + enabled.hashCode()
+}
+
+/** The two places in the action bar: Back (or another way out) at the start, the next step at the end. */
+data class FmtActions(val start: FmtAction? = null, val end: FmtAction? = null)
+
+/**
+ * Holds the action bar for an app whose screens change beneath it, so the
+ * buttons stay on screen between steps and morph (Done → Next) instead of
+ * sliding away with the screen. Each screen publishes its actions under its
+ * own key; the app shows the current screen's. See [FmtActionBarHost].
+ */
+class FmtActionHost {
+    internal val specs = mutableStateMapOf<Any, FmtActions>()
+    internal var height by mutableStateOf(0.dp)
+    fun actionsFor(key: Any): FmtActions? = specs[key]
+}
+
+/** Which screen is publishing actions, and to which host (provided by the app around each screen). */
+class FmtActionSlot(val host: FmtActionHost, val key: Any)
+
+val LocalFmtActionSlot = staticCompositionLocalOf<FmtActionSlot?> { null }
+
+/**
+ * The action bar: the start action on the left, the end one on the right,
+ * floating with no panel behind them, gutter from the edges, in the centred
+ * column. Each button stays put while its words and colour change, and
+ * fades in or out when a step has no such action.
+ */
+@Composable
+fun FmtActionBar(actions: FmtActions, modifier: Modifier = Modifier) {
+    val m = FmtTheme.metrics
+    var lastStart by remember { mutableStateOf(actions.start) }
+    var lastEnd by remember { mutableStateOf(actions.end) }
+    SideEffect {
+        if (actions.start != null) lastStart = actions.start
+        if (actions.end != null) lastEnd = actions.end
+    }
+    val enter = fadeIn(tween(FmtMotion.durBase, easing = FmtMotion.easeOut)) + scaleIn(tween(FmtMotion.durBase, easing = FmtMotion.easeSpring), initialScale = 0.9f)
+    val exit = fadeOut(tween(FmtMotion.durFast)) + scaleOut(tween(FmtMotion.durFast), targetScale = 0.9f)
+    Row(
+        modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = FmtSpace.s3),
+        horizontalArrangement = Arrangement.spacedBy(m.gridGap),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AnimatedVisibility(actions.start != null, enter = enter, exit = exit) {
+            (actions.start ?: lastStart)?.let { FmtButton(it.label, it.onClick, kind = it.kind, trailingChevron = it.chevron, enabled = it.enabled) }
+        }
+        Spacer(Modifier.weight(1f))
+        AnimatedVisibility(actions.end != null, enter = enter, exit = exit) {
+            (actions.end ?: lastEnd)?.let { FmtButton(it.label, it.onClick, kind = it.kind, trailingChevron = it.chevron, enabled = it.enabled) }
+        }
+    }
+}
+
+/**
+ * Where an app shows the shared action bar: at the bottom of the screen
+ * area, over the content, while [visible] (hide it on screens without
+ * actions, such as tabs). It measures itself so screens leave room for it.
+ */
+@Composable
+fun BoxScope.FmtActionBarHost(host: FmtActionHost, key: Any, visible: Boolean = true) {
+    val density = LocalDensity.current
+    // A new screen publishes its actions just after it first draws; until
+    // then the bar keeps the last ones rather than blinking out.
+    val actions = host.actionsFor(key)
+    AnimatedVisibility(
+        visible,
+        modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().onSizeChanged { host.height = with(density) { it.height.toDp() } },
+        enter = fadeIn(tween(FmtMotion.durBase, easing = FmtMotion.easeOut)) + slideInVertically(tween(FmtMotion.durSlow, easing = FmtMotion.easeOut)) { it },
+        exit = fadeOut(tween(FmtMotion.durFast)) + slideOutVertically(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard)) { it },
+    ) {
+        var last by remember { mutableStateOf(actions ?: FmtActions()) }
+        SideEffect { if (actions != null) last = actions }
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { FmtActionBar(actions ?: last) }
+    }
+}
+
+/**
  * One screen of a flow. The content scrolls in the centred column, starting
  * below the app bar's wave; the actions (Back and the next step) float at the
  * bottom with no panel behind them, always in the same place so a child
  * learns where to tap. The content leaves room for them at its end.
  * In an app, leave [appBar] out and keep one [FmtAppBar] and wave above all
- * the screens (so they stay put while screens change); pass one for a
- * screen on its own.
+ * the screens, and provide a [LocalFmtActionSlot] so the actions show in the
+ * app's shared [FmtActionBarHost]: both then stay put while screens change.
+ * On its own (no slot), the screen draws its own bar and actions.
  */
 @Composable
 fun FmtFlowScaffold(
     appBar: (@Composable () -> Unit)? = null,
-    actions: (@Composable RowScope.() -> Unit)? = null,
+    start: FmtAction? = null,
+    end: FmtAction? = null,
     centre: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val m = FmtTheme.metrics
     val density = LocalDensity.current
-    var actionsHeight by remember { mutableStateOf(0.dp) }
+    val slot = LocalFmtActionSlot.current
+    var ownHeight by remember { mutableStateOf(0.dp) }
+    val hasActions = start != null || end != null
+    if (slot != null) {
+        // Publish to the shared bar. Clicks call this screen's latest actions.
+        val latest = remember(slot) { arrayOfNulls<FmtAction>(2) }
+        latest[0] = start; latest[1] = end
+        SideEffect {
+            val spec = FmtActions(start?.calling { latest[0]?.onClick?.invoke() }, end?.calling { latest[1]?.onClick?.invoke() })
+            if (slot.host.specs[slot.key] != spec) slot.host.specs[slot.key] = spec
+        }
+        DisposableEffect(slot) { onDispose { slot.host.specs.remove(slot.key) } }
+    }
+    val actionsHeight = if (!hasActions) 0.dp else if (slot != null) slot.host.height else ownHeight
     Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
         appBar?.invoke()
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
@@ -328,15 +441,10 @@ fun FmtFlowScaffold(
                 )
             }
             if (appBar != null) FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true, height = wave, stroke = FmtColors.purpleLine)
-            if (actions != null) {
-                Row(
-                    Modifier.align(Alignment.BottomCenter).widthIn(max = m.content).fillMaxWidth()
-                        .onSizeChanged { actionsHeight = with(density) { it.height.toDp() } }
-                        .padding(horizontal = m.gutter, vertical = FmtSpace.s3),
-                    horizontalArrangement = Arrangement.spacedBy(m.gridGap),
-                    verticalAlignment = Alignment.CenterVertically,
-                    content = actions,
-                )
+            if (slot == null && hasActions) {
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().onSizeChanged { ownHeight = with(density) { it.height.toDp() } }, contentAlignment = Alignment.Center) {
+                    FmtActionBar(FmtActions(start, end))
+                }
             }
         }
     }
@@ -462,6 +570,3 @@ fun FmtListRow(
     }
 }
 
-/** Fills the remaining width in a row of actions (pushes the next button right). */
-@Composable
-fun RowScope.FmtActionSpacer() = Spacer(Modifier.weight(1f))
