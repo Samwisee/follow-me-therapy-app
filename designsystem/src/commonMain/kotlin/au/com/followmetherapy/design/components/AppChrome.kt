@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -233,25 +234,34 @@ fun FmtTabBar(tabs: List<FmtTab>, selected: Int, onSelect: (Int) -> Unit) {
     val at by animateFloatAsState(selected.toFloat(), tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
     FmtOnGround(FmtColors.purpleTint) {
         Box(
-            Modifier.fillMaxWidth().zIndex(1f).background(FmtColors.purpleTint),
+            Modifier.fillMaxWidth().zIndex(1f).background(FmtColors.purpleTint)
+                .drawBehind {
+                    // The crest: a smooth hump centred on the chosen tab, and a
+                    // purple-line stroke along the whole top edge and over the crest.
+                    val rowW = minOf(size.width, m.content.toPx())
+                    val inset = (m.gutter / 2).toPx()
+                    val left = (size.width - rowW) / 2 + inset
+                    val tabW = (rowW - inset * 2) / tabs.size
+                    val cx = left + tabW * (at + 0.5f)
+                    val half = tabW * 0.6f
+                    val top = -FmtAppChrome.crest.toPx()
+                    val crest = Path().apply {
+                        moveTo(cx - half, 0f)
+                        cubicTo(cx - half / 2, 0f, cx - half / 2, top, cx, top)
+                        cubicTo(cx + half / 2, top, cx + half / 2, 0f, cx + half, 0f)
+                    }
+                    drawPath(Path().apply { addPath(crest); close() }, FmtColors.purpleTint)
+                    val edge = Path().apply {
+                        moveTo(0f, 0f); lineTo(cx - half, 0f)
+                        addPath(crest)
+                        moveTo(cx + half, 0f); lineTo(size.width, 0f)
+                    }
+                    drawPath(edge, FmtColors.purpleLine, style = Stroke(FmtBorder.outline.toPx()))
+                },
             contentAlignment = Alignment.Center,
         ) {
             Row(
                 Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter / 2)
-                    .drawBehind {
-                        // The crest: a smooth hump one tab wide, centred on the chosen tab.
-                        val tabW = size.width / tabs.size
-                        val cx = tabW * (at + 0.5f)
-                        val half = tabW * 0.6f
-                        val top = -FmtAppChrome.crest.toPx()
-                        val p = Path().apply {
-                            moveTo(cx - half, 0.5f)
-                            cubicTo(cx - half / 2, 0.5f, cx - half / 2, top, cx, top)
-                            cubicTo(cx + half / 2, top, cx + half / 2, 0.5f, cx + half, 0.5f)
-                            close()
-                        }
-                        drawPath(p, FmtColors.purpleTint)
-                    }
                     .padding(bottom = FmtSpace.s1),
             ) {
                 tabs.forEachIndexed { i, tab -> TabItem(tab, i == selected, { onSelect(i) }) }
@@ -317,7 +327,7 @@ fun FmtFlowScaffold(
                     content = content,
                 )
             }
-            if (appBar != null) FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true, height = wave)
+            if (appBar != null) FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true, height = wave, stroke = FmtColors.purpleLine)
             if (actions != null) {
                 Row(
                     Modifier.align(Alignment.BottomCenter).widthIn(max = m.content).fillMaxWidth()

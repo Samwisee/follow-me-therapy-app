@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.drawscope.Stroke
 import au.com.followmetherapy.design.icons.FmtIcon
 import au.com.followmetherapy.design.icons.FmtIcons
 import au.com.followmetherapy.design.theme.FmtTheme
@@ -53,9 +54,10 @@ import au.com.followmetherapy.design.tokens.FmtSpace
  * The website's section edge: a band's colour as a gentle wave, the same
  * 240×40 tile repeated every 12 waves' width. [down] hangs it below a band
  * (the inner pages' top bar); otherwise it rises into the band above.
+ * [stroke] outlines the curved edge in a line colour (the app's bars).
  */
 @Composable
-fun FmtWave(color: Color, modifier: Modifier = Modifier, down: Boolean = false, height: Dp = FmtLayout.wave.max.dp) {
+fun FmtWave(color: Color, modifier: Modifier = Modifier, down: Boolean = false, height: Dp = FmtLayout.wave.max.dp, stroke: Color? = null) {
     val h = height
     Canvas(modifier.fillMaxWidth().height(h)) {
         val tileW = h.toPx() * 12
@@ -73,13 +75,29 @@ fun FmtWave(color: Color, modifier: Modifier = Modifier, down: Boolean = false, 
             p.close()
             x0 += tileW - 0.5f
         }
+        // The curved edge alone, for the stroke.
+        val edge = Path()
+        if (stroke != null) {
+            var e0 = 0f
+            edge.moveTo(0f, 22f * sy)
+            while (e0 < size.width) {
+                edge.cubicTo(e0 + 40f * sx, 6f * sy, e0 + 80f * sx, 6f * sy, e0 + 120f * sx, 22f * sy)
+                edge.cubicTo(e0 + 160f * sx, 38f * sy, e0 + 200f * sx, 38f * sy, e0 + 240f * sx, 22f * sy)
+                e0 += tileW
+            }
+        }
+        val line = FmtBorder.outline.toPx()
         if (down) {
             // Flip: the band's colour hangs from the top edge.
             val q = Path()
             q.addPath(p)
-            withTransform({ scale(1f, -1f, pivot = center) }) { drawPath(q, color) }
+            withTransform({ scale(1f, -1f, pivot = center) }) {
+                drawPath(q, color)
+                if (stroke != null) drawPath(edge, stroke, style = Stroke(line))
+            }
         } else {
             drawPath(p, color)
+            if (stroke != null) drawPath(edge, stroke, style = Stroke(line))
         }
     }
 }

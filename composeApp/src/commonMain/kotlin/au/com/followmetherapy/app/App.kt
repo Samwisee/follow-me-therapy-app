@@ -111,7 +111,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                         }
                     }
                 }
-                FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true, height = FmtAppChrome.wave)
+                FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true, height = FmtAppChrome.wave, stroke = FmtColors.purpleLine)
             }
         }
     }
