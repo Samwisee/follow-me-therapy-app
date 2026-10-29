@@ -41,9 +41,13 @@ jobs:
         if: github.ref == 'refs/heads/main'
         continue-on-error: true
         run: |
-          npm install --no-save playwright@1.56.1 >/dev/null
-          npx playwright install --with-deps chromium >/dev/null
-          node tools/ci/screens.mjs composeApp/build/dist/wasmJs/productionExecutable ci-screens
+          set -o pipefail
+          {
+            npm install --no-save playwright@1.56.1 &&
+            npx playwright install --with-deps chromium &&
+            node tools/ci/screens.mjs composeApp/build/dist/wasmJs/productionExecutable ci-screens
+          } > screens.log 2>&1 || { tail -25 screens.log | sed 's/^/::warning::/'; exit 1; }
+          tail -5 screens.log
       - name: Publish screenshots to the ci-screens branch
         if: github.ref == 'refs/heads/main'
         continue-on-error: true
