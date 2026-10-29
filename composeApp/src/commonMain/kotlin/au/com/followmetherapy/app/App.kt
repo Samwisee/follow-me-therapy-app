@@ -64,11 +64,27 @@ import au.com.followmetherapy.design.tokens.FmtSpace
 
 private enum class Screen { Home, Morning, Calm, Week, DesignSystem }
 
+private val Screen.slug: String
+    get() = when (this) {
+        Screen.Home -> ""
+        Screen.Morning -> "morning"
+        Screen.Calm -> "calm"
+        Screen.Week -> "week"
+        Screen.DesignSystem -> "design-system"
+    }
+
+private fun screenFor(slug: String) = Screen.entries.firstOrNull { it.slug == slug } ?: Screen.Home
+
+/**
+ * [startAt] is the screen to open first (from the web address, so a link can
+ * go straight to one activity); [onNavigate] reports each screen's slug.
+ */
 @Composable
-fun App() {
+fun App(startAt: String = "", onNavigate: (String) -> Unit = {}) {
     FmtTheme {
-        var screen by rememberSaveable { mutableStateOf(Screen.Home) }
-        val home = { screen = Screen.Home }
+        var screen by rememberSaveable { mutableStateOf(screenFor(startAt)) }
+        val go: (Screen) -> Unit = { screen = it; onNavigate(it.slug) }
+        val home = { go(Screen.Home) }
         // Moving between screens cross-fades with a small rise, as pages do on the website.
         AnimatedContent(
             targetState = screen,
@@ -81,7 +97,7 @@ fun App() {
         ) { s ->
             FmtPage(key = s, back = if (s == Screen.Home) null else home, backLabel = "All activities") {
                 when (s) {
-                    Screen.Home -> HomeScreen(open = { screen = it })
+                    Screen.Home -> HomeScreen(open = go)
                     Screen.Morning -> MorningRoutineScreen()
                     Screen.Calm -> CalmPlanScreen()
                     Screen.Week -> PracticeWeekScreen()

@@ -4,7 +4,7 @@ on:
   push:
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 concurrency:
@@ -37,6 +37,22 @@ jobs:
           # Kotlin errors as annotations, so they're readable without the log.
           grep -E '^e: ' build.log | head -40 | sed -E 's#^e: file://([^:]+):([0-9]+):([0-9]+) (.*)#::error file=\1,line=\2,col=\3::\4#' || true
           grep -A8 'What went wrong' build.log | head -20 | sed 's/^/::error::/' || true
+      - name: Screenshots and scroll timing
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        run: |
+          npm install --no-save playwright@1.56.1 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
+          node tools/ci/screens.mjs composeApp/build/dist/wasmJs/productionExecutable ci-screens
+      - name: Publish screenshots to the ci-screens branch
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        run: |
+          cd ci-screens
+          git init -q -b ci-screens
+          git add -A
+          git -c user.name="CI" -c user.email="ci@users.noreply.github.com" commit -qm "Screens for ${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" ci-screens
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
