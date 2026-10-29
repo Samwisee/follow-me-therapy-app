@@ -78,32 +78,68 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
     val store = remember { AppStore(platform) }
     val nav = remember { Nav(Route.parse(startAt), onNavigate) }
     FmtTheme {
-        AnimatedContent(
-            targetState = nav.route,
-            modifier = Modifier.fillMaxSize().background(FmtColors.paper),
-            transitionSpec = { transitionFor(initialState, targetState) },
-            contentKey = { if (it.area.tab != null) "tabs" else "${it.area}/${it.step}" },
-        ) { r ->
-            if (r.area.tab != null) {
-                TabShell(nav, r.area.tab) { t ->
-                    when (t) {
-                        1 -> ActivitiesTab(store, nav)
-                        2 -> GrownUpsTab(store, nav)
-                        else -> TodayTab(store, nav)
+        // One app bar and wave above every screen: they stay put while the
+        // screens slide beneath, and only their parts animate.
+        val bar = barFor(nav.route, store, nav)
+        Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
+            FmtAppBar(bar.title, onBack = bar.back, progress = bar.progress, progressLabel = bar.label)
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                AnimatedContent(
+                    targetState = nav.route,
+                    modifier = Modifier.fillMaxSize(),
+                    transitionSpec = { transitionFor(initialState, targetState) },
+                    contentKey = { if (it.area.tab != null) "tabs" else "${it.area}/${it.step}" },
+                ) { r ->
+                    if (r.area.tab != null) {
+                        TabShell(nav, r.area.tab) { t ->
+                            when (t) {
+                                1 -> ActivitiesTab(store, nav)
+                                2 -> GrownUpsTab(store, nav)
+                                else -> TodayTab(store, nav)
+                            }
+                        }
+                    } else {
+                        when (r.area) {
+                            Area.Morning -> MorningFlow(store, nav, r.step)
+                            Area.Calm -> CalmFlow(store, nav, r.step)
+                            Area.CalmNow -> CalmNowFlow(store, nav, r.step)
+                            Area.WeekSetup -> WeekSetupFlow(store, nav)
+                            Area.Week -> WeekFlow(store, nav)
+                            Area.DesignSystem -> DesignSystemScreen(nav)
+                            else -> Unit
+                        }
                     }
                 }
-            } else {
-                when (r.area) {
-                    Area.Morning -> MorningFlow(store, nav, r.step)
-                    Area.Calm -> CalmFlow(store, nav, r.step)
-                    Area.CalmNow -> CalmNowFlow(store, nav, r.step)
-                    Area.WeekSetup -> WeekSetupFlow(store, nav)
-                    Area.Week -> WeekFlow(store, nav)
-                    Area.DesignSystem -> DesignSystemScreen(nav)
-                    else -> Unit
-                }
+                FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true)
             }
         }
+    }
+}
+
+/** What the app bar shows for a place in the app. */
+private data class Bar(val title: String, val back: (() -> Unit)? = null, val progress: Float? = null, val label: String? = null)
+
+private fun barFor(r: Route, store: AppStore, nav: Nav): Bar {
+    val home = nav::home
+    return when (r.area) {
+        Area.Today, Area.Activities, Area.GrownUps -> Bar(tabs[r.area.tab ?: 0].label)
+        Area.Morning -> {
+            val total = store.routineSteps.size
+            val last = total + 2
+            when (r.step) {
+                0 -> Bar("Morning routine", home)
+                in 1..total -> Bar("Morning routine", home, r.step / last.toFloat(), "${r.step} of $total")
+                else -> Bar("Morning routine", home, r.step.coerceAtMost(last) / last.toFloat())
+            }
+        }
+        Area.Calm -> Bar("Calm-down plan", home, if (r.step in 1..3) r.step / 4f else null, if (r.step in 1..3) "${r.step} of 4" else null)
+        Area.CalmNow -> {
+            val n = store.calmChosen.size + if (store.calmIdea.isNotBlank()) 1 else 0
+            if (n == 0 || r.step >= n) Bar("Calm-down plan", home)
+            else Bar("Calm-down plan", home, (r.step + 1) / n.toFloat(), "${r.step + 1} of $n")
+        }
+        Area.WeekSetup, Area.Week -> Bar("Practice week", home)
+        Area.DesignSystem -> Bar("Design system", { nav.go(Route(Area.GrownUps)) })
     }
 }
 
@@ -120,12 +156,16 @@ private fun transitionFor(from: Route, to: Route): ContentTransform {
     }
 }
 
-/** The three tabs share a lilac app bar, the wave, a scrolling column, and the tab bar. */
+/**
+ * The three tabs share a scrolling column and the lilac tab bar, with an
+ * upward wave floating over the bottom of the content (the app bar and its
+ * wave sit above, in [App]).
+ */
 @Composable
 private fun TabShell(nav: Nav, tab: Int, content: @Composable ColumnScope.(Int) -> Unit) {
     val m = FmtTheme.metrics
+    val wave = FmtLayout.wave.max.dp
     Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
-        FmtAppBar(title = tabs[tab].label)
         Box(Modifier.weight(1f).fillMaxWidth()) {
             // A new tab's content fades and rises in; the bars stay put.
             AnimatedContent(
@@ -138,13 +178,12 @@ private fun TabShell(nav: Nav, tab: Int, content: @Composable ColumnScope.(Int) 
             ) { t ->
                 Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), contentAlignment = Alignment.TopCenter) {
                     Column(
-                        Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter).padding(top = FmtLayout.wave.max.dp, bottom = m.stack),
+                        Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter).padding(top = wave, bottom = wave + m.stack),
                         verticalArrangement = Arrangement.spacedBy(m.stack),
                     ) { content(t) }
                 }
             }
-            // The wave floats over the content, so it scrolls up behind the lilac curve.
-            FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true)
+            FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.BottomCenter))
         }
         FmtTabBar(tabs, tab, nav::tab)
     }

@@ -1,5 +1,18 @@
 package au.com.followmetherapy.design.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -120,7 +133,10 @@ fun FmtProgressBar(progress: Float, modifier: Modifier = Modifier, label: String
 
 /**
  * The app bar: lilac, an optional round back button, the screen's title in
- * Fredoka, and an optional progress bar beneath (for flows).
+ * Fredoka, and an optional progress bar beneath (for flows). Put it once
+ * above the screens, not inside them: it stays put while screens change, and
+ * its parts animate (the title cross-fades, the back button and the progress
+ * bar slide in and out, the progress glides to its new length).
  */
 @Composable
 fun FmtAppBar(
@@ -131,22 +147,51 @@ fun FmtAppBar(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val m = FmtTheme.metrics
+    // While the progress bar slides away it keeps its last length.
+    var lastProgress by remember { mutableStateOf(progress ?: 0f) }
+    var lastLabel by remember { mutableStateOf(progressLabel) }
+    SideEffect {
+        if (progress != null) lastProgress = progress
+        if (progressLabel != null) lastLabel = progressLabel
+    }
+    var lastBack by remember { mutableStateOf(onBack) }
+    SideEffect { if (onBack != null) lastBack = onBack }
+    val enter = fadeIn(tween(FmtMotion.durBase, easing = FmtMotion.easeOut))
+    val exit = fadeOut(tween(FmtMotion.durFast))
     Column(Modifier.fillMaxWidth().background(FmtColors.purpleTint)) {
         FmtOnGround(FmtColors.purpleTint) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Column(
-                Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = FmtSpace.s3),
-                verticalArrangement = Arrangement.spacedBy(FmtSpace.s3),
-            ) {
-                Row(Modifier.fillMaxWidth().heightIn(min = FmtSize.target), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtSpace.s3)) {
-                    if (onBack != null) FmtIconButton(FmtIcons.back, "Back", onBack)
-                    FmtText(title, FmtTheme.type.subheading.copy(fontSize = m.textLg, fontWeight = FontWeight.SemiBold), Modifier.weight(1f).semantics { heading() })
+            Column(Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = FmtSpace.s2)) {
+                Row(Modifier.fillMaxWidth().heightIn(min = FmtSize.target), verticalAlignment = Alignment.CenterVertically) {
+                    AnimatedVisibility(
+                        onBack != null,
+                        enter = enter + expandHorizontally(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard), expandFrom = Alignment.Start),
+                        exit = exit + shrinkHorizontally(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard), shrinkTowards = Alignment.Start),
+                    ) {
+                        Row { FmtIconButton(FmtIcons.back, "Back", { (onBack ?: lastBack)?.invoke() }); Spacer(Modifier.width(FmtSpace.s3)) }
+                    }
+                    AnimatedContent(
+                        targetState = title,
+                        modifier = Modifier.weight(1f),
+                        transitionSpec = {
+                            (enter + slideInVertically(tween(FmtMotion.durBase, easing = FmtMotion.easeOut)) { h -> h / 4 }) togetherWith exit
+                        },
+                        contentAlignment = Alignment.CenterStart,
+                    ) { t ->
+                        FmtText(t, FmtTheme.type.subheading.copy(fontSize = m.textLg, fontWeight = FontWeight.SemiBold), Modifier.fillMaxWidth().semantics { heading() })
+                    }
                     trailing?.invoke()
                 }
-                if (progress != null) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtSpace.s3)) {
-                        FmtProgressBar(progress, Modifier.weight(1f), progressLabel ?: "Progress")
-                        if (progressLabel != null) FmtText(progressLabel, FmtTheme.type.chip, color = FmtColors.purpleInk)
+                AnimatedVisibility(
+                    progress != null,
+                    enter = enter + expandVertically(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard), expandFrom = Alignment.Top),
+                    exit = exit + shrinkVertically(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard), shrinkTowards = Alignment.Top),
+                ) {
+                    Row(Modifier.padding(top = FmtSpace.s2, bottom = FmtSpace.s1), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtSpace.s3)) {
+                        FmtProgressBar(progress ?: lastProgress, Modifier.weight(1f), progressLabel ?: lastLabel ?: "Progress")
+                        AnimatedVisibility(progressLabel != null, enter = enter, exit = exit) {
+                            FmtText(progressLabel ?: lastLabel ?: "", FmtTheme.type.chip, color = FmtColors.purpleInk)
+                        }
                     }
                 }
             }
@@ -158,21 +203,20 @@ fun FmtAppBar(
 data class FmtTab(val label: String, val icon: ImageVector)
 
 /**
- * The bottom tab bar: paper, a purple-line rule on top; each tab is an icon
- * and its label (never an icon alone), the chosen one sits in a lilac pill
- * and its label turns purple-ink, so it doesn't rely on colour alone.
+ * The bottom tab bar: lilac, like the app bar, so the screen sits between two
+ * bands. Each tab is an icon and its label (never an icon alone); the chosen
+ * one sits in a paper pill outlined in purple-line and its label turns bold
+ * purple-ink, so it doesn't rely on colour alone. Pair it with an upward
+ * [FmtWave] floating over the bottom of the content.
  */
 @Composable
 fun FmtTabBar(tabs: List<FmtTab>, selected: Int, onSelect: (Int) -> Unit) {
     val m = FmtTheme.metrics
-    Box(
-        Modifier.fillMaxWidth().background(FmtColors.paper).drawBehind {
-            drawLine(FmtColors.purpleLine, Offset(0f, 0f), Offset(size.width, 0f), FmtBorder.outline.toPx())
-        },
-        contentAlignment = Alignment.Center,
-    ) {
-        Row(Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter / 2, vertical = FmtSpace.s2)) {
-            tabs.forEachIndexed { i, tab -> TabItem(tab, i == selected, { onSelect(i) }) }
+    FmtOnGround(FmtColors.purpleTint) {
+        Box(Modifier.fillMaxWidth().background(FmtColors.purpleTint), contentAlignment = Alignment.Center) {
+            Row(Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter / 2).padding(bottom = FmtSpace.s2)) {
+                tabs.forEachIndexed { i, tab -> TabItem(tab, i == selected, { onSelect(i) }) }
+            }
         }
     }
 }
@@ -181,7 +225,9 @@ fun FmtTabBar(tabs: List<FmtTab>, selected: Int, onSelect: (Int) -> Unit) {
 private fun RowScope.TabItem(tab: FmtTab, on: Boolean, select: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusVisibleAsState()
-    val pill by animateColorAsState(if (on) FmtColors.purpleTint else FmtColors.paper, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
+    val pill by animateColorAsState(if (on) FmtColors.paper else FmtColors.purpleTint, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
+    val rim by animateColorAsState(if (on) FmtColors.purpleLine else FmtColors.purpleTint, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
+    val pop by animateFloatAsState(if (on) 1f else 0.9f, tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
     val ink = if (on) FmtColors.purpleInk else FmtColors.inkSoft
     Column(
         Modifier.weight(1f)
@@ -192,7 +238,7 @@ private fun RowScope.TabItem(tab: FmtTab, on: Boolean, select: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(FmtSpace.s1, Alignment.CenterVertically),
     ) {
-        Box(Modifier.width(FmtSpace.s16).height(FmtSpace.s8).background(pill, CircleShape).then(if (on) Modifier.border(FmtBorder.outline, FmtColors.purpleLine, CircleShape) else Modifier), contentAlignment = Alignment.Center) {
+        Box(Modifier.width(FmtSpace.s16).height(FmtSpace.s8).scale(pop).background(pill, CircleShape).border(FmtBorder.outline, rim, CircleShape), contentAlignment = Alignment.Center) {
             FmtIcon(tab.icon, if (on) FmtColors.purple else FmtColors.inkSoft, FmtSize.icon)
         }
         FmtText(tab.label, FmtTheme.type.chip.copy(fontSize = FmtTheme.metrics.textXs, fontWeight = if (on) FontWeight.Bold else FontWeight.SemiBold), color = ink, align = TextAlign.Center)
@@ -200,20 +246,23 @@ private fun RowScope.TabItem(tab: FmtTab, on: Boolean, select: () -> Unit) {
 }
 
 /**
- * One screen of a flow: the app bar on top, the content scrolling in the
+ * One screen of a flow. Its content starts below the wave. In an app, leave
+ * [appBar] out and keep one [FmtAppBar] and wave above all the screens (so
+ * they stay put while screens change); pass one for a screen on its own.
+ * The app bar on top, the content scrolling in the
  * centred column, and the actions pinned at the bottom (Back and the next
  * step), always in the same place so a child learns where to tap.
  */
 @Composable
 fun FmtFlowScaffold(
-    appBar: @Composable () -> Unit,
+    appBar: (@Composable () -> Unit)? = null,
     actions: (@Composable RowScope.() -> Unit)? = null,
     centre: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val m = FmtTheme.metrics
     Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
-        appBar()
+        appBar?.invoke()
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             val viewport = maxHeight
             val wave = FmtLayout.wave.max.dp
@@ -227,7 +276,7 @@ fun FmtFlowScaffold(
                 content = content,
             )
             }
-            FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true)
+            if (appBar != null) FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true)
         }
         if (actions != null) {
             Box(

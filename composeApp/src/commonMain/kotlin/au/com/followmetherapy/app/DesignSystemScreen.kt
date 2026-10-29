@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import au.com.followmetherapy.design.components.ButtonKind
-import au.com.followmetherapy.design.components.FmtAppBar
 import au.com.followmetherapy.design.components.FmtButton
 import au.com.followmetherapy.design.components.FmtChip
 import au.com.followmetherapy.design.components.FmtFlowScaffold
@@ -42,7 +41,7 @@ import au.com.followmetherapy.design.tokens.FmtSpace
 fun DesignSystemScreen(nav: Nav) {
     val m = FmtTheme.metrics
     val type = FmtTheme.type
-    FmtFlowScaffold(appBar = { FmtAppBar("Design system", onBack = { nav.go(Route(Area.GrownUps)) }) }) {
+    FmtFlowScaffold {
         FmtSectionTitle("Design system", subtitle = "The same tokens and components as the website and worksheets, in Compose.")
 
         FmtGroup("Colour") {
