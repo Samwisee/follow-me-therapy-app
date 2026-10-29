@@ -27,6 +27,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import au.com.followmetherapy.design.tokens.FmtSpace
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.Animatable
 import au.com.followmetherapy.design.components.FmtAppBar
 import au.com.followmetherapy.design.components.FmtAppChrome
 import au.com.followmetherapy.design.components.FmtActionBarHost
@@ -94,10 +99,17 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
     val safeBottom = remember { platform.safeBottom().dp }
     FmtTheme {
       CompositionLocalProvider(LocalFmtSafeBottom provides safeBottom) {
+        // Opening: the page's splash (the logo on lilac) fades as the app fades and rises in.
+        val enter = remember { Animatable(0f) }
+        LaunchedEffect(Unit) {
+            platform.ready()
+            enter.animateTo(1f, tween(FmtMotion.durSlow, easing = FmtMotion.easeOut))
+        }
+        val rise = with(LocalDensity.current) { FmtSpace.s4.toPx() }
         // One app bar and wave above every screen: they stay put while the
         // screens slide beneath, and only their parts animate.
         val bar = barFor(nav.route, store, nav)
-        Column(Modifier.fillMaxSize().background(FmtColors.paper)) {
+        Column(Modifier.fillMaxSize().graphicsLayer { alpha = enter.value; translationY = (1f - enter.value) * rise }.background(FmtColors.paper)) {
             FmtAppBar(bar.title, onBack = bar.back, brand = bar.brand, progress = bar.progress, progressLabel = bar.label)
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 AnimatedContent(

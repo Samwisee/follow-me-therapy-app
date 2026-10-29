@@ -46,6 +46,8 @@ interface Platform {
     fun install(onResult: (Boolean) -> Unit) { onResult(false) }
     /** Space the device keeps at the bottom edge (the home indicator), in dp. */
     fun safeBottom(): Float = 0f
+    /** The app has drawn its first screen: the page's splash can go. */
+    fun ready() {}
 }
 
 enum class Device { IPhone, Android, Computer }

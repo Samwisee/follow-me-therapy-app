@@ -41,6 +41,7 @@ private fun jsInstall(onResult: (Boolean) -> Unit): Unit = js("""{
   const e = window.fmtInstallPrompt; if (!e) { onResult(false); return; }
   e.prompt(); e.userChoice.then(c => { window.fmtInstallPrompt = null; onResult(c.outcome === 'accepted'); }).catch(() => onResult(false));
 }""")
+private fun jsReady(): Unit = js("{ if (window.fmtReady) window.fmtReady(); }")
 private fun jsSafeBottom(): Double = js("""(() => { const d = document.createElement('div'); d.style.cssText = 'position:fixed;bottom:0;height:0;padding-bottom:env(safe-area-inset-bottom)'; document.body.appendChild(d); const v = parseFloat(getComputedStyle(d).paddingBottom) || 0; d.remove(); return v; })()""")
 
 /** The browser: one record in local storage on this device (private windows may forget it), its files and its clock. */
@@ -65,6 +66,7 @@ private object WebPlatform : Platform {
     override fun canInstall() = jsCanInstall()
     override fun install(onResult: (Boolean) -> Unit) = jsInstall(onResult)
     override fun safeBottom() = jsSafeBottom().toFloat()
+    override fun ready() = jsReady()
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
