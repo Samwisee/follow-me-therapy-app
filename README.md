@@ -19,7 +19,15 @@ later without changing the shared code.
 ./gradlew :composeApp:wasmJsBrowserDistribution       # production build in composeApp/build/dist/wasmJs/productionExecutable
 ```
 
-CI builds every push and publishes `main` to GitHub Pages.
+CI builds every push and publishes `main` to GitHub Pages:
+https://samwisee.github.io/follow-me-therapy-app/
+
+Each activity has its own address, so a link can go straight to it:
+`#morning`, `#calm`, `#week` (and `#design-system`).
+
+After each build on `main`, CI also screenshots every screen at phone (390) and
+laptop (1280) width, times scrolling, and pushes the results to the
+`ci-screens` branch (`report.json` has frame times and console errors).
 
 ## Design system rules (same as the website)
 
