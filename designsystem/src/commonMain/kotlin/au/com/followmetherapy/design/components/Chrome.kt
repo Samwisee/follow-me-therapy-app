@@ -98,11 +98,13 @@ fun FmtBand(
     Column(modifier.fillMaxWidth()) {
         if (waveTop) FmtWave(ground, Modifier.offset(y = 1.dp))
         Box(Modifier.fillMaxWidth().background(ground), contentAlignment = Alignment.TopCenter) {
-            Column(
-                Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = m.sectionTop),
-                verticalArrangement = Arrangement.spacedBy(m.stack),
-                content = content,
-            )
+            FmtOnGround(ground) {
+                Column(
+                    Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = m.sectionTop),
+                    verticalArrangement = Arrangement.spacedBy(m.stack),
+                    content = content,
+                )
+            }
         }
     }
 }

@@ -142,7 +142,7 @@ fun FmtHead(title: String, swash: String?, tag: String, tone: Tone = Tone.Purple
             FmtSwashTitle(title, swash)
             FmtTag(tag, tone)
         }
-        trailing?.invoke()
+        FmtOnGround(ground) { trailing?.invoke() }
     }
 }
 

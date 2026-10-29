@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -67,6 +69,18 @@ val Tone.colors: ToneColors
         Tone.Sun -> ToneColors(FmtColors.sun, FmtColors.sunInk, FmtColors.sunTint, FmtColors.sunLine, FmtColors.sunDeep)
         Tone.Pink -> ToneColors(FmtColors.pinkDeep, FmtColors.pinkDeep, FmtColors.pinkTint, FmtColors.pinkLine, FmtColors.pink)
     }
+
+/**
+ * The ground a component sits on. Tinted containers (bands, headers, the app
+ * bar, notes) provide their tint, so parts inside can adapt: a chip on its
+ * own tint switches to paper with its line outline, as on the website.
+ */
+val LocalFmtGround = staticCompositionLocalOf { FmtColors.paper }
+
+/** Provides [ground] to [content] (use inside any tinted container). */
+@Composable
+fun FmtOnGround(ground: Color, content: @Composable () -> Unit) =
+    CompositionLocalProvider(LocalFmtGround provides ground, content = content)
 
 /** Plain text in a design-system style. */
 @Composable
@@ -193,10 +207,12 @@ fun FmtTag(text: String, tone: Tone = Tone.Purple, modifier: Modifier = Modifier
 @Composable
 fun FmtChip(text: String, tone: Tone = Tone.Purple, icon: androidx.compose.ui.graphics.vector.ImageVector? = null, modifier: Modifier = Modifier) {
     val c = tone.colors
+    // On its own tint (an ages chip on the lilac hero) a chip turns paper, keeping its line outline and ink.
+    val fill = if (LocalFmtGround.current == c.tint) FmtColors.paper else c.tint
     Row(
         modifier
             .heightIn(min = FmtSize.target)
-            .background(c.tint, CircleShape)
+            .background(fill, CircleShape)
             .border(FmtBorder.outline, c.line, CircleShape)
             .padding(horizontal = FmtSpace.s4, vertical = FmtSpace.s2),
         horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2),

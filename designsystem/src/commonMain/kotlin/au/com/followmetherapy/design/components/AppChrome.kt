@@ -131,6 +131,7 @@ fun FmtAppBar(
 ) {
     val m = FmtTheme.metrics
     Column(Modifier.fillMaxWidth().background(FmtColors.purpleTint)) {
+        FmtOnGround(FmtColors.purpleTint) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Column(
                 Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = FmtSpace.s3),
@@ -148,6 +149,7 @@ fun FmtAppBar(
                     }
                 }
             }
+        }
         }
     }
 }
