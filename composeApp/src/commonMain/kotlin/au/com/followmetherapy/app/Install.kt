@@ -32,7 +32,7 @@ private val STEPS = mapOf(
     )),
     Device.Android to ("On an Android phone or tablet" to listOf(
         "Open this page in Chrome.",
-        "Tap the menu (⋮) at the top right.",
+        "Tap the menu (three dots) at the top right.",
         "Tap Add to Home screen, then Install.",
         "Open Follow Me from your Home Screen or your apps.",
     )),
@@ -59,7 +59,7 @@ fun InstallScreen(platform: Platform, nav: Nav) {
         end = if (canInstall && !installed) FmtAction("Install now") { platform.install { ok -> if (ok) canInstall = false } }
         else FmtAction("Done") { back() },
     ) {
-        FmtHead("Add to your Home Screen", swash = "Home Screen", tag = "For grown-ups", tone = Tone.Purple)
+        FmtHead("Add to your Home Screen", swash = "Home", tag = "For grown-ups", tone = Tone.Purple)
         if (installed) {
             FmtInfoNote("you're using the app from your Home Screen.", leadIn = "All set:", tone = Tone.Teal, icon = FmtIcons.tick)
         } else {

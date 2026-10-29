@@ -68,7 +68,8 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   await ctx.setOffline(true);
   await page.reload().catch(() => {});
   await page.waitForTimeout(5000);
-  pwa.offlineCanvas = await page.evaluate(() => !!document.querySelector('canvas')).catch(() => false);
+  // Compose draws in a shadow root: look there for its canvas.
+  pwa.offlineCanvas = await page.evaluate(() => !![document, ...[...document.querySelectorAll('*')].map(e => e.shadowRoot).filter(Boolean)].find(r => r.querySelector('canvas'))).catch(() => false);
   await page.screenshot({ path: join(out, 'phone-offline.png') });
   report.pwa = pwa;
   await ctx.close();
