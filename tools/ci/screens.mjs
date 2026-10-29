@@ -22,14 +22,14 @@ await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', args: ['--enable-unsafe-swiftshader'] });
 const report = {};
 for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop', { width: 1280, height: 800 }]]) {
-  for (const screen of ['', 'morning', 'calm', 'week', 'design-system']) {
+  for (const screen of ['', 'activities', 'grown-ups', 'morning', 'morning/2', 'calm/1', 'calm-now', 'week-setup', 'design-system']) {
     const page = await browser.newPage({ viewport, deviceScaleFactor: name === 'phone' ? 2 : 1 });
     const errors = [];
     page.on('pageerror', e => errors.push(String(e)));
     page.on('console', m => m.type() === 'error' && errors.push(m.text()));
     await page.goto(`http://localhost:8099/${screen ? '#' + screen : ''}`);
     await page.waitForTimeout(4000);
-    const label = `${name}-${screen || 'home'}`;
+    const label = `${name}-${(screen || 'today').replace('/', '-')}`;
     await page.screenshot({ path: join(out, `${label}.png`) });
     // Scroll down in steps and record frame times.
     const timing = await page.evaluate(async () => {

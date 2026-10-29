@@ -195,7 +195,7 @@ fun FmtTracker(
                     }
                     days.forEachIndexed { d, day ->
                         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            StarToggle((r to d) in done, "$day, ${name.ifBlank { "activity ${r + 1}" }}") { onToggle(r, d) }
+                            FmtStarToggle((r to d) in done, "$day, ${name.ifBlank { "activity ${r + 1}" }}") { onToggle(r, d) }
                         }
                     }
                 }
@@ -204,8 +204,9 @@ fun FmtTracker(
     }
 }
 
+/** A star to tap (44dp target): outlined purple, filled sun with a sun-deep outline when done. */
 @Composable
-private fun StarToggle(on: Boolean, label: String, toggle: () -> Unit) {
+fun FmtStarToggle(on: Boolean, label: String, toggle: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusVisibleAsState()
     val pressed by source.collectIsPressedAsState()

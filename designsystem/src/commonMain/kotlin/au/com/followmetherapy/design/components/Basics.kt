@@ -133,6 +133,7 @@ fun FmtButton(
     kind: ButtonKind = ButtonKind.Primary,
     shape: Shape = CircleShape,
     trailingChevron: Boolean = false,
+    enabled: Boolean = true,
 ) {
     val source = remember { MutableInteractionSource() }
     val hovered by source.collectIsHoveredAsState()
@@ -141,14 +142,14 @@ fun FmtButton(
     val scale by animateFloatAsState(if (pressed) 0.97f else 1f, tween(FmtMotion.durBase, easing = FmtMotion.easeSpring))
     val lift by animateFloatAsState(if (hovered && !pressed) 1f else 0f, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
 
-    val (bg, fg, line) = when (kind) {
+    val (bg, fg, line) = if (!enabled) Triple(FmtColors.paper, FmtColors.inkSoft, FmtColors.purpleLine) else when (kind) {
         ButtonKind.Primary -> Triple(FmtColors.purple, FmtColors.paper, FmtColors.purple)
         ButtonKind.Teal -> Triple(FmtColors.teal, FmtColors.paper, FmtColors.teal)
         ButtonKind.Outline -> Triple(if (hovered) FmtColors.purpleTint else FmtColors.paper, FmtColors.purple, FmtColors.purple)
         ButtonKind.OutlineTeal -> Triple(if (hovered) FmtColors.tealTint else FmtColors.paper, FmtColors.tealInk, FmtColors.teal)
         ButtonKind.Quiet -> Triple(FmtColors.sunTint, FmtColors.ink, FmtColors.sunLine)
     }
-    val shadow = when (kind) {
+    val shadow = if (!enabled) null else when (kind) {
         ButtonKind.Primary -> FmtShadow.glowPurple
         ButtonKind.Teal -> FmtShadow.glowTeal
         else -> null
@@ -162,7 +163,7 @@ fun FmtButton(
             .background(bg, shape)
             .border(FmtBorder.outline, line, shape)
             .hoverable(source)
-            .clickable(interactionSource = source, indication = null, role = Role.Button, onClick = onClick)
+            .clickable(interactionSource = source, indication = null, role = Role.Button, enabled = enabled, onClick = onClick)
             .heightIn(min = FmtSize.button)
             .padding(horizontal = FmtSpace.s6, vertical = FmtSpace.s2),
         horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2, Alignment.CenterHorizontally),
