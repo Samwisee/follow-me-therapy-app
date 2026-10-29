@@ -115,7 +115,7 @@ fun FmtBand(
 ) {
     val m = FmtTheme.metrics
     Column(modifier.fillMaxWidth()) {
-        if (waveTop) FmtWave(ground, Modifier.offset(y = 1.dp))
+        if (waveTop) FmtWave(ground, Modifier.offset(y = FmtSpace.hair / 2))
         Box(Modifier.fillMaxWidth().background(ground), contentAlignment = Alignment.TopCenter) {
             FmtOnGround(ground) {
                 Column(
@@ -185,7 +185,7 @@ fun FmtSiteHead(back: (() -> Unit)? = null, backLabel: String = "Back", modifier
 fun FmtFooter(modifier: Modifier = Modifier) {
     val m = FmtTheme.metrics
     Column(modifier.fillMaxWidth()) {
-        FmtWave(FmtColors.deep, Modifier.offset(y = 1.dp))
+        FmtWave(FmtColors.deep, Modifier.offset(y = FmtSpace.hair / 2))
         Box(Modifier.fillMaxWidth().background(FmtColors.deep), contentAlignment = Alignment.TopCenter) {
             Column(
                 Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = m.stack),

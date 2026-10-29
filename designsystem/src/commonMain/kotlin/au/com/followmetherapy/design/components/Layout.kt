@@ -4,6 +4,10 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import au.com.followmetherapy.design.icons.FmtIcon
+import au.com.followmetherapy.design.tokens.FmtSize
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -48,7 +52,11 @@ import androidx.compose.ui.unit.dp
 import au.com.followmetherapy.design.icons.FmtIcons
 import au.com.followmetherapy.design.theme.FmtTheme
 import au.com.followmetherapy.design.tokens.FmtBorder
+import au.com.followmetherapy.design.tokens.FmtCardTokens
 import au.com.followmetherapy.design.tokens.FmtColors
+import au.com.followmetherapy.design.tokens.FmtHeadTokens
+import au.com.followmetherapy.design.tokens.FmtNoteTokens
+import au.com.followmetherapy.design.tokens.FmtSwashTokens
 import au.com.followmetherapy.design.tokens.FmtShadow
 import au.com.followmetherapy.design.tokens.FmtSpace
 
@@ -114,8 +122,9 @@ fun FmtSwashTitle(text: String, swash: String?, modifier: Modifier = Modifier, s
                 val left = l.getBoundingBox(start).left
                 val right = l.getBoundingBox(end - 1).right
                 val y = l.getLineBottom(line) + FmtSpace.s1.toPx()
-                val path = squigglePath(left, right - left, y, 4.5.dp.toPx(), FmtSpace.s4.toPx())
-                drawPath(path, FmtColors.sun, style = Stroke(width = 3.5.dp.toPx(), cap = StrokeCap.Round))
+                val s = FmtSwashTokens
+                val path = squigglePath(left, right - left, y, s.height.toPx() / 4, s.wavelength.toPx() / 2)
+                drawPath(path, s.colour, style = Stroke(width = s.stroke.toPx(), cap = StrokeCap.Round))
             },
     )
 }
@@ -128,19 +137,20 @@ fun FmtSwashTitle(text: String, swash: String?, modifier: Modifier = Modifier, s
 @Composable
 fun FmtHead(title: String, swash: String?, tag: String, tone: Tone = Tone.Purple, modifier: Modifier = Modifier, trailing: (@Composable () -> Unit)? = null) {
     val m = FmtTheme.metrics
-    val c = tone.colors
-    val ground = if (tone == Tone.Sun) FmtColors.butter else c.tint
+    val ground = FmtHeadTokens.fill(tone)
     Row(
         modifier.fillMaxWidth()
             .background(ground, RoundedCornerShape(m.containerRadius))
-            .border(FmtBorder.outline, c.line, RoundedCornerShape(m.containerRadius))
+            .border(FmtBorder.outline, FmtHeadTokens.line(tone), RoundedCornerShape(m.containerRadius))
             .padding(m.cardPad + FmtBorder.outline),
         horizontalArrangement = Arrangement.spacedBy(m.gridGap),
         verticalAlignment = Alignment.Bottom,
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(m.groupGap)) {
-            FmtSwashTitle(title, swash)
-            FmtTag(tag, tone)
+        FmtOnGround(ground) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(m.groupGap)) {
+                FmtSwashTitle(title, swash)
+                FmtTag(tag, tone)
+            }
         }
         FmtOnGround(ground) { trailing?.invoke() }
     }
@@ -163,8 +173,9 @@ fun FmtSectionTitle(title: String, accent: Tone = Tone.Purple, subtitle: String?
         Box(
             Modifier.widthIn(min = FmtSpace.s20, max = FmtSpace.s20).fillMaxWidth().padding(vertical = FmtSpace.s2)
                 .drawBehind {
-                    val path = squigglePath(4.dp.toPx(), size.width - 8.dp.toPx(), size.height / 2, 4.5.dp.toPx(), 16.dp.toPx())
-                    drawPath(path, accentColor, style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round))
+                    val s = FmtSwashTokens
+                    val path = squigglePath(FmtSpace.s1.toPx(), size.width - FmtSpace.s2.toPx(), size.height / 2, s.height.toPx() / 4, s.wavelength.toPx() / 2)
+                    drawPath(path, accentColor, style = Stroke(width = s.stroke.toPx(), cap = StrokeCap.Round))
                 },
         ) {}
         if (subtitle != null) FmtText(subtitle, FmtTheme.type.lead, align = TextAlign.Center)
@@ -179,22 +190,22 @@ fun FmtSectionTitle(title: String, accent: Tone = Tone.Purple, subtitle: String?
 @Composable
 fun FmtInfoNote(text: String, leadIn: String? = null, tone: Tone = Tone.Purple, icon: ImageVector = FmtIcons.info, modifier: Modifier = Modifier) {
     val m = FmtTheme.metrics
-    val c = tone.colors
-    val ground = if (tone == Tone.Sun) FmtColors.butter else c.tint
+    val t = FmtNoteTokens
+    val ground = t.fill(tone)
     val shape = RoundedCornerShape(m.containerRadius)
     val words: AnnotatedString = buildAnnotatedString {
         if (leadIn != null) {
-            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = FmtColors.ink)) { append(leadIn) }
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = t.leadIn)) { append(leadIn) }
             append(" ")
         }
         append(text)
     }
     Row(
-        modifier.fillMaxWidth().background(ground, shape).border(FmtBorder.outline, c.line, shape).padding(m.cardPad + FmtBorder.outline),
+        modifier.fillMaxWidth().background(ground, shape).border(FmtBorder.outline, t.line(tone), shape).padding(m.cardPad + FmtBorder.outline),
         horizontalArrangement = Arrangement.spacedBy(m.cardPad),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        FmtIconTile(icon, tone, small = true, ground = FmtColors.paper)
+        FmtIconTile(icon, tone, small = true, ground = t.tileFill)
         FmtText(words, FmtTheme.type.body.copy(lineHeight = FmtTheme.type.body.fontSize * 1.5f), Modifier.weight(1f))
     }
 }
@@ -206,7 +217,7 @@ fun FmtInfoNote(text: String, leadIn: String? = null, tone: Tone = Tone.Purple, 
 @Composable
 fun FmtCard(title: String, body: String, icon: ImageVector, tone: Tone = Tone.Purple, more: String? = "Learn more", onClick: (() -> Unit)? = null, modifier: Modifier = Modifier) {
     val m = FmtTheme.metrics
-    val c = tone.colors
+    val t = FmtCardTokens
     val shape = RoundedCornerShape(m.containerRadius)
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusVisibleAsState()
@@ -221,8 +232,8 @@ fun FmtCard(title: String, body: String, icon: ImageVector, tone: Tone = Tone.Pu
             .scale(scale)
             .fmtFocusRing(focused, shape)
             .fmtShadow(if (active) FmtShadow.raised else FmtShadow.rest, shape)
-            .background(FmtColors.paper, shape)
-            .border(FmtBorder.outline, c.solid, shape)
+            .background(t.fill, shape)
+            .border(FmtBorder.outline, t.line(tone), shape)
             .then(if (onClick != null) Modifier.hoverable(source).clickableNoRipple(source, onClick) else Modifier)
             .padding(m.cardPad + FmtBorder.outline),
         verticalArrangement = Arrangement.spacedBy(m.groupGap),
@@ -234,7 +245,7 @@ fun FmtCard(title: String, body: String, icon: ImageVector, tone: Tone = Tone.Pu
         FmtText(body, FmtTheme.type.body)
         if (more != null) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                FmtText("$more ›", FmtTheme.type.chip.copy(fontSize = FmtTheme.metrics.textMd), color = c.ink)
+                FmtText("$more ›", FmtTheme.type.chip.copy(fontSize = FmtTheme.metrics.textMd), color = t.more)
             }
         }
     }
@@ -242,3 +253,21 @@ fun FmtCard(title: String, body: String, icon: ImageVector, tone: Tone = Tone.Pu
 
 internal fun Modifier.clickableNoRipple(source: MutableInteractionSource, onClick: () -> Unit) =
     clickable(interactionSource = source, indication = null, role = Role.Button, onClick = onClick)
+
+/**
+ * Plain lines, each with a teal tick circle (the website's checklist and the
+ * worksheets' tick list). Words in body ink-soft; [bold] lines in ink.
+ */
+@Composable
+fun FmtTickList(items: List<String>, modifier: Modifier = Modifier) {
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(FmtSpace.s3)) {
+        items.forEach { item ->
+            Row(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s3), verticalAlignment = Alignment.Top) {
+                Box(Modifier.padding(top = FmtSpace.hair).size(FmtSize.iconSm).background(FmtColors.teal, CircleShape), contentAlignment = Alignment.Center) {
+                    FmtIcon(FmtIcons.tick, FmtColors.paper, FmtSize.iconSm * 0.65f)
+                }
+                FmtText(item, FmtTheme.type.body, Modifier.weight(1f))
+            }
+        }
+    }
+}

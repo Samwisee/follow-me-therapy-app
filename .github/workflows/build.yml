@@ -18,10 +18,15 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - name: Design tokens are up to date
+      # The design comes from the website repo: tokens, the component list,
+      # icons and the checker. Build with the latest, and fail if the app no
+      # longer implements it (a missing component, a colour taken directly,
+      # a hand-written size). The Design sync workflow commits the copies.
+      - name: Design from the website
         run: |
-          python3 tools/gen_tokens.py
-          git diff --exit-code -- designsystem/src/commonMain/kotlin/au/com/followmetherapy/design/tokens || (echo "::error::FmtTokens.kt is stale: run python3 tools/gen_tokens.py and commit"; exit 1)
+          pip install -q svgelements
+          tools/sync_design.sh 2>&1 | tee design.log || { grep -E "^(missing|colour|contrast|unlisted|designsystem|composeApp)" design.log | head -30 | sed 's/^/::error::/'; exit 1; }
+          git diff --stat -- design tools designsystem | tail -1
       - uses: actions/setup-java@v5
         with:
           distribution: temurin

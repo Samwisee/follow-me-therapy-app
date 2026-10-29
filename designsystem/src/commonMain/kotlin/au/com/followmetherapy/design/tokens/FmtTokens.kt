@@ -343,3 +343,181 @@ object FmtShadow {
     val glow = FmtShadowToken(8.0f, 18.0f, FmtColors.purple.copy(alpha = 0.3f))
     val button = FmtShadowToken(8.0f, 18.0f, FmtColors.purple.copy(alpha = 0.3f))
 }
+
+/** The four tones. Fixed meanings: purple = who it's for, teal = telehealth, sun = in person, pink = reports. */
+enum class FmtTone { Purple, Teal, Sun, Pink }
+
+/** The role a colour plays in a tone. Components pick a role, never a colour. */
+enum class FmtToneRole { Tint, Ink, Line, Solid, Strong, StrongHover, Ground, Icon, OnSolid }
+
+object FmtTones {
+    /** The colour that plays [role] in [tone]. */
+    fun color(tone: FmtTone, role: FmtToneRole): Color = when (tone) {
+        FmtTone.Purple -> when (role) {
+            FmtToneRole.Tint -> FmtColors.purpleTint
+            FmtToneRole.Ink -> FmtColors.purpleInk
+            FmtToneRole.Line -> FmtColors.purpleLine
+            FmtToneRole.Solid -> FmtColors.purple
+            FmtToneRole.Strong -> FmtColors.purple
+            FmtToneRole.StrongHover -> FmtColors.purpleDark
+            FmtToneRole.Ground -> FmtColors.purpleTint
+            FmtToneRole.Icon -> FmtColors.purple
+            FmtToneRole.OnSolid -> FmtColors.paper
+        }
+        FmtTone.Teal -> when (role) {
+            FmtToneRole.Tint -> FmtColors.tealTint
+            FmtToneRole.Ink -> FmtColors.tealInk
+            FmtToneRole.Line -> FmtColors.tealLine
+            FmtToneRole.Solid -> FmtColors.teal
+            FmtToneRole.Strong -> FmtColors.tealInk
+            FmtToneRole.StrongHover -> FmtColors.tealDeeper
+            FmtToneRole.Ground -> FmtColors.tealTint
+            FmtToneRole.Icon -> FmtColors.teal
+            FmtToneRole.OnSolid -> FmtColors.paper
+        }
+        FmtTone.Sun -> when (role) {
+            FmtToneRole.Tint -> FmtColors.sunTint
+            FmtToneRole.Ink -> FmtColors.sunInk
+            FmtToneRole.Line -> FmtColors.sunLine
+            FmtToneRole.Solid -> FmtColors.sun
+            FmtToneRole.Strong -> FmtColors.sunDeep
+            FmtToneRole.StrongHover -> FmtColors.sunDeep
+            FmtToneRole.Ground -> FmtColors.butter
+            FmtToneRole.Icon -> FmtColors.sunDeep
+            FmtToneRole.OnSolid -> FmtColors.ink
+        }
+        FmtTone.Pink -> when (role) {
+            FmtToneRole.Tint -> FmtColors.pinkTint
+            FmtToneRole.Ink -> FmtColors.pinkDeep
+            FmtToneRole.Line -> FmtColors.pinkLine
+            FmtToneRole.Solid -> FmtColors.pinkDeep
+            FmtToneRole.Strong -> FmtColors.pinkDeep
+            FmtToneRole.StrongHover -> FmtColors.pinkDeep
+            FmtToneRole.Ground -> FmtColors.pinkTint
+            FmtToneRole.Icon -> FmtColors.pink
+            FmtToneRole.OnSolid -> FmtColors.paper
+        }
+    }
+}
+
+/** A pill label (Ages 0–18, Telehealth Australia-wide). */
+object FmtChipTokens {
+    fun fill(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Tint)
+    fun ink(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Ink)
+    fun line(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Line)
+    /** Outline of a chip that's a link, on hover. */
+    fun lineHover(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Solid)
+    /** A chip sitting on its own tone's ground (an Ages chip on a lilac hero, app bar or note) turns paper so it doesn't vanish. */
+    val fillOnGround: Color = FmtColors.paper
+    /** An outline chip (a plain label on paper): paper with the tone's ink and line. */
+    val outlineFill: Color = FmtColors.paper
+    /** The 'Spots available' dot. */
+    val live: Color = FmtColors.live
+    val liveInk: Color = FmtColors.liveInk
+}
+
+/** A small solid label above a title (Self-care). */
+object FmtTagTokens {
+    fun fill(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Solid)
+    fun ink(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.OnSolid)
+}
+
+/** An icon tile: a rounded square, tint ground, icon in the tone. */
+object FmtTileTokens {
+    fun fill(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Tint)
+    fun icon(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Icon)
+    fun line(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Line)
+    /** A tile inside a tinted container (a note) is paper. */
+    val fillOnGround: Color = FmtColors.paper
+}
+
+/** An info note: tinted, outlined, with an icon tile; words centred beside it. */
+object FmtNoteTokens {
+    fun fill(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Ground)
+    fun line(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Line)
+    fun icon(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Icon)
+    /** The bold lead-in (For grown-ups:). */
+    val leadIn: Color = FmtColors.ink
+    /** Outline of a note that's a link, on hover. */
+    fun lineHover(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Solid)
+    /** The note's icon tile. */
+    val tileFill: Color = FmtColors.paper
+    /** The practice's promise: a paper note in the heading face. */
+    val promiseFill: Color = FmtColors.paper
+    fun promiseTileFill(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Tint)
+    val promiseInk: Color = FmtColors.ink
+    /** A one-line link note set with the contact rows (How your information is handled): paper, deep outline. */
+    val rowFill: Color = FmtColors.paper
+    val rowLine: Color = FmtColors.deep
+    val rowInk: Color = FmtColors.deep
+    val rowTileFill: Color = FmtColors.purpleMist
+}
+
+/** An activity's header panel (worksheet and app). */
+object FmtHeadTokens {
+    fun fill(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Ground)
+    fun line(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Line)
+}
+
+/** A container you tap (service card, list row). Tappable things are outlined in the solid colour; static ones in the line colour. */
+object FmtCardTokens {
+    val fill: Color = FmtColors.paper
+    fun line(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Solid)
+    /** The 'Learn more ›' line. */
+    val more: Color = FmtColors.purple
+}
+
+/** A choice tile (tap to choose on screens, circle on paper). */
+object FmtChoiceTokens {
+    val fill: Color = FmtColors.paper
+    fun line(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Line)
+    fun fillSelected(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Tint)
+    /** Outline of a chosen tile (with a second inner outline, so it never relies on colour alone). */
+    fun lineSelected(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Icon)
+    fun lineHover(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Icon)
+}
+
+/** A pill button. Solid: the tone's strong colour with white words. Outline: paper with the strong colour. */
+object FmtButtonTokens {
+    fun fill(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Strong)
+    fun ink(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.OnSolid)
+    fun line(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Strong)
+    fun fillHover(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.StrongHover)
+    val outlineFill: Color = FmtColors.paper
+    fun outlineInk(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Strong)
+    fun outlineFillHover(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Tint)
+    /** Words of an outline button on hover (7:1 on the tint). */
+    fun outlineInkHover(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.StrongHover)
+    val quietFill: Color = FmtColors.sunTint
+    val quietInk: Color = FmtColors.ink
+    val quietLine: Color = FmtColors.sunLine
+    val disabledFill: Color = FmtColors.paper
+    val disabledInk: Color = FmtColors.inkSoft
+    val disabledLine: Color = FmtColors.purpleLine
+}
+
+/** The app's top bar, tab bar and their waves (and any lilac band edge in an app). */
+object FmtBarTokens {
+    val fill: Color = FmtColors.purpleTint
+    /** Stroke along the bars' curved edges. */
+    val line: Color = FmtColors.purpleLine
+    val ink: Color = FmtColors.ink
+    /** The lockup's name on the home screen's bar. */
+    val brand: Color = FmtColors.brandInk
+    val tabInk: Color = FmtColors.inkSoft
+    val tabInkSelected: Color = FmtColors.purpleInk
+    val tabIconSelected: Color = FmtColors.purple
+    /** Depth of the wave under the app bar. */
+    val wave = 16.0.dp
+    /** How far the tab bar's crest rises over the chosen tab. */
+    val crest = 20.0.dp
+}
+
+/** The hand-drawn sun underline under one key word. */
+object FmtSwashTokens {
+    val colour: Color = FmtColors.sun
+    val stroke = 4.0.dp
+    val wavelength = 32.0.dp
+    val height = 16.0.dp
+}
+

@@ -87,6 +87,8 @@ import au.com.followmetherapy.design.icons.FmtIcon
 import au.com.followmetherapy.design.icons.FmtIcons
 import au.com.followmetherapy.design.theme.FmtTheme
 import au.com.followmetherapy.design.tokens.FmtBorder
+import au.com.followmetherapy.design.tokens.FmtBarTokens
+import au.com.followmetherapy.design.tokens.FmtCardTokens
 import au.com.followmetherapy.design.tokens.FmtColors
 import au.com.followmetherapy.design.tokens.FmtLayout
 import androidx.compose.ui.unit.dp
@@ -101,12 +103,12 @@ import au.com.followmetherapy.design.tokens.FmtSpace
  * containers with nested corners, pill buttons, 44dp targets, focus rings.
  */
 
-/** Sizes of the app's bars: a shallow wave under the app bar, and the crest over the chosen tab. */
+/** Sizes of the app's bars, from tokens.json › component.bar (FmtBarTokens). */
 object FmtAppChrome {
-    /** Height of the wave under the app bar (shallower than the website's, so it covers less). */
-    val wave: Dp = FmtSpace.s4
+    /** Depth of the wave under the app bar. */
+    val wave: Dp get() = FmtBarTokens.wave
     /** How far the tab bar's crest rises over the chosen tab. */
-    val crest: Dp = FmtSpace.s5
+    val crest: Dp get() = FmtBarTokens.crest
 }
 
 /** A round icon button (size-target), outlined in purple-line on paper. Needs a [label] for screen readers. */
@@ -183,8 +185,8 @@ fun FmtAppBar(
     SideEffect { if (onBack != null) lastBack = onBack }
     val enter = fadeIn(tween(FmtMotion.durBase, easing = FmtMotion.easeOut))
     val exit = fadeOut(tween(FmtMotion.durFast))
-    Column(Modifier.fillMaxWidth().background(FmtColors.purpleTint)) {
-        FmtOnGround(FmtColors.purpleTint) {
+    Column(Modifier.fillMaxWidth().background(FmtBarTokens.fill)) {
+        FmtOnGround(FmtBarTokens.fill) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Column(Modifier.widthIn(max = m.content).fillMaxWidth().padding(horizontal = m.gutter, vertical = FmtSpace.s1)) {
                 Row(Modifier.fillMaxWidth().heightIn(min = FmtSize.target), verticalAlignment = Alignment.CenterVertically) {
@@ -204,7 +206,7 @@ fun FmtAppBar(
                         contentAlignment = Alignment.CenterStart,
                     ) { t ->
                         if (t == null) FmtLockup(Modifier.semantics { heading() }, compact = true)
-                        else FmtText(t, FmtTheme.type.subheading.copy(fontSize = m.textLg, fontWeight = FontWeight.SemiBold), Modifier.fillMaxWidth().semantics { heading() })
+                        else FmtText(t, FmtTheme.type.subheading.copy(fontSize = m.textLg, fontWeight = FontWeight.SemiBold), Modifier.fillMaxWidth().semantics { heading() }, color = FmtBarTokens.ink)
                     }
                     trailing?.invoke()
                 }
@@ -216,7 +218,7 @@ fun FmtAppBar(
                     Row(Modifier.padding(top = FmtSpace.s1, bottom = FmtSpace.s1), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtSpace.s3)) {
                         FmtProgressBar(progress ?: lastProgress, Modifier.weight(1f), progressLabel ?: lastLabel ?: "Progress")
                         AnimatedVisibility(progressLabel != null, enter = enter, exit = exit) {
-                            FmtText(progressLabel ?: lastLabel ?: "", FmtTheme.type.chip, color = FmtColors.purpleInk)
+                            FmtText(progressLabel ?: lastLabel ?: "", FmtTheme.type.chip, color = FmtBarTokens.tabInkSelected)
                         }
                     }
                 }
@@ -239,9 +241,9 @@ data class FmtTab(val label: String, val icon: ImageVector)
 fun FmtTabBar(tabs: List<FmtTab>, selected: Int, onSelect: (Int) -> Unit) {
     val m = FmtTheme.metrics
     val at by animateFloatAsState(selected.toFloat(), tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
-    FmtOnGround(FmtColors.purpleTint) {
+    FmtOnGround(FmtBarTokens.fill) {
         Box(
-            Modifier.fillMaxWidth().zIndex(1f).background(FmtColors.purpleTint)
+            Modifier.fillMaxWidth().zIndex(1f).background(FmtBarTokens.fill)
                 .drawBehind {
                     // The crest: a smooth hump centred on the chosen tab, and a
                     // purple-line stroke along the whole top edge and over the crest.
@@ -257,13 +259,13 @@ fun FmtTabBar(tabs: List<FmtTab>, selected: Int, onSelect: (Int) -> Unit) {
                         cubicTo(cx - half / 2, 0f, cx - half / 2, top, cx, top)
                         cubicTo(cx + half / 2, top, cx + half / 2, 0f, cx + half, 0f)
                     }
-                    drawPath(Path().apply { addPath(crest); close() }, FmtColors.purpleTint)
+                    drawPath(Path().apply { addPath(crest); close() }, FmtBarTokens.fill)
                     val edge = Path().apply {
                         moveTo(0f, 0f); lineTo(cx - half, 0f)
                         addPath(crest)
                         moveTo(cx + half, 0f); lineTo(size.width, 0f)
                     }
-                    drawPath(edge, FmtColors.purpleLine, style = Stroke(FmtBorder.outline.toPx()))
+                    drawPath(edge, FmtBarTokens.line, style = Stroke(FmtBorder.outline.toPx()))
                 },
             contentAlignment = Alignment.Center,
         ) {
@@ -282,7 +284,7 @@ private fun RowScope.TabItem(tab: FmtTab, on: Boolean, select: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusVisibleAsState()
     val pressed by source.collectIsPressedAsState()
-    val ink = if (on) FmtColors.purpleInk else FmtColors.inkSoft
+    val ink = if (on) FmtBarTokens.tabInkSelected else FmtBarTokens.tabInk
     val lift by animateDpAsState(if (on) -FmtSpace.s1 else 0.dp, tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
     val scale by animateFloatAsState(if (pressed) 0.92f else 1f, tween(FmtMotion.durBase, easing = FmtMotion.easeSpring))
     Column(
@@ -294,7 +296,7 @@ private fun RowScope.TabItem(tab: FmtTab, on: Boolean, select: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(FmtSpace.s1 / 2, Alignment.CenterVertically),
     ) {
-        Box(Modifier.offset(y = lift)) { FmtIcon(tab.icon, if (on) FmtColors.purple else FmtColors.inkSoft, FmtSize.icon) }
+        Box(Modifier.offset(y = lift)) { FmtIcon(tab.icon, if (on) FmtBarTokens.tabIconSelected else FmtBarTokens.tabInk, FmtSize.icon) }
         FmtText(tab.label, FmtTheme.type.chip.copy(fontSize = FmtTheme.metrics.textXs, fontWeight = if (on) FontWeight.Bold else FontWeight.SemiBold), color = ink, align = TextAlign.Center)
     }
 }
@@ -440,7 +442,7 @@ fun FmtFlowScaffold(
                     content = content,
                 )
             }
-            if (appBar != null) FmtWave(FmtColors.purpleTint, Modifier.align(Alignment.TopCenter), down = true, height = wave, stroke = FmtColors.purpleLine)
+            if (appBar != null) FmtWave(FmtBarTokens.fill, Modifier.align(Alignment.TopCenter), down = true, height = wave, stroke = FmtBarTokens.line)
             if (slot == null && hasActions) {
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().onSizeChanged { ownHeight = with(density) { it.height.toDp() } }, contentAlignment = Alignment.Center) {
                     FmtActionBar(FmtActions(start, end))
@@ -543,7 +545,7 @@ fun FmtListRow(
     modifier: Modifier = Modifier,
 ) {
     val m = FmtTheme.metrics
-    val c = tone.colors
+    val t = FmtCardTokens
     val shape = RoundedCornerShape(m.containerRadius)
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusVisibleAsState()
@@ -553,8 +555,9 @@ fun FmtListRow(
         modifier.fillMaxWidth()
             .scale(scale)
             .fmtFocusRing(focused, shape)
-            .background(FmtColors.paper, shape)
-            .border(FmtBorder.outline, c.line, shape)
+            .background(t.fill, shape)
+            // Tappable: outlined in the tone's solid colour (card.line); a static row keeps the line colour.
+            .border(FmtBorder.outline, if (onClick != null) t.line(tone) else tone.colors.line, shape)
             .then(if (onClick != null) Modifier.clickable(interactionSource = source, indication = null, role = Role.Button, onClick = onClick) else Modifier)
             .padding(m.cardPad),
         horizontalArrangement = Arrangement.spacedBy(m.cardPad),
@@ -566,7 +569,7 @@ fun FmtListRow(
             if (subtitle != null) FmtText(subtitle, FmtTheme.type.small)
         }
         trailing?.invoke()
-        if (onClick != null && trailing == null) FmtIcon(FmtIcons.chevron, c.ink, FmtSize.iconSm)
+        if (onClick != null && trailing == null) FmtIcon(FmtIcons.chevron, t.more, FmtSize.iconSm)
     }
 }
 

@@ -56,26 +56,39 @@ import au.com.followmetherapy.design.icons.FmtIcon
 import au.com.followmetherapy.design.icons.FmtIcons
 import au.com.followmetherapy.design.theme.FmtTheme
 import au.com.followmetherapy.design.tokens.FmtBorder
+import au.com.followmetherapy.design.tokens.FmtButtonTokens
+import au.com.followmetherapy.design.tokens.FmtChipTokens
 import au.com.followmetherapy.design.tokens.FmtColors
+import au.com.followmetherapy.design.tokens.FmtTagTokens
+import au.com.followmetherapy.design.tokens.FmtTileTokens
+import au.com.followmetherapy.design.tokens.FmtTone
+import au.com.followmetherapy.design.tokens.FmtToneRole
+import au.com.followmetherapy.design.tokens.FmtTones
 import au.com.followmetherapy.design.tokens.FmtMotion
 import au.com.followmetherapy.design.tokens.FmtShadowToken
 import au.com.followmetherapy.design.tokens.FmtShadow
 import au.com.followmetherapy.design.tokens.FmtSize
 import au.com.followmetherapy.design.tokens.FmtSpace
 
-/** The four tones. Fixed meanings: purple = who it's for, teal = telehealth, sun = in person, pink = reports. */
-enum class Tone { Purple, Teal, Sun, Pink }
+/** The four tones (generated from tokens.json › tone). Fixed meanings: purple = who it's for, teal = telehealth, sun = in person, pink = reports. */
+typealias Tone = FmtTone
 
-/** A tone's colours: solid, ink (text on its tint), tint (ground) and line (outline). */
-data class ToneColors(val solid: Color, val ink: Color, val tint: Color, val line: Color, val icon: Color)
+/** A tone's colours by role, for parts that aren't shared components (shared ones read their Fmt…Tokens). */
+data class ToneColors(val solid: Color, val ink: Color, val tint: Color, val line: Color, val icon: Color, val ground: Color)
 
 val Tone.colors: ToneColors
-    get() = when (this) {
-        Tone.Purple -> ToneColors(FmtColors.purple, FmtColors.purpleInk, FmtColors.purpleTint, FmtColors.purpleLine, FmtColors.purple)
-        Tone.Teal -> ToneColors(FmtColors.teal, FmtColors.tealInk, FmtColors.tealTint, FmtColors.tealLine, FmtColors.teal)
-        Tone.Sun -> ToneColors(FmtColors.sun, FmtColors.sunInk, FmtColors.sunTint, FmtColors.sunLine, FmtColors.sunDeep)
-        Tone.Pink -> ToneColors(FmtColors.pinkDeep, FmtColors.pinkDeep, FmtColors.pinkTint, FmtColors.pinkLine, FmtColors.pink)
-    }
+    get() = ToneColors(
+        FmtTones.color(this, FmtToneRole.Solid), FmtTones.color(this, FmtToneRole.Ink), FmtTones.color(this, FmtToneRole.Tint),
+        FmtTones.color(this, FmtToneRole.Line), FmtTones.color(this, FmtToneRole.Icon), FmtTones.color(this, FmtToneRole.Ground),
+    )
+
+/** True inside a tinted container (a band, header, note or bar): tiles there turn paper. */
+@Composable
+internal fun onTintedGround(): Boolean = LocalFmtGround.current != FmtColors.paper
+
+/** True when the ground is [tone]'s own ground: a chip there turns paper. */
+@Composable
+internal fun onOwnGround(tone: Tone): Boolean = LocalFmtGround.current == FmtTones.color(tone, FmtToneRole.Ground)
 
 /**
  * The ground a component sits on. Tinted containers (bands, headers, the app
@@ -163,12 +176,17 @@ fun FmtButton(
     val scale by animateFloatAsState(if (pressed) 0.97f else 1f, tween(FmtMotion.durBase, easing = FmtMotion.easeSpring))
     val lift by animateFloatAsState(if (hovered && !pressed) 1f else 0f, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
 
-    val (bg, fg, line) = if (!enabled) Triple(FmtColors.paper, FmtColors.inkSoft, FmtColors.purpleLine) else when (kind) {
-        ButtonKind.Primary -> Triple(FmtColors.purple, FmtColors.paper, FmtColors.purple)
-        ButtonKind.Teal -> Triple(FmtColors.teal, FmtColors.paper, FmtColors.teal)
-        ButtonKind.Outline -> Triple(if (hovered) FmtColors.purpleTint else FmtColors.paper, FmtColors.purple, FmtColors.purple)
-        ButtonKind.OutlineTeal -> Triple(if (hovered) FmtColors.tealTint else FmtColors.paper, FmtColors.tealInk, FmtColors.teal)
-        ButtonKind.Quiet -> Triple(FmtColors.sunTint, FmtColors.ink, FmtColors.sunLine)
+    // Every colour from FmtButtonTokens (tokens.json › component.button), as on the website.
+    val t = FmtButtonTokens
+    val tone = if (kind == ButtonKind.Teal || kind == ButtonKind.OutlineTeal) Tone.Teal else Tone.Purple
+    val (bg, fg, line) = if (!enabled) Triple(t.disabledFill, t.disabledInk, t.disabledLine) else when (kind) {
+        ButtonKind.Primary, ButtonKind.Teal -> Triple(if (hovered) t.fillHover(tone) else t.fill(tone), t.ink(tone), if (hovered) t.fillHover(tone) else t.line(tone))
+        ButtonKind.Outline, ButtonKind.OutlineTeal -> Triple(
+            if (hovered) t.outlineFillHover(tone) else t.outlineFill,
+            if (hovered) t.outlineInkHover(tone) else t.outlineInk(tone),
+            t.line(tone),
+        )
+        ButtonKind.Quiet -> Triple(t.quietFill, t.quietInk, t.quietLine)
     }
     // Colours, width and words change smoothly, so a button that stays on
     // screen between steps (Done → Next) morphs rather than flickers.
@@ -183,7 +201,7 @@ fun FmtButton(
     Row(
         modifier = modifier
             .scale(scale)
-            .padding(top = (2 * (1 - lift)).dp, bottom = (2 * lift).dp)
+            .padding(top = FmtSpace.hair * (1 - lift), bottom = FmtSpace.hair * lift)
             .fmtFocusRing(focused, shape)
             .then(if (shadow != null) Modifier.fmtShadow(shadow, shape) else Modifier)
             .background(bgA, shape)
@@ -208,13 +226,8 @@ fun FmtButton(
 /** A small solid label above a title ("Self-care"). Sun takes ink text; the others white. */
 @Composable
 fun FmtTag(text: String, tone: Tone = Tone.Purple, modifier: Modifier = Modifier) {
-    val bg = when (tone) {
-        Tone.Purple -> FmtColors.purple
-        Tone.Teal -> FmtColors.teal
-        Tone.Sun -> FmtColors.sun
-        Tone.Pink -> FmtColors.pinkDeep
-    }
-    val fg = if (tone == Tone.Sun) FmtColors.ink else FmtColors.paper
+    val bg = FmtTagTokens.fill(tone)
+    val fg = FmtTagTokens.ink(tone)
     Box(modifier.background(bg, CircleShape).padding(horizontal = FmtSpace.s3, vertical = FmtSpace.s1)) {
         FmtText(text, FmtTheme.type.chip.copy(fontSize = FmtTheme.metrics.textXs), color = fg)
     }
@@ -223,20 +236,20 @@ fun FmtTag(text: String, tone: Tone = Tone.Purple, modifier: Modifier = Modifier
 /** A bordered pastel pill that states one fact. Say it in words; the colour only reinforces. */
 @Composable
 fun FmtChip(text: String, tone: Tone = Tone.Purple, icon: androidx.compose.ui.graphics.vector.ImageVector? = null, modifier: Modifier = Modifier) {
-    val c = tone.colors
-    // On its own tint (an ages chip on the lilac hero) a chip turns paper, keeping its line outline and ink.
-    val fill = if (LocalFmtGround.current == c.tint) FmtColors.paper else c.tint
+    val t = FmtChipTokens
+    // On its own tone's ground (an ages chip on the lilac hero or app bar) a chip turns paper, keeping its line and ink.
+    val fill = if (onOwnGround(tone)) t.fillOnGround else t.fill(tone)
     Row(
         modifier
             .heightIn(min = FmtSize.target)
             .background(fill, CircleShape)
-            .border(FmtBorder.outline, c.line, CircleShape)
+            .border(FmtBorder.outline, t.line(tone), CircleShape)
             .padding(horizontal = FmtSpace.s4, vertical = FmtSpace.s2),
         horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (icon != null) FmtIcon(icon, c.ink, FmtSize.icon)
-        FmtText(text, FmtTheme.type.chip, color = c.ink)
+        if (icon != null) FmtIcon(icon, t.ink(tone), FmtSize.icon)
+        FmtText(text, FmtTheme.type.chip, color = t.ink(tone))
     }
 }
 
@@ -246,17 +259,19 @@ fun FmtChip(text: String, tone: Tone = Tone.Purple, icon: androidx.compose.ui.gr
  */
 @Composable
 fun FmtIconTile(icon: androidx.compose.ui.graphics.vector.ImageVector, tone: Tone = Tone.Purple, small: Boolean = false, ground: Color? = null, modifier: Modifier = Modifier) {
-    val c = tone.colors
+    val t = FmtTileTokens
     val size: Dp = if (small) FmtSize.tileMd else FmtSize.tileLg
     val shape = RoundedCornerShape(au.com.followmetherapy.design.tokens.FmtRadius.tile)
+    // Inside a tinted container (a note, a header) the tile is paper.
+    val fill = ground ?: if (onTintedGround()) t.fillOnGround else t.fill(tone)
     Box(
         modifier
             .size(size)
-            .background(ground ?: c.tint, shape)
-            .border(FmtBorder.outline, c.line, shape),
+            .background(fill, shape)
+            .border(FmtBorder.outline, t.line(tone), shape),
         contentAlignment = Alignment.Center,
     ) {
-        FmtIcon(icon, c.icon, if (small) FmtSize.iconLg else FmtSize.iconXl)
+        FmtIcon(icon, t.icon(tone), if (small) FmtSize.iconLg else FmtSize.iconXl)
     }
 }
 

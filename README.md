@@ -7,8 +7,10 @@ later without changing the shared code.
 
 | Path | What's there |
 |---|---|
-| `design/tokens.json` | A copy of the design tokens. The single source is `design/tokens.json` in the website repo (Samwisee/follow-me-therapy). Sync with `tools/sync_tokens.sh` |
-| `tools/gen_tokens.py` | Generates `FmtTokens.kt` from the tokens. CI fails if it's stale |
+| `design/tokens.json`, `components.json`, `icons.json` | Copies of the design system's single source in the website repo (Samwisee/follow-me-therapy › design/). Never edit here |
+| `tools/sync_design.sh` | Takes the design from the website (GitHub, or a local checkout), regenerates `FmtTokens.kt` (`gen_tokens.py`) and `FmtIcons.kt` (`gen_icons.py`), and runs the checks |
+| `tools/check_components.py` | The website's checker (synced): every component in `components.json` exists here and takes its colours from its component tokens (`Fmt…Tokens`) |
+| `tools/check_literals.py` | No hand-written colours or dp/sp sizes in UI code |
 | `designsystem/` | The design system as a Compose library: tokens, theme (fluid sizes by window width, like the site), fonts, icons and components |
 | `composeApp/` | The app: tabs (Today, Activities, For grown-ups), the guided flows, the on-device store (`Store.kt`) and a design-system page |
 
@@ -32,6 +34,22 @@ local storage on the device. Nothing is sent anywhere.
 After each build on `main`, CI also screenshots every screen at phone (390) and
 laptop (1280) width, times scrolling, and pushes the results to the
 `ci-screens` branch (`report.json` has frame times and console errors).
+
+## How design changes reach the app
+
+The website repo owns the design: `design/tokens.json` (colours, type, sizes,
+the role each colour plays in each tone, and component tokens),
+`design/components.json` (every shared component, its rules and where each
+product implements it) and `design/icons.json`. The app never keeps its own:
+
+- **Every build** (`build.yml`) downloads them from the website's `preview`
+  branch, regenerates the Kotlin, and fails if the app no longer implements
+  the design (a component missing, a colour taken directly, a hand-written size).
+- **Hourly** (`design-sync.yml`, or run it from the Actions tab) does the same,
+  commits what changed and rebuilds and deploys the app. So a design change on
+  the website reaches the app within the hour, or fails loudly saying what the
+  app is missing.
+- To follow the live site instead of preview, set `DESIGN_REF: main` in both workflows.
 
 ## Design system rules (same as the website)
 

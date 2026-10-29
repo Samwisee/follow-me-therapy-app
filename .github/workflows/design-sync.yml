@@ -1,0 +1,39 @@
+# Keep the app's design in step with the website (the single source).
+# Hourly, and on demand: take design/tokens.json, components.json, icons.json
+# and the checker from Samwisee/follow-me-therapy, regenerate FmtTokens.kt and
+# FmtIcons.kt, and if anything changed, commit it and rebuild and deploy the app.
+# If the app no longer implements the design (the checks fail), the run fails
+# and says what's missing, so a design change can't silently skip the app.
+name: Design sync
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Take the design from the website
+        run: |
+          pip install -q svgelements
+          tools/sync_design.sh 2>&1 | tee design.log || { grep -E "^(missing|colour|contrast|unlisted|designsystem|composeApp)" design.log | head -30 | sed 's/^/::error::/'; exit 1; }
+      - name: Commit and rebuild if it changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet; then echo "::notice::The app already matches the website's design."; exit 0; fi
+          SITE=$(curl -fsSL https://api.github.com/repos/Samwisee/follow-me-therapy/commits/${DESIGN_REF:-preview} | python3 -c "import json,sys; print(json.load(sys.stdin)['sha'][:7])")
+          git config user.name "Claude"
+          git config user.email "noreply@anthropic.com"
+          git add -A design tools designsystem
+          git commit -m "Design from the website (follow-me-therapy@$SITE)"
+          git push
+          gh workflow run build.yml --ref main
+          echo "::notice::Synced the design from follow-me-therapy@$SITE and started a build."

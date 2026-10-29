@@ -3,8 +3,8 @@
     python3 tools/gen_tokens.py
 
 design/tokens.json is a copy of the single source in the website repo
-(Samwisee/follow-me-therapy, design/tokens.json). Update it with
-tools/sync_tokens.sh, then run this. CI fails if the generated file is stale.
+(Samwisee/follow-me-therapy, design/tokens.json). tools/sync_design.sh
+takes the latest and runs this; so do CI and the hourly Design sync.
 
 Writes designsystem/src/commonMain/kotlin/au/com/followmetherapy/design/tokens/FmtTokens.kt
 
@@ -218,6 +218,66 @@ for k, v in items("shadow"):
     y, blur, cname, pct = float(m.group(2)), float(m.group(3)), m.group(4), float(m.group(5))
     w(f"    val {camel(k)} = FmtShadowToken({num(y)}f, {num(blur)}f, FmtColors.{camel(cname)}.copy(alpha = {num(pct / 100)}f))")
 w("}")
+
+w("")
+
+# Tones and component tokens: which role or value each part of a shared
+# component takes (tokens.json › tone, component; design/components.json).
+TONES = [k for k in T["tone"] if not k.startswith("$")]
+ROLES = [k for k in T["tone"][TONES[0]] if not k.startswith("$")]
+def pascal(n):
+    c = camel(n)
+    return c[:1].upper() + c[1:]
+def colour_ref(val):
+    m = re.fullmatch(r"\{color\.([^}]+)\}", str(val))
+    if m:
+        return f"FmtColors.{camel(m.group(1))}"
+    m = re.fullmatch(r"\{([^}]+)\}", str(val))
+    if m:  # an alias to another token: resolve to its colour
+        return colour_ref(resolve_path(m.group(1)))
+    return color_literal(val)
+def resolve_path(path):
+    node = T
+    for k in path.split("."):
+        node = node[k]
+    return node["$value"]
+w("/** The four tones. Fixed meanings: purple = who it's for, teal = telehealth, sun = in person, pink = reports. */")
+w("enum class FmtTone { " + ", ".join(pascal(t) for t in TONES) + " }")
+w("")
+w("/** The role a colour plays in a tone. Components pick a role, never a colour. */")
+w("enum class FmtToneRole { " + ", ".join(pascal(r) for r in ROLES) + " }")
+w("")
+w("object FmtTones {")
+w("    /** The colour that plays [role] in [tone]. */")
+w("    fun color(tone: FmtTone, role: FmtToneRole): Color = when (tone) {")
+for t in TONES:
+    w(f"        FmtTone.{pascal(t)} -> when (role) {{")
+    for r in ROLES:
+        w(f"            FmtToneRole.{pascal(r)} -> {colour_ref(T['tone'][t][r]['$value'])}")
+    w("        }")
+w("    }")
+w("}")
+w("")
+for comp, parts in T["component"].items():
+    if comp.startswith("$"):
+        continue
+    if parts.get("$description"):
+        w(f"/** {parts['$description'].replace('*/', '* /')} */")
+    w(f"object Fmt{pascal(comp)}Tokens {{")
+    for part, v in parts.items():
+        if part.startswith("$"):
+            continue
+        if kdoc(v):
+            w(kdoc(v).rstrip("\n"))
+        name = camel(part)
+        if v.get("$type") == "other":
+            w(f"    fun {name}(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.{pascal(v['$value'])})")
+        elif v.get("$type") == "color":
+            w(f"    val {name}: Color = {colour_ref(v['$value'])}")
+        elif v.get("$type") == "dimension":
+            w(f"    val {name} = {num(px(resolve(v['$value']) if not str(v['$value']).startswith('{') else resolve_path(str(v['$value'])[1:-1])))}.dp")
+    w("}")
+    w("")
 
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text("\n".join(L) + "\n")

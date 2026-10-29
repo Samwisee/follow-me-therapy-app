@@ -1,0 +1,111 @@
+{
+ "$description": "Every line icon, THE single source for the website, the Design System, worksheets and the app. 24-grid icons sit beside words (stroke 2.2), 40-grid icons go in an icon tile (stroke 2.6). Round caps and joins, no fill unless filled. Built into the Design System by npm run design-system and into the app by tools/gen_icons.py.",
+ "icons": {
+  "smile": {
+   "grid": 24,
+   "svg": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8.5 14.5c1.8 2 5.2 2 7 0\"/><path d=\"M9 9.8v.1M15 9.8v.1\"/>"
+  },
+  "video": {
+   "grid": 24,
+   "svg": "<rect x=\"3\" y=\"6\" width=\"13\" height=\"12\" rx=\"3\"/><path d=\"M16 10.5l5-3v9l-5-3\"/>"
+  },
+  "pin": {
+   "grid": 24,
+   "svg": "<path d=\"M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z\"/><circle cx=\"12\" cy=\"10\" r=\"2.4\"/>"
+  },
+  "info": {
+   "grid": 24,
+   "svg": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v5.5\"/><path d=\"M12 7.6v.1\"/>"
+  },
+  "book": {
+   "grid": 24,
+   "svg": "<path d=\"M3 5.5c3-1.3 6-1.3 9 .5 3-1.8 6-1.8 9-.5V19c-3-1.3-6-1.3-9 .5-3-1.8-6-1.8-9-.5z\"/><path d=\"M12 6v13.5\"/>"
+  },
+  "heart": {
+   "grid": 24,
+   "svg": "<path d=\"M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z\"/>"
+  },
+  "chevron": {
+   "grid": 24,
+   "svg": "<path d=\"M9 5l7 7-7 7\"/>"
+  },
+  "back": {
+   "grid": 24,
+   "svg": "<path d=\"M15 5l-7 7 7 7\"/>"
+  },
+  "tick": {
+   "grid": 24,
+   "svg": "<path d=\"M5 12.5l4.5 4.5L19 7.5\"/>"
+  },
+  "sunrise": {
+   "grid": 40,
+   "svg": "<path d=\"M8 28h24\"/><path d=\"M13 28a7 7 0 0 1 14 0\"/><path d=\"M20 13v3\"/><path d=\"M10.5 17.5l2 2\"/><path d=\"M29.5 17.5l-2 2\"/><path d=\"M12 33h16\"/>"
+  },
+  "blocks": {
+   "grid": 40,
+   "svg": "<rect x=\"6\" y=\"22\" width=\"12\" height=\"12\" rx=\"2.5\"/><rect x=\"22\" y=\"22\" width=\"12\" height=\"12\" rx=\"2.5\"/><rect x=\"14\" y=\"7\" width=\"12\" height=\"12\" rx=\"2.5\" transform=\"rotate(8 20 13)\"/>"
+  },
+  "star": {
+   "grid": 24,
+   "svg": "<path d=\"M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.8l6.1-.9z\"/>"
+  },
+  "footprints": {
+   "grid": 40,
+   "svg": "<g transform=\"translate(6 7) rotate(-6 8 12) scale(.95)\"><ellipse cx=\"11.5\" cy=\"3.1\" rx=\"2.05\" ry=\"2.55\"/><circle cx=\"8.15\" cy=\"2.25\" r=\"1.35\"/><circle cx=\"5.85\" cy=\"2.9\" r=\"1.2\"/><circle cx=\"3.95\" cy=\"4.15\" r=\"1.05\"/><circle cx=\"2.55\" cy=\"5.85\" r=\"0.9\"/><path d=\"M7.6 6.6C11.2 6.2 13.9 7.8 13.6 10.8 13.4 12.8 11.4 14 10.9 16.2 10.5 18 11.6 19.4 11.2 21.2 10.8 23.2 9.3 24 7.7 24 5.6 24 4.3 22.7 4.3 20.6 4.3 17.6 3 15.8 2.8 12.8 2.5 9.2 4.4 6.9 7.6 6.6Z\"/></g><g transform=\"translate(19 4) rotate(6 8 12) scale(.95)\"><g transform=\"translate(16 0) scale(-1 1)\"><ellipse cx=\"11.5\" cy=\"3.1\" rx=\"2.05\" ry=\"2.55\"/><circle cx=\"8.15\" cy=\"2.25\" r=\"1.35\"/><circle cx=\"5.85\" cy=\"2.9\" r=\"1.2\"/><circle cx=\"3.95\" cy=\"4.15\" r=\"1.05\"/><circle cx=\"2.55\" cy=\"5.85\" r=\"0.9\"/><path d=\"M7.6 6.6C11.2 6.2 13.9 7.8 13.6 10.8 13.4 12.8 11.4 14 10.9 16.2 10.5 18 11.6 19.4 11.2 21.2 10.8 23.2 9.3 24 7.7 24 5.6 24 4.3 22.7 4.3 20.6 4.3 17.6 3 15.8 2.8 12.8 2.5 9.2 4.4 6.9 7.6 6.6Z\"/></g></g>",
+   "filled": true
+  },
+  "stairs": {
+   "grid": 40,
+   "svg": "<path d=\"M6 31h8v-7h7v-7h7v-7h6\"/>"
+  },
+  "clipboard": {
+   "grid": 40,
+   "svg": "<rect x=\"9\" y=\"7\" width=\"22\" height=\"28\" rx=\"4\"/><rect x=\"15\" y=\"4\" width=\"10\" height=\"6\" rx=\"2\"/><path d=\"M15 22l4 4 7-8\"/>"
+  },
+  "umbrella": {
+   "grid": 40,
+   "svg": "<path d=\"M6 20a14 14 0 0 1 28 0\"/><path d=\"M6 20c2.3-2.2 4.7-2.2 7 0 2.3-2.2 4.7-2.2 7 0 2.3-2.2 4.7-2.2 7 0 2.3-2.2 4.7-2.2 7 0\"/><path d=\"M20 20v10.5a3.5 3.5 0 0 1-7 0\"/><path d=\"M20 6V4\"/>"
+  },
+  "medicare-cross": {
+   "grid": 40,
+   "svg": "<rect x=\"7\" y=\"7\" width=\"26\" height=\"26\" rx=\"7\"/><path d=\"M20 13v14M13 20h14\"/>"
+  },
+  "shield-tick": {
+   "grid": 40,
+   "svg": "<path d=\"M20 5l12 5v9c0 8-5 13-12 16C13 32 8 27 8 19v-9z\"/><path d=\"M15 20l4 4 7-8\"/>"
+  },
+  "breathe": {
+   "grid": 40,
+   "svg": "<path d=\"M7 16h17a5 5 0 1 0-5-5\"/><path d=\"M7 24h21a5 5 0 1 1-5 5\"/><path d=\"M7 20h11\"/>"
+  },
+  "cushion": {
+   "grid": 40,
+   "svg": "<path d=\"M9 11c7 3 15 3 22 0c-2 6-2 12 0 18c-7-3-15-3-22 0c2-6 2-12 0-18z\"/>"
+  },
+  "push-wall": {
+   "grid": 40,
+   "svg": "<path d=\"M32 6v28\"/><path d=\"M26 13v11\"/><path d=\"M22 11v13\"/><path d=\"M18 12v12\"/><path d=\"M14 16v11a6 6 0 0 0 6 6h3a3 3 0 0 0 3-3v-6\"/>"
+  },
+  "water": {
+   "grid": 40,
+   "svg": "<path d=\"M11 9h18l-2.5 23h-13z\"/><path d=\"M12.5 18h15\"/>"
+  },
+  "hug": {
+   "grid": 40,
+   "svg": "<path d=\"M20 32s-11-7-11-15a6 6 0 0 1 11-3.5a6 6 0 0 1 11 3.5c0 8-11 15-11 15z\"/>"
+  },
+  "quiet-spot": {
+   "grid": 40,
+   "svg": "<path d=\"M5 32L20 8l15 24z\"/><path d=\"M15 32l5-8 5 8\"/>"
+  },
+  "star-filled": {
+   "grid": 24,
+   "svg": "<path d=\"M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.8l6.1-.9z\"/>",
+   "filled": true
+  },
+  "calendar": {
+   "grid": 40,
+   "svg": "<rect x=\"7\" y=\"9\" width=\"26\" height=\"24\" rx=\"4\"/><path d=\"M7 16h26\"/><path d=\"M14 6v6M26 6v6\"/><path d=\"M14 23l3 3 6-6\"/>"
+  }
+ }
+}

@@ -1,0 +1,396 @@
+{
+ "$description": "Every shared component of the Follow Me Therapy design system: what it is, its rules, which component tokens it takes (design/tokens.json › component.<tokens>), and where each product implements it. CI checks this file in every product: each listed implementation must exist, a product that doesn't have a component must say why (\"none\"), and a component with tokens must take its colours from them, never from a colour directly. To add or change a component: change it here first, then in every product (the checks fail until they match).",
+ "products": {
+  "website": "Samwisee/follow-me-therapy: css/*.css selectors (the live site)",
+  "designSystem": "Samwisee/follow-me-therapy: design/design-system/project/components (css: bundle.css selector; react: export in src/index.tsx). Also used by the worksheets and books.",
+  "app": "Samwisee/follow-me-therapy-app: Compose function in designsystem/"
+ },
+ "components": {
+  "Chip": {
+   "description": "A pill label, outlined in its line colour; a link chip is a 44px target.",
+   "tokens": "chip",
+   "tones": [
+    "purple",
+    "teal",
+    "sun",
+    "pink"
+   ],
+   "rules": [
+    "Fill tint, words ink, outline line; on hover a link chip's outline turns solid.",
+    "A chip on its own tone's ground (the lilac hero, the app bar, a note) turns paper (chip.fill-on-ground)."
+   ],
+   "website": [
+    ".facts li",
+    ".chips li",
+    ".modal-chips li"
+   ],
+   "designSystem": {
+    "css": ".fmt-chip",
+    "react": "Chip"
+   },
+   "app": "FmtChip"
+  },
+  "Tag": {
+   "description": "A small solid label above a title (Self-care, Telehealth).",
+   "tokens": "tag",
+   "tones": [
+    "purple",
+    "teal",
+    "sun",
+    "pink"
+   ],
+   "rules": [
+    "Solid fill, words in on-solid (paper; ink on sun)."
+   ],
+   "website": [
+    ".modal-tag"
+   ],
+   "designSystem": {
+    "css": ".fmt-tag",
+    "react": "Tag"
+   },
+   "app": "FmtTag"
+  },
+  "IconTile": {
+   "description": "A rounded square of tint with a line icon in the tone.",
+   "tokens": "tile",
+   "tones": [
+    "purple",
+    "teal",
+    "sun",
+    "pink"
+   ],
+   "rules": [
+    "Tint fill, icon colour, outlined in line.",
+    "Inside a tinted container the tile is paper (tile.fill-on-ground)."
+   ],
+   "website": [
+    ".svc-icon"
+   ],
+   "designSystem": {
+    "css": ".fmt-tile",
+    "react": "IconTile"
+   },
+   "app": "FmtIconTile"
+  },
+  "InfoNote": {
+   "description": "A tinted, outlined note with an icon tile. Two layouts: wrap (long notes: words wrap round the tile) and centred (short tips: words centred beside it).",
+   "tokens": "note",
+   "tones": [
+    "purple",
+    "teal",
+    "sun"
+   ],
+   "rules": [
+    "Ground fill, line outline, paper tile with the tone's icon.",
+    "Corner nests round the tile: radius-tile + card-pad + outline.",
+    "Short notes centre; long ones wrap so they never squeeze into a narrow column."
+   ],
+   "website": [
+    ".info-note"
+   ],
+   "designSystem": {
+    "css": ".fmt-note",
+    "react": "InfoNote"
+   },
+   "app": "FmtInfoNote"
+  },
+  "Head": {
+   "description": "An activity's header: tinted panel, title with one swash, the tag beneath (worksheets, app activities).",
+   "tokens": "head",
+   "tones": [
+    "purple",
+    "teal",
+    "sun",
+    "pink"
+   ],
+   "rules": [
+    "Ground fill, line outline, corner nests (radius-tile + card-pad + outline)."
+   ],
+   "website": {
+    "none": "The website has no activities; its hero plays this part."
+   },
+   "designSystem": {
+    "css": ".fmt-head",
+    "react": "Worksheet"
+   },
+   "app": "FmtHead"
+  },
+  "Card": {
+   "description": "A container you tap: service card (tile beside the title, a sentence, centred Learn more ›), action card (button at the foot), list row (tile, words, chevron).",
+   "tokens": "card",
+   "tones": [
+    "purple",
+    "teal",
+    "sun",
+    "pink"
+   ],
+   "rules": [
+    "Tappable containers are outlined in the tone's solid colour; static ones in its line colour.",
+    "Paper fill; lifts on hover, presses in on tap.",
+    "Corner nests round what sits in it: the tile, or the button (button/2 + card-pad + outline)."
+   ],
+   "website": [
+    ".service-item",
+    ".funding-card",
+    ".card",
+    ".contact-card"
+   ],
+   "designSystem": {
+    "css": ".fmt-card",
+    "react": [
+     "Card",
+     "ActionCard"
+    ]
+   },
+   "app": [
+    "FmtCard",
+    "FmtListRow"
+   ]
+  },
+  "Choices": {
+   "description": "Choice tiles: tap to choose on screens, circle on paper.",
+   "tokens": "choice",
+   "tones": [
+    "purple",
+    "teal"
+   ],
+   "rules": [
+    "Paper with a line outline; chosen: tint fill and a solid outline, never colour alone (a tick or a thicker outline too)."
+   ],
+   "website": {
+    "none": "Activities only (worksheets and the app)."
+   },
+   "designSystem": {
+    "css": ".fmt-choice",
+    "react": "Choices"
+   },
+   "app": "FmtChoices"
+  },
+  "Button": {
+   "description": "A pill button in the heading face, button-height tall. Solid, outline or quiet.",
+   "tokens": "button",
+   "tones": [
+    "purple",
+    "teal"
+   ],
+   "rules": [
+    "Solid: strong fill, white words, a soft glow. Outline: paper with the strong colour. Quiet: sun tint.",
+    "Disabled: paper, ink-soft words, purple-line outline.",
+    "Chevron (›) for going on, never an arrow."
+   ],
+   "website": [
+    ".btn",
+    ".btn-secondary",
+    ".btn-outline"
+   ],
+   "designSystem": {
+    "css": ".fmt-btn",
+    "react": "Button"
+   },
+   "app": "FmtButton"
+  },
+  "Swash": {
+   "description": "The hand-drawn sun underline under one key word; one per page.",
+   "tokens": "swash",
+   "rules": [
+    "Sun colour, repeating squiggle the width of the word."
+   ],
+   "website": [
+    ".swash"
+   ],
+   "designSystem": {
+    "css": ".fmt-swash",
+    "react": "Swash"
+   },
+   "app": "FmtSwashTitle"
+  },
+  "SectionTitle": {
+   "description": "A centred section title with a short squiggle in the band's accent and an optional subtitle.",
+   "website": [
+    ".content-section h2"
+   ],
+   "designSystem": {
+    "css": ".fmt-title",
+    "react": "SectionTitle"
+   },
+   "app": "FmtSectionTitle"
+  },
+  "TickList": {
+   "description": "Plain lines, each with a teal tick circle (an empty box on paper).",
+   "website": [
+    ".checklist"
+   ],
+   "designSystem": {
+    "css": ".fmt-ticks",
+    "react": "TickList"
+   },
+   "app": "FmtTickList"
+  },
+  "StepPath": {
+   "description": "Numbered steps along a path (How it works, a routine).",
+   "website": [
+    ".steps"
+   ],
+   "designSystem": {
+    "css": ".fmt-steps",
+    "react": "StepPath"
+   },
+   "app": "FmtStepList"
+  },
+  "Tracker": {
+   "description": "A week of stars: activities down the side, days across.",
+   "website": {
+    "none": "Activities only."
+   },
+   "designSystem": {
+    "css": ".fmt-tracker",
+    "react": "Tracker"
+   },
+   "app": "FmtTracker"
+  },
+  "Logo": {
+   "description": "The mark and the lockup (mark + Follow Me Therapy at weight-brand).",
+   "website": [
+    ".nav-logo"
+   ],
+   "designSystem": {
+    "css": ".fmt-logo",
+    "react": "Logo"
+   },
+   "app": [
+    "FmtMark",
+    "FmtLockup"
+   ]
+  },
+  "Wave": {
+   "description": "The gentle wave where one band meets the next.",
+   "website": [
+    ".wave-top"
+   ],
+   "designSystem": {
+    "css": ".fmt-wave",
+    "react": "Wave"
+   },
+   "app": "FmtWave"
+  },
+  "AppBar": {
+   "description": "The app's lilac top bar: back button, title (or the lockup on the home screen), progress for flows, a shallow wave with a line stroke. One bar stays put while screens change.",
+   "tokens": "bar",
+   "rules": [
+    "Lilac fill; the wave (bar.wave) is outlined in bar.line.",
+    "Persistent: its parts animate, it never rebuilds."
+   ],
+   "website": {
+    "none": "The website uses its menu (the rail and the top bar)."
+   },
+   "designSystem": {
+    "css": ".fmt-appbar",
+    "react": "AppBar"
+   },
+   "app": "FmtAppBar"
+  },
+  "TabBar": {
+   "description": "The app's lilac tab bar: icon and label per tab; a wave crest rises over the chosen tab and glides between tabs.",
+   "tokens": "bar",
+   "rules": [
+    "The chosen tab: crest, purple icon, bold purple-ink label (never colour alone).",
+    "Top edge stroked in bar.line."
+   ],
+   "website": {
+    "none": "The website has no tabs."
+   },
+   "designSystem": {
+    "css": ".fmt-tabbar",
+    "react": "TabBar"
+   },
+   "app": "FmtTabBar"
+  },
+  "ActionBar": {
+   "description": "A flow's buttons (Back at the start, the next step at the end), floating at the bottom with no panel. They stay on screen between steps and morph.",
+   "website": {
+    "none": "The website has no flows."
+   },
+   "designSystem": {
+    "css": ".fmt-actionbar",
+    "react": "ActionBar"
+   },
+   "app": "FmtActionBar"
+  },
+  "ProgressBar": {
+   "description": "A slim purple-line track with a purple fill that glides to its length.",
+   "website": {
+    "none": "The website has no flows."
+   },
+   "designSystem": {
+    "css": ".fmt-progress",
+    "react": "ProgressBar"
+   },
+   "app": "FmtProgressBar"
+  },
+  "StepFocus": {
+   "description": "One step, big: Step n of N, the number in a disc (teal with a tick when done), the words in the heading face.",
+   "website": {
+    "none": "The website has no flows."
+   },
+   "designSystem": {
+    "css": ".fmt-stepfocus",
+    "react": "StepFocus"
+   },
+   "app": "FmtStepFocus"
+  },
+  "Celebration": {
+   "description": "The end of a flow: a sun disc with a star that springs in, a title with the swash, a short message.",
+   "website": {
+    "none": "The website has no flows."
+   },
+   "designSystem": {
+    "css": ".fmt-celebrate",
+    "react": "Celebration"
+   },
+   "app": "FmtCelebration"
+  },
+  "FootstepTrail": {
+   "description": "Anatomical footprints walking left and right (the brand's 'follow me').",
+   "website": [
+    ".step-trail"
+   ],
+   "designSystem": {
+    "css": ".fmt-trail",
+    "react": "FootstepTrail"
+   },
+   "app": {
+    "none": "Not used in the app yet."
+   }
+  },
+  "CutLine": {
+   "description": "A dashed line to cut along (print).",
+   "website": {
+    "none": "Print only."
+   },
+   "designSystem": {
+    "css": ".fmt-cut",
+    "react": "CutLine"
+   },
+   "app": {
+    "none": "Print only."
+   }
+  },
+  "Page": {
+   "description": "A printed page: A4 worksheet or A5 book page.",
+   "website": {
+    "none": "Print only."
+   },
+   "designSystem": {
+    "css": ".fmt-sheet",
+    "react": [
+     "Worksheet",
+     "BookPage"
+    ]
+   },
+   "app": {
+    "none": "Print only; the app uses FmtFlowScaffold."
+   }
+  }
+ }
+}

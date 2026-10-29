@@ -91,15 +91,15 @@ fun FmtChoices(
 @Composable
 private fun ChoiceTile(choice: Choice, on: Boolean, toggle: () -> Unit, tone: Tone, modifier: Modifier) {
     val m = FmtTheme.metrics
-    val c = tone.colors
+    val t = au.com.followmetherapy.design.tokens.FmtChoiceTokens
     val shape = RoundedCornerShape(m.containerRadius)
     val source = remember { MutableInteractionSource() }
     val hovered by source.collectIsHoveredAsState()
     val pressed by source.collectIsPressedAsState()
     val focused by source.collectIsFocusVisibleAsState()
     val scale by animateFloatAsState(if (pressed) 0.97f else 1f, tween(FmtMotion.durBase, easing = FmtMotion.easeSpring))
-    val ground by animateColorAsState(if (on) c.tint else FmtColors.paper, tween(FmtMotion.durFast, easing = FmtMotion.easeStandard))
-    val line = if (on || hovered) c.solid else c.line
+    val ground by animateColorAsState(if (on) t.fillSelected(tone) else t.fill, tween(FmtMotion.durFast, easing = FmtMotion.easeStandard))
+    val line = if (on) t.lineSelected(tone) else if (hovered) t.lineHover(tone) else t.line(tone)
     Column(
         modifier
             .scale(scale)
