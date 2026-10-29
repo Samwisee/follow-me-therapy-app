@@ -28,8 +28,19 @@ Every screen has its own address, so a link can go straight to it:
 `#activities`, `#morning`, `#calm`, `#calm-now`, `#week`, `#grown-ups`,
 `#design-system` (flow steps add `/n`, e.g. `#morning/2`).
 
-Progress, the calm-down plan and the week's stars are saved in the browser's
-local storage on the device. Nothing is sent anywhere.
+Progress, the calm-down plan and the week's stars are saved on the device as
+one versioned record (`Record.kt`: each entry with its value and when it
+changed; local storage key `fmt.record`). Nothing is sent anywhere. The same
+JSON is the backup file (For grown-ups › Save a backup / Restore; restoring
+keeps whichever entry changed last) and is what a sync service would exchange
+if there's ever a backend: send the record, merge by time. Bump
+`Record.SCHEMA` and migrate in `Record.parse` when the shape changes.
+
+It's a progressive web app: installable (`manifest.webmanifest`, colours from
+the tokens, icons synced from the website), works offline (`sw.js`, network
+first, one cache per build), and asks the browser to keep its data. The
+install guide is at `#install`. On iPhone the Home Screen app keeps its own
+data, separate from Safari: move it across with a backup.
 
 After each build on `main`, CI also screenshots every screen at phone (390) and
 laptop (1280) width, times scrolling, and pushes the results to the
