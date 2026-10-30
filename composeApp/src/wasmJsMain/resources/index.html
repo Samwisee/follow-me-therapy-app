@@ -33,27 +33,29 @@
     @media (prefers-reduced-motion: reduce) { #splash img { animation: none; } #splash { transition-duration: 1ms; } }
   </style>
   <script>
-    // Always the newest build. GitHub Pages lets browsers keep files for ten
-    // minutes, so the page checks a version file that is never cached; if a
-    // newer build is live it reloads under a fresh address (?v=<build>).
+    // Opens from the phone's copy, at once (see sw.js). A newer build downloads
+    // in the background while this one runs, and takes over on the next launch,
+    // before the app starts. version.json (never cached) says which is newest.
     window.FMT_BUILD = "__BUILD__";
     (function () {
       if (window.FMT_BUILD.indexOf("__") === 0) return; // local dev
-      fetch("version.json?t=" + Date.now(), { cache: "no-store" })
-        .then(function (r) { return r.json(); })
-        .then(function (v) {
-          if (!v.build || v.build === window.FMT_BUILD) return;
-          var u = new URL(location.href);
-          if (u.searchParams.get("v") === v.build) return;
-          u.searchParams.set("v", v.build);
-          location.replace(u.toString());
-        })
-        .catch(function () {});
-      // Works without the internet: the service worker keeps the last copy of
-      // each file it fetched (always asking the network first), one cache per build.
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("sw.js?v=" + window.FMT_BUILD).catch(function () {});
-      }
+      if (!("serviceWorker" in navigator)) return;
+      var sw = navigator.serviceWorker;
+      sw.getRegistration().then(function (reg) {
+        // A build downloaded last time is ready: switch to it before the app starts.
+        if (reg && reg.waiting && sw.controller && !window.fmtStarted) {
+          sw.addEventListener("controllerchange", function () { if (!window.fmtStarted) location.reload(); });
+          reg.waiting.postMessage("fmt-take-over");
+          return;
+        }
+        // The first visit: keep this build on the phone.
+        if (!reg) sw.register("sw.js?v=" + window.FMT_BUILD).catch(function () {});
+        // A newer build? Download it in the background for next time.
+        fetch("version.json?t=" + Date.now(), { cache: "no-store" })
+          .then(function (r) { return r.json(); })
+          .then(function (v) { if (v.build && v.build !== window.FMT_BUILD) sw.register("sw.js?v=" + v.build).catch(function () {}); })
+          .catch(function () {});
+      }).catch(function () {});
     })();
     // Chrome and Edge offer a one-tap install; keep the offer for the app's Install now button.
     window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.fmtInstallPrompt = e; });
@@ -72,6 +74,7 @@
     window.fmtReady = function () {
       var s = document.getElementById("splash");
       if (!s) return;
+      window.fmtStarted = true;
       s.classList.add("is-done");
       setTimeout(function () { s.remove(); }, 600);
     };

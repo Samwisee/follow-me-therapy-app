@@ -74,6 +74,33 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   report.pwa = pwa;
   await ctx.close();
 }
+// Launching again opens from the phone's copy at once, even on slow 3G; a new
+// build downloads in the background and takes over on the next launch.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  const ready = () => page.waitForFunction(() => !document.getElementById('splash'), null, { timeout: 60000 }).then(() => true).catch(() => false);
+  await page.goto('http://localhost:8099/'); await ready(); await page.waitForTimeout(6000); // first visit: the worker keeps every file
+  const cdp = await ctx.newCDPSession(page);
+  await cdp.send('Network.enable');
+  await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 400, downloadThroughput: 50 * 1024, uploadThroughput: 50 * 1024 });
+  let t = Date.now(); await page.reload(); const ok = await ready();
+  const update = { cachedLaunchSlow3gMs: ok ? Date.now() - t : null };
+  await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+  // Pretend a new build is live.
+  const realVersion = await readFile(join(dist, 'version.json'), 'utf8');
+  const files = JSON.parse(await readFile(join(dist, 'files.json'), 'utf8'));
+  await writeFile(join(dist, 'version.json'), JSON.stringify({ build: 'next' }));
+  t = Date.now(); await page.reload(); await ready(); update.launchWhileNewBuildDownloadsMs = Date.now() - t;
+  await page.waitForTimeout(8000);
+  update.waitingAfter = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { active: r.active && r.active.scriptURL.split('?v=')[1], waiting: r.waiting && r.waiting.scriptURL.split('?v=')[1] }; });
+  t = Date.now(); await page.reload(); await ready(); await page.waitForTimeout(1500); update.launchTakingOverMs = Date.now() - t;
+  update.after = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { controller: navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL.split('?v=')[1], caches: await caches.keys() }; });
+  update.files = files.files.length;
+  await writeFile(join(dist, 'version.json'), realVersion);
+  report.update = update;
+  await ctx.close();
+}
 // Data saved by older versions (one key per entry) moves into the record, once.
 {
   const ctx = await browser.newContext();
