@@ -471,6 +471,9 @@ object FmtCardTokens {
     fun line(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Solid)
     /** The 'Learn more ›' line. */
     val more: Color = FmtColors.purple
+    /** The tick badge on a row whose activity is done (done is teal everywhere). */
+    val doneFill: Color = FmtColors.teal
+    val doneInk: Color = FmtColors.paper
 }
 
 /** A choice tile (tap to choose on screens, circle on paper). */
@@ -553,5 +556,21 @@ object FmtBreatheTokens {
     val fill: Color = FmtColors.tealTint
     val line: Color = FmtColors.tealLine
     val dot: Color = FmtColors.teal
+}
+
+/** A week of an activity plan: days across, activities down; each day planned, partly done or done. */
+object FmtCalendarTokens {
+    /** A planned day: a ring in the activity's line colour. */
+    fun planned(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Line)
+    /** Partly done (some steps): the activity's tint inside its ring. */
+    fun partial(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Tint)
+    fun partialLine(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Solid)
+    /** Done: teal with a tick. */
+    val doneFill: Color = FmtColors.teal
+    val doneInk: Color = FmtColors.paper
+    /** Today's column. */
+    val today: Color = FmtColors.purpleTint
+    val ink: Color = FmtColors.ink
+    val dayInk: Color = FmtColors.inkSoft
 }
 

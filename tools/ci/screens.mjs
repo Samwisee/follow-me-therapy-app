@@ -22,7 +22,7 @@ await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', args: ['--enable-unsafe-swiftshader'] });
 const report = {};
 for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop', { width: 1280, height: 800 }]]) {
-  for (const screen of ['', 'plan', 'grown-ups', 'morning', 'morning/2', 'calm/1', 'calm-now', 'week-setup', 'design-system', 'install', 'install/1', 'planner', 'planner/1']) {
+  for (const screen of ['', 'plan', 'activities', 'grown-ups', 'morning', 'morning/2', 'calm/1', 'calm-now', 'week-setup', 'design-system', 'install', 'install/1', 'planner', 'planner/1']) {
     const page = await browser.newPage({ viewport, deviceScaleFactor: name === 'phone' ? 2 : 1 });
     const errors = [];
     page.on('pageerror', e => errors.push(String(e)));

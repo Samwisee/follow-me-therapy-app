@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.animation.core.Animatable
 import au.com.followmetherapy.design.components.FmtAppBar
+import au.com.followmetherapy.design.components.FmtIconButton
 import au.com.followmetherapy.design.components.FmtAppChrome
 import au.com.followmetherapy.design.components.FmtActionBarHost
 import au.com.followmetherapy.design.components.LocalFmtSafeBottom
@@ -53,7 +54,7 @@ import androidx.compose.ui.unit.dp
 
 /** Where the app is: an area, and for flows the step within it. */
 enum class Area(val slug: String, val tab: Int?) {
-    Today("today", 0), Plan("plan", 1), GrownUps("grown-ups", 2),
+    Today("today", 0), Plan("plan", 1), Activities("activities", 2), GrownUps("grown-ups", null),
     Morning("morning", null), Calm("calm", null), CalmNow("calm-now", null),
     WeekSetup("week-setup", null), Week("week", null), DesignSystem("design-system", null), Install("install", null),
     PlanImport("plan-import", null), Planner("planner", null),
@@ -65,8 +66,7 @@ data class Route(val area: Area, val step: Int = 0) {
     companion object {
         fun parse(slug: String): Route {
             val parts = slug.split("/")
-            // "activities" was the Plan tab's old address.
-            val area = if (parts[0] == "activities") Area.Plan else Area.entries.firstOrNull { it.slug == parts[0] } ?: Area.Today
+            val area = Area.entries.firstOrNull { it.slug == parts[0] } ?: Area.Today
             return Route(area, parts.getOrNull(1)?.toIntOrNull() ?: 0)
         }
     }
@@ -85,7 +85,7 @@ class Nav(start: Route, private val onChange: (String) -> Unit) {
 private val tabs = listOf(
     FmtTab("Today", FmtIcons.sunrise),
     FmtTab("Plan", FmtIcons.calendar),
-    FmtTab("For grown-ups", FmtIcons.heart),
+    FmtTab("Activities", FmtIcons.blocks),
 )
 
 @Composable
@@ -117,7 +117,10 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
         // screens slide beneath, and only their parts animate.
         val bar = barFor(nav.route, store, nav)
         Column(Modifier.fillMaxSize().graphicsLayer { alpha = enter.value; translationY = (1f - enter.value) * rise }.background(FmtColors.paper)) {
-            FmtAppBar(bar.title, onBack = bar.back, brand = bar.brand, progress = bar.progress, progressLabel = bar.label)
+            FmtAppBar(
+                bar.title, onBack = bar.back, brand = bar.brand, progress = bar.progress, progressLabel = bar.label,
+                trailing = if (bar.menu) { { FmtIconButton(FmtIcons.menu, "Menu: for grown-ups", { nav.go(Route(Area.GrownUps)) }) } } else null,
+            )
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 AnimatedContent(
                     targetState = nav.route,
@@ -130,7 +133,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                         TabShell(nav, r.area.tab) { t ->
                             when (t) {
                                 1 -> PlanTab(store, nav, platform, inbox)
-                                2 -> GrownUpsTab(store, nav, platform)
+                                2 -> ActivitiesTab(store, nav)
                                 else -> TodayTab(store, nav)
                             }
                         }
@@ -143,6 +146,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                             Area.Week -> WeekFlow(store, nav)
                             Area.DesignSystem -> DesignSystemScreen(nav)
                             Area.Install -> InstallScreen(platform, nav, store, welcome = r.step == WELCOME)
+                            Area.GrownUps -> GrownUpsScreen(store, nav, platform)
                             Area.PlanImport -> PlanImportScreen(store, nav, platform, inbox)
                             Area.Planner -> PlannerScreen(store, nav, platform, r.step, inbox)
                             else -> Unit
@@ -160,13 +164,15 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
 }
 
 /** What the app bar shows for a place in the app. */
-private data class Bar(val title: String, val back: (() -> Unit)? = null, val progress: Float? = null, val label: String? = null, val brand: Boolean = false)
+private data class Bar(val title: String, val back: (() -> Unit)? = null, val progress: Float? = null, val label: String? = null, val brand: Boolean = false, val menu: Boolean = false)
 
 private fun barFor(r: Route, store: AppStore, nav: Nav): Bar {
     val home = nav::home
     return when (r.area) {
         // The three tabs share one bar with the lockup: the tab bar says where you are.
-        Area.Today, Area.Plan, Area.GrownUps -> Bar(tabs[r.area.tab ?: 0].label, brand = true)
+        // The tabs share the lockup bar, with the menu (For grown-ups) at its end.
+        Area.Today, Area.Plan, Area.Activities -> Bar(tabs[r.area.tab ?: 0].label, brand = true, menu = true)
+        Area.GrownUps -> Bar("For grown-ups", home)
         Area.PlanImport -> Bar("A plan from Simone", home)
         Area.Planner -> if (r.step == 0) Bar("Make a plan", home) else Bar("Send the plan", { nav.go(Route(Area.Planner)) })
         Area.Morning -> {

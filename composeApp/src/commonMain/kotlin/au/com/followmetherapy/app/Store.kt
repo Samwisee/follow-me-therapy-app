@@ -182,6 +182,24 @@ class AppStore(private val p: Platform) {
     fun plannerDraft(): Plan? = get("planner.draft")?.let { Plan.parse(it) }
     fun savePlannerDraft(p: Plan) = put("planner.draft", p.toJson())
 
+    /** This week's Monday, yyyy-mm-dd. */
+    val weekStart: String get() = week
+
+    // ── Progress on any day (for the calendar) ──
+    fun routineStepsOn(date: String): Int = ints(get("routine.done.$date")).size
+    fun calmUsedOn(date: String): Int = get("calm.used.$date")?.toIntOrNull() ?: 0
+    /** Practice activity [row] starred on weekday [day] of the week starting [monday]. */
+    fun practisedOn(monday: String, row: Int, day: Int): Boolean =
+        if (monday == week) (row to day) in weekDone
+        else get("week.done.$monday")?.split(",")?.any { it == "$row:$day" } == true
+
+    /** Making the calm-down plan: choose, an idea of your own, your body's signs, saved. */
+    val calmProgress: Float get() = if (calmSaved) 1f else listOf(calmChosen.isNotEmpty(), calmIdea.isNotBlank(), calmBody.isNotBlank()).count { it } / 4f
+
+    /** Stars this week against the stars planned (or a star a day for each activity without a plan). */
+    val practiceTarget: Int get() = plan?.practice?.sumOf { it.days.size }?.takeIf { it > 0 } ?: (activities.size * 7)
+    val practiceProgress: Float get() = if (practiceTarget == 0) 0f else (starsThisWeek.toFloat() / practiceTarget).coerceAtMost(1f)
+
     /** This week, Monday to Sunday, as yyyy-mm-dd. */
     val weekDates: List<String> get() = (0..6).map { Dates.add(week, it) }
 

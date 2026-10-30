@@ -81,6 +81,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import au.com.followmetherapy.design.icons.FmtIcon
@@ -555,10 +556,13 @@ fun FmtListRow(
     /** Progress through what the row opens (0–1), shown inside the row under its words. */
     progress: Float? = null,
     progressLabel: String? = null,
+    /** Done: a teal tick in place of the chevron (and "done" to screen readers). */
+    done: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val m = FmtTheme.metrics
     val t = FmtCardTokens
+    val tick by animateFloatAsState(if (done) 1f else 0f, tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
     val shape = RoundedCornerShape(m.containerRadius)
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusVisibleAsState()
@@ -572,6 +576,7 @@ fun FmtListRow(
             // Tappable: outlined in the tone's solid colour (card.line); a static row keeps the line colour.
             .border(FmtBorder.outline, if (onClick != null) t.line(tone) else tone.colors.line, shape)
             .then(if (onClick != null) Modifier.clickable(interactionSource = source, indication = null, role = Role.Button, onClick = onClick) else Modifier)
+            .semantics { if (done) stateDescription = "done" }
             .padding(m.cardPad),
         horizontalArrangement = Arrangement.spacedBy(m.cardPad),
         verticalAlignment = Alignment.CenterVertically,
@@ -583,7 +588,11 @@ fun FmtListRow(
             if (progress != null) FmtProgressBar(progress, Modifier.padding(top = FmtSpace.s2), progressLabel ?: "Progress")
         }
         trailing?.invoke()
-        if (onClick != null && trailing == null) FmtIcon(FmtIcons.chevron, t.more, FmtSize.iconSm)
+        if (done && trailing == null) {
+            Box(Modifier.size(FmtSize.iconLg).scale(tick).background(t.doneFill, CircleShape), contentAlignment = Alignment.Center) {
+                FmtIcon(FmtIcons.tick, t.doneInk, FmtSize.iconSm)
+            }
+        } else if (onClick != null && trailing == null) FmtIcon(FmtIcons.chevron, t.more, FmtSize.iconSm)
     }
 }
 

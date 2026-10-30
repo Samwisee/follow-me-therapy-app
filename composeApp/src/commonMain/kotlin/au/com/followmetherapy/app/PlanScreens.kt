@@ -12,6 +12,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
+import au.com.followmetherapy.design.components.FmtWeekCalendar
+import au.com.followmetherapy.design.components.FmtIconButton
+import au.com.followmetherapy.design.components.CalendarRow
+import au.com.followmetherapy.design.components.CalendarDay
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -50,6 +57,7 @@ fun PlanTab(store: AppStore, nav: Nav, platform: Platform, inbox: PlanInbox) {
     if (p != null) {
         FmtHead("My plan", swash = "plan", tag = p.service ?: "From Simone", tone = Tone.Purple)
         p.note?.takeIf { it.isNotBlank() }?.let { FmtInfoNote(it, leadIn = "From Simone:", icon = FmtIcons.heart) }
+        PlanCalendar(store)
         FmtGroup("Each week") {}
         PlanRows(p, store, nav)
         FmtPanel("Reminders and progress", Tone.Purple) {
@@ -71,14 +79,60 @@ fun PlanTab(store: AppStore, nav: Nav, platform: Platform, inbox: PlanInbox) {
             FmtText("Your plan from me goes here: which activities, on which days. After a session I'll send you a link. Open it, or copy it and paste it here.", FmtTheme.type.lead)
         }
         PastePlan(platform, nav, inbox, null)
+        PlanCalendar(store)
     }
-    FmtGroup("Everything you can do") {}
-    FmtListRow("My morning routine", "Self-care · six steps from waking up to out the door", FmtIcons.sunrise, Tone.Purple, onClick = { nav.go(Route(Area.Morning)) })
-    FmtListRow("My calm-down plan", if (store.calmSaved) "Feelings · your plan is ready" else "Feelings · choose what helps when feelings get big", FmtIcons.breathe, Tone.Teal,
-        onClick = { nav.go(if (store.calmSaved) Route(Area.Calm, CALM_PLAN_STEP) else Route(Area.Calm)) })
-    FmtListRow("My practice week", if (store.weekSetUp) "Home practice · ${store.starsThisWeek} stars this week" else "Home practice · a star for each day you practise", FmtIcons.calendar, Tone.Sun,
-        onClick = { nav.go(Route(if (store.weekSetUp) Area.Week else Area.WeekSetup)) })
-    FmtInfoNote("these are the same activities as my printed worksheets. Use whichever suits your family: paper on the fridge, or this on a phone or tablet.", leadIn = "For grown-ups:")
+}
+
+/**
+ * The week as a calendar: each activity's days planned, partly done or done,
+ * today marked; step back through earlier weeks (or one ahead).
+ */
+@Composable
+private fun PlanCalendar(store: AppStore) {
+    var offset by remember { mutableStateOf(0) }
+    val monday = Dates.add(store.weekStart, offset * 7)
+    val dates = (0..6).map { Dates.add(monday, it) }
+    val plan = store.plan
+    val rows = buildList {
+        if (plan == null || plan.routine != null) {
+            val planned = plan?.routine?.days
+            add(CalendarRow("Morning routine", Tone.Purple, dates.mapIndexed { i, d ->
+                val n = store.routineStepsOn(d)
+                when {
+                    n >= store.routineSteps.size -> CalendarDay.Done
+                    n > 0 -> CalendarDay.Partial
+                    planned != null && i in planned -> CalendarDay.Planned
+                    else -> CalendarDay.None
+                }
+            }))
+        }
+        if (plan?.calm == true || store.calmSaved) {
+            add(CalendarRow("Calm-down plan", Tone.Teal, dates.map { if (store.calmUsedOn(it) > 0) CalendarDay.Done else CalendarDay.None }))
+        }
+        store.weekNames.forEachIndexed { r, name ->
+            if (name.isNotBlank()) {
+                val planned = plan?.practice?.getOrNull(r)?.days
+                add(CalendarRow(name, Tone.Sun, (0..6).map { d ->
+                    when {
+                        store.practisedOn(monday, r, d) -> CalendarDay.Done
+                        planned != null && d in planned -> CalendarDay.Planned
+                        else -> CalendarDay.None
+                    }
+                }))
+            }
+        }
+    }
+    FmtGroup {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
+            FmtIconButton(FmtIcons.back, "Last week", { if (offset > -12) offset-- })
+            FmtText(
+                when (offset) { 0 -> "This week"; -1 -> "Last week"; 1 -> "Next week"; else -> "Week of ${Dates.show(monday)}" },
+                FmtTheme.type.groupTitle, Modifier.weight(1f).semantics { heading() }, align = TextAlign.Center,
+            )
+            FmtIconButton(FmtIcons.chevron, "Next week", { if (offset < 1) offset++ })
+        }
+    }
+    FmtWeekCalendar(rows, dates.map { it.substringAfterLast('-').trimStart('0') }, today = if (offset == 0) store.weekday else null)
 }
 
 /** The plan's activities, each with its days and time, a tap away. */

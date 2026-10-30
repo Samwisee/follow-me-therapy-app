@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import au.com.followmetherapy.design.components.FmtToggleChip
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import au.com.followmetherapy.design.components.FmtFlowScaffold
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -75,8 +80,9 @@ fun TodayTab(store: AppStore, nav: Nav) {
                 val next = store.routineSteps.indices.firstOrNull { it !in store.routineDone }
                 nav.go(Route(Area.Morning, if (next == null || done == 0) 0 else next + 1))
             },
-            progress = if (done > 0) done / total.toFloat() else null,
+            progress = done / total.toFloat(),
             progressLabel = "$done of $total steps done",
+            done = store.routineComplete,
         )
     }
 
@@ -85,7 +91,8 @@ fun TodayTab(store: AppStore, nav: Nav) {
     else if (store.calmSaved) {
         FmtListRow("Use my calm-down plan", "For when feelings get big", FmtIcons.breathe, Tone.Teal, onClick = { nav.go(Route(Area.CalmNow)) })
     } else {
-        FmtListRow("Make my calm-down plan", "Choose what helps, in four short steps", FmtIcons.breathe, Tone.Teal, onClick = { nav.go(Route(Area.Calm)) })
+        FmtListRow("Make my calm-down plan", "Choose what helps, in four short steps", FmtIcons.breathe, Tone.Teal, onClick = { nav.go(Route(Area.Calm)) },
+            progress = store.calmProgress, progressLabel = "Making the plan")
     }
 
     // Practice: today's stars, or set the week up.
@@ -116,22 +123,72 @@ fun TodayTab(store: AppStore, nav: Nav) {
 fun StarButton(on: Boolean, label: String, toggle: () -> Unit) = FmtStarToggle(on, label, toggle)
 
 
-/** For grown-ups: what this is, privacy, and a way to clear the device. */
+/** The kinds of activity, as on the worksheets' tags: the Activities tab filters by them. */
+private enum class Kind(val label: String) { SelfCare("Self-care"), Feelings("Feelings"), HomePractice("Home practice") }
+
+/**
+ * Activities: everything there is to do, filtered by kind (more kinds arrive
+ * as the worksheets do). Each shows its progress, and a tick when it's done.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun GrownUpsTab(store: AppStore, nav: Nav, platform: Platform) {
+fun ActivitiesTab(store: AppStore, nav: Nav) {
+    var only by remember { mutableStateOf<Kind?>(null) }
+    FmtGroup {
+        FmtText("Small, everyday practice between our sessions, for you and your child to do together.", FmtTheme.type.lead)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
+            FmtToggleChip("All", only == null, { only = null })
+            Kind.entries.forEach { k -> FmtToggleChip(k.label, only == k, { on -> only = if (on) k else null }) }
+        }
+    }
+    val done = store.routineDone.size
+    val total = store.routineSteps.size
+    if (only == null || only == Kind.SelfCare) {
+        FmtListRow(
+            "My morning routine",
+            "Self-care · " + if (store.routineComplete) "all done today" else "$done of $total steps today",
+            FmtIcons.sunrise, Tone.Purple, onClick = { nav.go(Route(Area.Morning)) },
+            progress = done / total.toFloat(), progressLabel = "$done of $total steps done today", done = store.routineComplete,
+        )
+    }
+    if (only == null || only == Kind.Feelings) {
+        FmtListRow(
+            "My calm-down plan",
+            if (store.calmSaved) "Feelings · your plan is ready" else "Feelings · choose what helps when feelings get big",
+            FmtIcons.breathe, Tone.Teal,
+            onClick = { nav.go(if (store.calmSaved) Route(Area.Calm, CALM_PLAN_STEP) else Route(Area.Calm)) },
+            progress = store.calmProgress, progressLabel = if (store.calmSaved) "Plan ready" else "Making the plan", done = store.calmSaved,
+        )
+    }
+    if (only == null || only == Kind.HomePractice) {
+        val target = store.practiceTarget
+        FmtListRow(
+            "My practice week",
+            "Home practice · " + if (store.weekSetUp) "${store.starsThisWeek} of $target stars this week" else "a star for each day you practise",
+            FmtIcons.calendar, Tone.Sun,
+            onClick = { nav.go(Route(if (store.weekSetUp) Area.Week else Area.WeekSetup)) },
+            progress = store.practiceProgress, progressLabel = "${store.starsThisWeek} of $target stars this week",
+            done = target > 0 && store.starsThisWeek >= target,
+        )
+    }
+    FmtInfoNote("these are the same activities as my printed worksheets. Use whichever suits your family: paper on the fridge, or this on a phone or tablet.", leadIn = "For grown-ups:")
+}
+
+/** For grown-ups (from the menu button on the tabs): install, privacy, backups and starting again. */
+@Composable
+fun GrownUpsScreen(store: AppStore, nav: Nav, platform: Platform) {
+    FmtFlowScaffold { GrownUpsContent(store, nav, platform) }
+}
+
+@Composable
+private fun ColumnScope.GrownUpsContent(store: AppStore, nav: Nav, platform: Platform) {
     var confirm by remember { mutableStateOf(false) }
+    var cleared by remember { mutableStateOf(false) }
     var kept by remember { mutableStateOf<Boolean?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     val installed = remember { platform.installed() }
     // Ask the device to keep this app's data even when it's short of space.
     LaunchedEffect(Unit) { platform.keepData { kept = it } }
-    // Words line up on one edge: loose text sits in a group, at the same inset as the words inside panels and notes.
-    FmtGroup {
-        FmtText(
-            "I'm Simone, a paediatric occupational therapist. These activities are the ones we practise in our sessions, for you and your child to keep going with at home. Short and often is best: five minutes a day is plenty.",
-            FmtTheme.type.body,
-        )
-    }
     if (!installed) {
         FmtListRow("Add the app to your Home Screen", "It opens like an app, works without the internet, and keeps your progress safer", FmtIcons.addToHome, Tone.Purple, onClick = { nav.go(Route(Area.Install)) })
     }
@@ -167,11 +224,19 @@ fun GrownUpsTab(store: AppStore, nav: Nav, platform: Platform) {
         message?.let { FmtText(it, FmtTheme.type.small, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, color = FmtColors.ink) }
     }
     FmtPanel("Start again", Tone.Sun) {
-        FmtText("Clear the routine, the calm-down plan and this week's stars from this device.", FmtTheme.type.small)
+        FmtText("Clear the routine, the calm-down plan, your plan from me and the stars from this device.", FmtTheme.type.small)
         Row {
             FmtButton(if (confirm) "Tap again to clear everything" else "Clear everything on this device", {
-                if (confirm) { store.forgetEverything(); confirm = false } else confirm = true
+                if (confirm) { store.forgetEverything(); confirm = false; cleared = true } else { confirm = true; cleared = false }
             }, kind = ButtonKind.Outline)
+        }
+        // Say it's done: clearing can't be seen otherwise.
+        if (cleared) {
+            FmtInfoNote(
+                "everything this app saved on this device is gone. You can start again whenever you like.",
+                leadIn = "Cleared:", tone = Tone.Teal, icon = FmtIcons.tick,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+            )
         }
     }
     FmtListRow("The design system", "Colours, type and parts this app is built from", FmtIcons.blocks, Tone.Purple, onClick = { nav.go(Route(Area.DesignSystem)) })

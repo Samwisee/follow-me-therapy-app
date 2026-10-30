@@ -174,7 +174,7 @@
     "Tappable containers are outlined in the tone's solid colour; static ones in its line colour.",
     "Paper fill; lifts on hover, presses in on tap.",
     "Corner nests round what sits in it: the tile, or the button (button/2 + card-pad + outline).",
-    "A row can show progress through what it opens, inside the row under its words (never floating outside it)."
+    "A row for an activity with progress always shows its bar (empty until started) and, when done, a teal tick in place of the chevron; it says 'done' to screen readers."
    ],
    "website": [
     ".service-item",
@@ -294,6 +294,29 @@
     "react": "Tracker"
    },
    "app": "FmtTracker"
+  },
+  "WeekCalendar": {
+   "description": "A week of an activity plan: the days across (today marked), each activity's days down: planned (a ring), partly done (tinted) or done (teal with a tick).",
+   "tokens": "calendar",
+   "tones": [
+    "purple",
+    "teal",
+    "sun",
+    "pink"
+   ],
+   "rules": [
+    "Days Monday to Sunday with their dates; today's column on lilac.",
+    "Planned: a ring in the activity's line colour. Partly done: its tint, solid ring. Done: teal with a tick. Not planned: nothing.",
+    "Never colour alone: done has a tick, and each day is read out (Monday, Morning routine: done)."
+   ],
+   "website": {
+    "none": "The website has no plans."
+   },
+   "designSystem": {
+    "css": ".fmt-calendar",
+    "react": "WeekCalendar"
+   },
+   "app": "FmtWeekCalendar"
   },
   "Logo": {
    "description": "The mark and the lockup (mark + Follow Me Therapy at weight-brand).",
