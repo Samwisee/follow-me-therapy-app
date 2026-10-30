@@ -52,18 +52,18 @@ jobs:
           # Kotlin errors as annotations, so they're readable without the log.
           grep -E '^e: ' build.log | head -40 | sed -E 's#^e: file://([^:]+):([0-9]+):([0-9]+) (.*)#::error file=\1,line=\2,col=\3::\4#' || true
           grep -A8 'What went wrong' build.log | head -20 | sed 's/^/::error::/' || true
-      - name: Screenshots and scroll timing
+      # The app opened in a real browser: screenshots, timing, and checks that
+      # must hold (the routine taps through, offline, updates, planner, 60fps
+      # scrolling). A failed check fails the build, so it isn't released.
+      - name: Screenshots and checks
         if: github.ref == 'refs/heads/main'
-        continue-on-error: true
         run: |
           set -o pipefail
-          {
-            PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-save playwright@1.56.1 &&
-            node tools/ci/screens.mjs composeApp/build/dist/wasmJs/productionExecutable ci-screens
-          } > screens.log 2>&1 || { tail -25 screens.log | sed 's/^/::warning::/'; exit 1; }
-          tail -5 screens.log
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-save playwright@1.56.1 > screens.log 2>&1
+          node tools/ci/screens.mjs composeApp/build/dist/wasmJs/productionExecutable ci-screens > screens.log 2>&1 || { grep '^::error::' screens.log || tail -25 screens.log | sed 's/^/::error::/'; exit 1; }
+          grep -c '"failures": \[\]' ci-screens/report.json > /dev/null && echo "All checks passed"
       - name: Publish screenshots to the ci-screens branch
-        if: github.ref == 'refs/heads/main'
+        if: always() && github.ref == 'refs/heads/main'
         continue-on-error: true
         run: |
           cd ci-screens
