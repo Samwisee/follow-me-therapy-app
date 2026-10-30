@@ -41,6 +41,9 @@ private fun jsInstall(onResult: (Boolean) -> Unit): Unit = js("""{
   const e = window.fmtInstallPrompt; if (!e) { onResult(false); return; }
   e.prompt(); e.userChoice.then(c => { window.fmtInstallPrompt = null; onResult(c.outcome === 'accepted'); }).catch(() => onResult(false));
 }""")
+private fun jsOtherIosBrowser(): Boolean = js("/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo|GSA\\//.test(navigator.userAgent)")
+/** x-safari-https:// hands the page to Safari on iOS 17 and later; the address keeps nothing personal. */
+private fun jsOpenInSafari(): Unit = js("{ location.href = 'x-safari-' + location.origin + location.pathname; }")
 private fun jsReady(): Unit = js("{ if (window.fmtReady) window.fmtReady(); }")
 private fun jsSafeBottom(): Double = js("""(() => { const d = document.createElement('div'); d.style.cssText = 'position:fixed;bottom:0;height:0;padding-bottom:env(safe-area-inset-bottom)'; document.body.appendChild(d); const v = parseFloat(getComputedStyle(d).paddingBottom) || 0; d.remove(); return v; })()""")
 
@@ -67,6 +70,8 @@ private object WebPlatform : Platform {
     override fun install(onResult: (Boolean) -> Unit) = jsInstall(onResult)
     override fun safeBottom() = jsSafeBottom().toFloat()
     override fun ready() = jsReady()
+    override fun otherIosBrowser() = jsOtherIosBrowser()
+    override fun openInSafari() = jsOpenInSafari()
 }
 
 @OptIn(ExperimentalComposeUiApi::class)

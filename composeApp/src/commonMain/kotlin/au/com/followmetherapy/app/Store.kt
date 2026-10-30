@@ -46,6 +46,10 @@ interface Platform {
     fun install(onResult: (Boolean) -> Unit) { onResult(false) }
     /** Space the device keeps at the bottom edge (the home indicator), in dp. */
     fun safeBottom(): Float = 0f
+    /** On an iPhone or iPad in a browser other than Safari (Chrome, Firefox, Edge…). */
+    fun otherIosBrowser(): Boolean = false
+    /** Opens this page in Safari (iOS 17 and later). */
+    fun openInSafari() {}
     /** The app has drawn its first screen: the page's splash can go. */
     fun ready() {}
 }

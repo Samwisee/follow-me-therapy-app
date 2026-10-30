@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import au.com.followmetherapy.design.components.ButtonKind
 import au.com.followmetherapy.design.components.FmtAction
+import au.com.followmetherapy.design.components.FmtButton
 import au.com.followmetherapy.design.components.FmtFlowScaffold
 import au.com.followmetherapy.design.components.FmtGroup
 import au.com.followmetherapy.design.components.FmtHead
@@ -81,6 +82,13 @@ fun InstallScreen(platform: Platform, nav: Nav, store: AppStore, welcome: Boolea
                 else "Then Follow Me opens like an app, without the browser around it, works without the internet, and your progress is less likely to be cleared.",
                 FmtTheme.type.lead,
             )
+        }
+        if (device == Device.IPhone && platform.otherIosBrowser() && !installed) {
+            // Chrome and others on an iPhone: Safari is one tap away (and their own Share menu works too).
+            FmtGroup("You're in another browser") {
+                FmtText("Open Follow Me in Safari to add it to your Home Screen. (Chrome can do it too: tap Share at the right of the address bar, then Add to Home Screen.)", FmtTheme.type.body)
+                Row { FmtButton("Open in Safari", { platform.openInSafari() }, trailingChevron = true) }
+            }
         }
         val order = listOf(device) + Device.entries.filter { it != device }
         order.forEach { d ->
