@@ -132,7 +132,8 @@ private fun PlanCalendar(store: AppStore) {
             FmtIconButton(FmtIcons.chevron, "Next week", { if (offset < 1) offset++ })
         }
     }
-    FmtWeekCalendar(rows, dates.map { it.substringAfterLast('-').trimStart('0') }, today = if (offset == 0) store.weekday else null)
+    // At the text edge, like the week's title above it.
+    FmtGroup { FmtWeekCalendar(rows, dates.map { it.substringAfterLast('-').trimStart('0') }, today = if (offset == 0) store.weekday else null) }
 }
 
 /** The plan's activities, each with its days and time, a tap away. */
