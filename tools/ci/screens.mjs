@@ -90,14 +90,18 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   // Pretend a new build is live.
   const realVersion = await readFile(join(dist, 'version.json'), 'utf8');
   const files = JSON.parse(await readFile(join(dist, 'files.json'), 'utf8'));
+  const realIndex = await readFile(join(dist, 'index.html'), 'utf8');
+  const built = JSON.parse(realVersion).build;
+  await writeFile(join(dist, 'index.html'), realIndex.replaceAll(built, 'next'));
   await writeFile(join(dist, 'version.json'), JSON.stringify({ build: 'next' }));
   t = Date.now(); await page.reload(); await ready(); update.launchWhileNewBuildDownloadsMs = Date.now() - t;
   await page.waitForTimeout(8000);
   update.waitingAfter = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { active: r.active && r.active.scriptURL.split('?v=')[1], waiting: r.waiting && r.waiting.scriptURL.split('?v=')[1] }; });
   t = Date.now(); await page.reload(); await ready(); await page.waitForTimeout(1500); update.launchTakingOverMs = Date.now() - t;
-  update.after = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { controller: navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL.split('?v=')[1], caches: await caches.keys() }; });
+  update.after = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { page: window.FMT_BUILD, waiting: !!r.waiting, installing: !!r.installing, controller: navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL.split('?v=')[1], caches: await caches.keys() }; });
   update.files = files.files.length;
   await writeFile(join(dist, 'version.json'), realVersion);
+  await writeFile(join(dist, 'index.html'), realIndex);
   report.update = update;
   await ctx.close();
 }
