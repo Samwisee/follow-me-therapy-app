@@ -54,7 +54,7 @@
     (function () {
       if (window.FMT_BUILD.indexOf("__") === 0 || !("serviceWorker" in navigator)) return fmtStart(); // local dev, or no workers
       var sw = navigator.serviceWorker;
-      setTimeout(function () { fmtLog("timeout"); fmtStart(); }, 1500);
+      setTimeout(function () { if (!document.querySelector('script[src^="composeApp.js"]')) fmtLog("timeout"); fmtStart(); }, 1500);
       sw.getRegistration().then(function (reg) {
         fmtLog("reg active=" + (reg && reg.active ? reg.active.scriptURL.split("v=")[1] : "-") + " waiting=" + (reg && reg.waiting ? reg.waiting.scriptURL.split("v=")[1] : "-") + " controlled=" + !!sw.controller);
         // A build downloaded last time is ready: switch to it, then start.
