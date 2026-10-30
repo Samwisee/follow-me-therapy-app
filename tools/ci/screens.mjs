@@ -100,6 +100,7 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   t = Date.now(); await page.reload(); await ready(); await page.waitForTimeout(1500); update.launchTakingOverMs = Date.now() - t;
   update.after = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { page: window.FMT_BUILD, waiting: !!r.waiting, installing: !!r.installing, controller: navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL.split('?v=')[1], caches: await caches.keys() }; });
   update.files = files.files.length;
+  update.boot = await page.evaluate(() => JSON.parse(sessionStorage.getItem('fmt.boot') || '[]'));
   await writeFile(join(dist, 'version.json'), realVersion);
   await writeFile(join(dist, 'index.html'), realIndex);
   report.update = update;
