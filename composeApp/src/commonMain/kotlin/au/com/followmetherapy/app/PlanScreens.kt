@@ -107,7 +107,7 @@ private fun PlanCalendar(store: AppStore) {
             }))
         }
         if (plan?.calm == true || store.calmSaved) {
-            add(CalendarRow("Calm-down plan", Tone.Teal, dates.map { if (store.calmUsedOn(it) > 0) CalendarDay.Done else CalendarDay.None }))
+            add(CalendarRow("Calm-down plan · when needed", Tone.Teal, dates.map { if (store.calmUsedOn(it) > 0) CalendarDay.Done else CalendarDay.None }))
         }
         store.weekNames.forEachIndexed { r, name ->
             if (name.isNotBlank()) {
@@ -121,6 +121,9 @@ private fun PlanCalendar(store: AppStore) {
                 }))
             }
         }
+    }.filter { row ->
+        // Without a plan, only what's been done shows (nothing is planned yet).
+        plan != null || row.days.any { it != CalendarDay.None }
     }
     FmtGroup {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
@@ -133,7 +136,10 @@ private fun PlanCalendar(store: AppStore) {
         }
     }
     // At the text edge, like the week's title above it.
-    FmtGroup { FmtWeekCalendar(rows, dates.map { it.substringAfterLast('-').trimStart('0') }, today = if (offset == 0) store.weekday else null) }
+    FmtGroup {
+        if (rows.isEmpty()) FmtText(if (offset > 0) "Nothing planned yet." else "Nothing done yet this week. What you do will show here, day by day.", FmtTheme.type.body)
+        else FmtWeekCalendar(rows, dates.map { it.substringAfterLast('-').trimStart('0') }, today = if (offset == 0) store.weekday else null)
+    }
 }
 
 /** The plan's activities, each with its days and time, a tap away. */
