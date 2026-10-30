@@ -43,10 +43,10 @@ import au.com.followmetherapy.design.tokens.FmtSpace
 /** A plan on its way in (from a link or a paste), waiting for the family to add it. */
 class PlanInbox {
     var plan by mutableStateOf<Plan?>(null)
+    /** Simone is previewing a plan as the family will see it (nothing is added). */
+    var preview by mutableStateOf(false)
 }
 
-/** Simone's services a plan can belong to (as on the website). */
-private val SERVICES = listOf("5 Steps Forward", "Steady Steps", "Early Start Denver Model")
 
 // ── The family's Plan tab ──
 
@@ -207,10 +207,11 @@ fun PlanImportScreen(store: AppStore, nav: Nav, platform: Platform, inbox: PlanI
         }
         return
     }
-    val replacing = store.plan != null
+    val replacing = store.plan != null && !inbox.preview
     FmtFlowScaffold(
-        start = FmtAction("Not now", ButtonKind.Outline) { inbox.plan = null; nav.home() },
-        end = FmtAction(if (replacing) "Use this plan" else "Add my plan", chevron = true) {
+        start = if (inbox.preview) null else FmtAction("Not now", ButtonKind.Outline) { inbox.plan = null; nav.home() },
+        end = if (inbox.preview) FmtAction("Back to the plan", ButtonKind.Outline) { inbox.plan = null; inbox.preview = false; nav.go(Route(Area.Planner, PLANNER_SEND)) }
+        else FmtAction(if (replacing) "Use this plan" else "Add my plan", chevron = true) {
             store.setPlan(p)
             inbox.plan = null
             nav.tab(1)
@@ -223,114 +224,11 @@ fun PlanImportScreen(store: AppStore, nav: Nav, platform: Platform, inbox: PlanI
         if (replacing) {
             FmtInfoNote("this replaces the plan you have now. Your progress so far stays.", leadIn = "Already have a plan?", tone = Tone.Sun)
         }
-        if (platform.device() == Device.IPhone && !platform.installed()) {
+        if (!inbox.preview && platform.device() == Device.IPhone && !platform.installed()) {
             FmtInfoNote(
                 "the app on your Home Screen keeps its own copy. Copy this link, open Follow Me from your Home Screen, and tap Plan › Paste a plan link.",
                 leadIn = "Using Follow Me from your Home Screen?", tone = Tone.Teal,
             )
-        }
-    }
-}
-
-// ── Simone's plan builder (#planner) ──
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun DayPicker(days: SnapshotStateList<Int>, tone: Tone) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
-        Plan.DAY_SHORT.forEachIndexed { i, d ->
-            FmtToggleChip(d, i in days, { on -> if (on) { if (i !in days) days.add(i) } else days.remove(i) }, tone)
-        }
-    }
-}
-
-/**
- * Where Simone makes a family's plan: her service, a note, which activities
- * on which days and when. It ends in a link she sends the family. Reached by
- * its address (#planner); her draft stays on her device.
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun PlannerScreen(store: AppStore, nav: Nav, platform: Platform, step: Int, inbox: PlanInbox) {
-    if (step == 1) { PlannerLink(store, nav, platform, inbox); return }
-    val draft = remember { store.plannerDraft() ?: Plan(routine = PlanItem("Morning routine", (0..4).toSet(), "07:30"), calm = true) }
-    var service by remember { mutableStateOf(draft.service) }
-    var note by remember { mutableStateOf(draft.note ?: "") }
-    var routineOn by remember { mutableStateOf(draft.routine != null) }
-    val routineDays = remember { mutableStateListOf<Int>().apply { addAll(draft.routine?.days ?: (0..4).toSet()) } }
-    var routineTime by remember { mutableStateOf(draft.routine?.time?.let { Plan.showTime(it) } ?: "7:30am") }
-    var calm by remember { mutableStateOf(draft.calm) }
-    val names = remember { mutableStateListOf<String>().apply { repeat(4) { add(draft.practice.getOrNull(it)?.name ?: "") } } }
-    val days = remember { List(4) { i -> mutableStateListOf<Int>().apply { addAll(draft.practice.getOrNull(i)?.days ?: setOf(0, 2, 4)) } } }
-    val times = remember { mutableStateListOf<String>().apply { repeat(4) { add(draft.practice.getOrNull(it)?.time?.let { t -> Plan.showTime(t) } ?: "4pm") } } }
-    fun build() = Plan(
-        service = service,
-        note = note.trim().ifEmpty { null },
-        routine = if (routineOn) PlanItem("Morning routine", routineDays.toSet(), Plan.normaliseTime(routineTime)) else null,
-        calm = calm,
-        practice = (0..3).filter { names[it].isNotBlank() }.map { PlanItem(names[it].trim(), days[it].toSet(), Plan.normaliseTime(times[it])) },
-        made = store.today,
-    )
-    FmtFlowScaffold(end = FmtAction("Make the link", chevron = true) { store.savePlannerDraft(build()); nav.go(Route(Area.Planner, 1)) }) {
-        FmtHead("Make a plan", swash = "plan", tag = "For Simone", tone = Tone.Purple)
-        FmtGroup("Service") {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
-                SERVICES.forEach { s -> FmtToggleChip(s, service == s, { on -> service = if (on) s else null }) }
-            }
-        }
-        FmtGroup("A note for the family") {
-            WriteField(note, { note = it }, placeholder = "What we're working on, in a sentence or two", kid = false, minLines = 2)
-        }
-        FmtPanel("Morning routine", Tone.Purple) {
-            Row { FmtToggleChip("In the plan", routineOn, { routineOn = it }) }
-            if (routineOn) {
-                DayPicker(routineDays, Tone.Purple)
-                WriteField(routineTime, { routineTime = it }, placeholder = "Reminder time, like 7:30am", kid = false)
-            }
-        }
-        FmtPanel("Calm-down plan", Tone.Teal) {
-            FmtText("For when feelings get big, so it has no days or reminders.", FmtTheme.type.small)
-            Row { FmtToggleChip("In the plan", calm, { calm = it }, Tone.Teal) }
-        }
-        FmtPanel("Practice", Tone.Sun) {
-            FmtText("Up to four activities, each with its days and a reminder time. Leave a name empty to skip it.", FmtTheme.type.small)
-            for (i in 0..3) {
-                WriteField(names[i], { names[i] = it }, placeholder = "Activity ${i + 1}, like Cutting practice", kid = false)
-                if (names[i].isNotBlank()) {
-                    DayPicker(days[i], Tone.Sun)
-                    WriteField(times[i], { times[i] = it }, placeholder = "Reminder time, like 4pm", kid = false)
-                }
-            }
-        }
-    }
-}
-
-/** The plan's link, to send: shared (Messages, Mail…) or copied. */
-@Composable
-private fun PlannerLink(store: AppStore, nav: Nav, platform: Platform, inbox: PlanInbox) {
-    val plan = remember { store.plannerDraft() ?: Plan(made = store.today) }
-    val link = remember { plan.link(platform.appUrl()) }
-    var message by remember { mutableStateOf<String?>(null) }
-    FmtFlowScaffold(
-        start = FmtAction("Edit", ButtonKind.Outline) { nav.go(Route(Area.Planner)) },
-        end = FmtAction("Share the link", chevron = true) {
-            platform.shareText("Your plan from Simone", "Here's your plan for Follow Me. Open this link on your phone: $link") { shared ->
-                if (!shared) platform.copyText(link) { ok -> message = if (ok) "Link copied. Paste it into a message or email." else link }
-            }
-        },
-    ) {
-        FmtHead("Send the plan", swash = "plan", tag = "For Simone", tone = Tone.Purple)
-        FmtGroup {
-            FmtText("Send the family this link. Opening it adds the plan to Follow Me on their phone. The plan is inside the link, so it isn't stored anywhere else.", FmtTheme.type.body)
-        }
-        FmtGroup("Each week") {}
-        PlanRows(plan, store, null)
-        FmtGroup {
-            Row(horizontalArrangement = Arrangement.spacedBy(FmtTheme.metrics.gridGap)) {
-                FmtButton("Copy the link", { platform.copyText(link) { ok -> message = if (ok) "Link copied." else link } }, kind = ButtonKind.Outline)
-                FmtButton("See it as the family will", { inbox.plan = plan; nav.go(Route(Area.PlanImport)) }, kind = ButtonKind.Outline)
-            }
-            message?.let { FmtText(it, FmtTheme.type.small, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, color = FmtColors.ink) }
         }
     }
 }

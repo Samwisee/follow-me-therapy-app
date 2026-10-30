@@ -74,12 +74,13 @@ data class Route(val area: Area, val step: Int = 0) {
 }
 
 /** Moving around: forward slides in from the right, back from the left; tabs cross-fade. */
-class Nav(start: Route, private val onChange: (String) -> Unit) {
+class Nav(start: Route, private val onChange: (String) -> Unit, private val homeRoute: Route = Route(Area.Today)) {
     var route by mutableStateOf(start)
         private set
     fun go(to: Route) { route = to; onChange(to.slug) }
     fun tab(i: Int) = go(Route(Area.entries.first { it.tab == i }))
-    fun home() = go(Route(Area.Today))
+    /** Today in the family app; the families list in Simone's planner. */
+    fun home() = go(homeRoute)
 }
 
 private val tabs = listOf(
@@ -93,12 +94,15 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
     val store = remember { AppStore(platform) }
     // A plan link (#plan=…) opens on the plan, waiting to be added.
     val inbox = remember { PlanInbox().apply { if (startAt.startsWith("plan=")) plan = Plan.fromLink(startAt) } }
+    val session = remember { PlannerSession() }
+    val planner = remember { platform.plannerEntry() }
     val fromLink = startAt.startsWith("plan=")
     // In a phone's or tablet's browser the app opens on its install page first
     // (it works best from the Home Screen); installed, or once skipped, it opens on Today.
     val nav = remember {
-        val welcome = startAt.isEmpty() && !platform.installed() && platform.device() != Device.Computer && !store.installSkipped
-        Nav(if (fromLink) Route(Area.PlanImport) else if (welcome) Route(Area.Install, WELCOME) else Route.parse(startAt), onNavigate)
+        val welcome = !planner && startAt.isEmpty() && !platform.installed() && platform.device() != Device.Computer && !store.installSkipped
+        Nav(if (fromLink) Route(Area.PlanImport) else if (welcome) Route(Area.Install, WELCOME) else Route.parse(startAt), onNavigate,
+            homeRoute = if (planner) Route(Area.Planner) else Route(Area.Today))
     }
     // Take the plan's code out of the address once it's read.
     LaunchedEffect(Unit) { if (fromLink) onNavigate(nav.route.slug) }
@@ -115,7 +119,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
         val rise = with(LocalDensity.current) { FmtSpace.s4.toPx() }
         // One app bar and wave above every screen: they stay put while the
         // screens slide beneath, and only their parts animate.
-        val bar = barFor(nav.route, store, nav)
+        val bar = barFor(nav.route, store, nav, planner)
         Column(Modifier.fillMaxSize().graphicsLayer { alpha = enter.value; translationY = (1f - enter.value) * rise }.background(FmtColors.paper)) {
             FmtAppBar(
                 bar.title, onBack = bar.back, brand = bar.brand, progress = bar.progress, progressLabel = bar.label,
@@ -148,7 +152,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                             Area.Install -> InstallScreen(platform, nav, store, welcome = r.step == WELCOME)
                             Area.GrownUps -> GrownUpsScreen(store, nav, platform)
                             Area.PlanImport -> PlanImportScreen(store, nav, platform, inbox)
-                            Area.Planner -> PlannerScreen(store, nav, platform, r.step, inbox)
+                            Area.Planner -> PlannerScreen(store, nav, platform, r.step, inbox, session)
                             else -> Unit
                         }
                     }
@@ -166,7 +170,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
 /** What the app bar shows for a place in the app. */
 private data class Bar(val title: String, val back: (() -> Unit)? = null, val progress: Float? = null, val label: String? = null, val brand: Boolean = false, val menu: Boolean = false)
 
-private fun barFor(r: Route, store: AppStore, nav: Nav): Bar {
+private fun barFor(r: Route, store: AppStore, nav: Nav, planner: Boolean): Bar {
     val home = nav::home
     return when (r.area) {
         // The three tabs share one bar with the lockup: the tab bar says where you are.
@@ -174,7 +178,11 @@ private fun barFor(r: Route, store: AppStore, nav: Nav): Bar {
         Area.Today, Area.Plan, Area.Activities -> Bar(tabs[r.area.tab ?: 0].label, brand = true, menu = true)
         Area.GrownUps -> Bar("For grown-ups", home)
         Area.PlanImport -> Bar("A plan from Simone", home)
-        Area.Planner -> if (r.step == 0) Bar("Make a plan", home) else Bar("Send the plan", { nav.go(Route(Area.Planner)) })
+        Area.Planner -> when (r.step) {
+            PLANNER_EDIT -> Bar("Plan", { nav.go(Route(Area.Planner)) })
+            PLANNER_SEND -> Bar("Send the plan", { nav.go(Route(Area.Planner, PLANNER_EDIT)) })
+            else -> if (planner) Bar("Planner", brand = true) else Bar("Planner", home)
+        }
         Area.Morning -> {
             val total = store.routineSteps.size
             val last = total + 2

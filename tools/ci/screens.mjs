@@ -22,7 +22,7 @@ await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', args: ['--enable-unsafe-swiftshader'] });
 const report = {};
 for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop', { width: 1280, height: 800 }]]) {
-  for (const screen of ['', 'plan', 'activities', 'grown-ups', 'morning', 'morning/2', 'calm/1', 'calm-now', 'week-setup', 'design-system', 'install', 'install/1', 'planner', 'planner/1']) {
+  for (const screen of ['', 'plan', 'activities', 'grown-ups', 'morning', 'morning/2', 'calm/1', 'calm-now', 'week-setup', 'design-system', 'install', 'install/1', 'planner']) {
     const page = await browser.newPage({ viewport, deviceScaleFactor: name === 'phone' ? 2 : 1 });
     const errors = [];
     page.on('pageerror', e => errors.push(String(e)));
@@ -127,6 +127,27 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   await page.waitForTimeout(4000);
   await page.screenshot({ path: join(out, 'phone-today-with-plan.png') });
   report.plan = { addressAfterOpening: address, saved: saved || null };
+  await ctx.close();
+}
+// Simone's planner opens from its own page (planner.html): its Home Screen
+// name and start, the families list, and a new plan (the action bar's end).
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  const page = await ctx.newPage();
+  await page.goto('http://localhost:8099/planner.html');
+  await page.waitForTimeout(5000);
+  await page.screenshot({ path: join(out, 'phone-planner-home.png') });
+  report.planner = await page.evaluate(async () => {
+    const m = await fetch('planner.webmanifest').then(r => r.json()).catch(() => null);
+    let qrModules = 0;
+    if (typeof qrcode === 'function') { const q = qrcode(0, 'M'); q.addData(location.origin + '/#plan=' + 'x'.repeat(300)); q.make(); qrModules = q.getModuleCount(); }
+    return { manifest: m && { name: m.name, start: m.start_url }, qrModules, hash: location.hash };
+  });
+  await page.mouse.click(390 - 90, 844 - 40); // New plan
+  await page.waitForTimeout(2000);
+  await page.screenshot({ path: join(out, 'phone-planner-new.png') });
+  await page.mouse.wheel(0, 1600); await page.waitForTimeout(800);
+  await page.screenshot({ path: join(out, 'phone-planner-new-scrolled.png') });
   await ctx.close();
 }
 await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 1));

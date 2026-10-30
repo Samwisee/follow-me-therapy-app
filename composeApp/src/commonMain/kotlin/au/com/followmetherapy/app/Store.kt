@@ -39,6 +39,10 @@ interface Platform {
     fun copyText(text: String, onResult: (Boolean) -> Unit) { onResult(false) }
     /** Reads what was copied (after a tap); null if the browser won't say. */
     fun readClipboard(onText: (String?) -> Unit) { onText(null) }
+    /** A QR code of [text] (rows of dark modules), or null if it can't be made here. */
+    fun qrCode(text: String): List<BooleanArray>? = null
+    /** Opened from the Planner icon (Simone's planner), not the family app. */
+    fun plannerEntry(): Boolean = false
     /** This app's address, for links (plans). */
     fun appUrl(): String = "https://samwisee.github.io/follow-me-therapy-app/"
     /** Lets the person pick a file, and gives back its text. */
@@ -178,9 +182,6 @@ class AppStore(private val p: Platform) {
     /** The calm-down plan was used today (counted for Simone's summary). */
     fun calmUsed() { put("calm.used.$today", ((get("calm.used.$today")?.toIntOrNull() ?: 0) + 1).toString()) }
 
-    /** Simone's plan builder keeps its draft here, on her device. */
-    fun plannerDraft(): Plan? = get("planner.draft")?.let { Plan.parse(it) }
-    fun savePlannerDraft(p: Plan) = put("planner.draft", p.toJson())
 
     /** This week's Monday, yyyy-mm-dd. */
     val weekStart: String get() = week
@@ -232,6 +233,19 @@ class AppStore(private val p: Platform) {
         if (tricky.isNotEmpty()) appendLine("Tricky: " + tricky.joinToString("; "))
         if (weekProud.isNotBlank()) appendLine("Proud of: $weekProud")
     }.trimEnd()
+
+    // ── Simone's planner: her families and templates, on her phone only ──
+    private val FAMILY = "planner.family."
+    fun families(): List<Family> = record.entries
+        .filter { it.key.startsWith(FAMILY) && it.value.value != null }
+        .mapNotNull { Family.parse(it.key.removePrefix(FAMILY), it.value.value!!) }
+        .sortedBy { it.name.lowercase() }
+    fun saveFamily(f: Family) = put(FAMILY + f.id, f.toJson())
+    fun deleteFamily(id: String) = put(FAMILY + id, null)
+    fun newFamilyId(): String = p.now().toString(36)
+    /** Her template for a service (or her own starting point without one): hers if she saved one, else the built-in. */
+    fun template(service: String?): Plan = get("planner.template.${service ?: "none"}")?.let { Plan.parse(it) } ?: Templates.builtIn(service)
+    fun saveTemplate(service: String?, plan: Plan) = put("planner.template.${service ?: "none"}", plan.copy(note = null, made = "").toJson())
 
     // ── Install ──
     /** Chose to use the app in the browser instead of adding it to the Home Screen. */

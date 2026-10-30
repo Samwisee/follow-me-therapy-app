@@ -37,7 +37,17 @@ private fun jsReadClipboard(onText: (String) -> Unit): Unit = js("""{
   if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(t => onText(t || '')).catch(() => onText(''));
   else onText('');
 }""")
-private fun jsAppUrl(): String = js("location.origin + location.pathname")
+/** The plan link always points at the family app (index), even when made in the planner (planner.html). */
+private fun jsAppUrl(): String = js("location.origin + location.pathname.replace(/planner\\.html$/, '')")
+/** Rows of 1s and 0s, comma-separated (vendor/qrcode.js, MIT, Kazuhiko Arase); empty if it isn't loaded. */
+private fun jsQr(text: String): String = js("""(() => {
+  if (typeof qrcode !== 'function') return '';
+  const q = qrcode(0, 'M'); q.addData(text); q.make();
+  const n = q.getModuleCount(), rows = [];
+  for (let y = 0; y < n; y++) { let r = ''; for (let x = 0; x < n; x++) r += q.isDark(y, x) ? '1' : '0'; rows.push(r); }
+  return rows.join(',');
+})()""")
+private fun jsPlannerEntry(): Boolean = js("window.FMT_ENTRY === 'planner'")
 private fun jsReloadOnPlanLink(): Unit = js("""{
   // A plan link opened while the app is already open: start again with it.
   window.addEventListener('hashchange', () => { if (location.hash.indexOf('#plan=') === 0) location.reload(); });
@@ -84,6 +94,8 @@ private object WebPlatform : Platform {
     override fun copyText(text: String, onResult: (Boolean) -> Unit) = jsCopyText(text, onResult)
     override fun readClipboard(onText: (String?) -> Unit) = jsReadClipboard { onText(it.ifEmpty { null }) }
     override fun appUrl() = jsAppUrl()
+    override fun qrCode(text: String): List<BooleanArray>? = jsQr(text).takeIf { it.isNotEmpty() }?.split(',')?.map { r -> BooleanArray(r.length) { r[it] == '1' } }
+    override fun plannerEntry() = jsPlannerEntry()
     override fun openFile(onText: (String) -> Unit) = jsOpenFile(onText)
     override fun keepData(onResult: (Boolean?) -> Unit) = jsKeepData { onResult(if (it < 0) null else it == 1) }
     override fun installed() = jsInstalled()
@@ -100,7 +112,8 @@ private object WebPlatform : Platform {
 fun main() {
     // Each place in the app has its own address (#today, #calm, #morning…),
     // replaced rather than pushed, so the browser's Back button leaves the app.
-    val start = window.location.hash.removePrefix("#")
+    // The Planner icon opens Simone's planner; the family app opens where its address says.
+    val start = window.location.hash.removePrefix("#").ifEmpty { if (jsPlannerEntry()) "planner" else "" }
     jsReloadOnPlanLink()
     ComposeViewport("app") {
         App(platform = WebPlatform, startAt = start, onNavigate = { slug ->

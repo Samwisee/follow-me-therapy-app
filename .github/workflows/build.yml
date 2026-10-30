@@ -40,7 +40,7 @@ jobs:
         run: |
           D=composeApp/build/dist/wasmJs/productionExecutable
           B="${GITHUB_SHA::7}"
-          sed -i "s/__BUILD__/$B/g" "$D/index.html"
+          sed -i "s/__BUILD__/$B/g" "$D/index.html" "$D/planner.html"
           printf '{"build":"%s"}\n' "$B" > "$D/version.json"
           echo "::notice::Built $B: $(ls $D | tr '\n' ' ')"
       - name: Report compile errors
