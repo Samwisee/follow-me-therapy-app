@@ -182,6 +182,12 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
                 done = target > 0 && store.starsThisWeek >= target,
             )
         }
+        // Each practice activity, explained (how to do it, why it helps).
+        store.activities.mapNotNull { (_, name) -> taskIndex(name)?.let { it to name } }.forEach { (t, name) ->
+            Reveal(Kind.HomePractice in shown, first = false) {
+                FmtListRow(name, "Home practice · how to do it", FmtIcons.star, Tone.Sun, onClick = { nav.go(Route(Area.Task, t)) })
+            }
+        }
     }
 }
 

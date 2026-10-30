@@ -333,8 +333,9 @@
     "pink"
    ],
    "rules": [
-    "Days Monday to Sunday with their dates; today's column on lilac. Each row's stars sit between dashed rules, the activity's name above, as on the practice week (Tracker).",
+    "Days Monday to Sunday with their dates; today's column on lilac. Each row's stars sit between dashed rules, the activity's name above, as on the practice week (Tracker), but compact: icon-sized stars, each still a 44px target.",
     "Not planned: a small dot. Planned: a purple outline star. Partly done: a pale sun star. Done: a gold star outlined in sun-deep.",
+    "A row's name can link to its activity (a chevron after the name, a 44px target).",
     "A row can be tapped to add or take away a star (practice); the others are read-only.",
     "Adding a star bursts: the star springs in with a twist and sparkles fly out (purple, teal, sun, pink). Not with reduced motion.",
     "Never colour alone: filled against outline, and each day is read out (Monday, Morning routine: done)."

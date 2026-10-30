@@ -50,7 +50,7 @@ private fun lerp(a: Float, b: Float, t: Float) = a + (b - a) * t
  * sparkles fly out in purple, teal, pink and sun. Not with reduced motion.
  */
 @Composable
-internal fun FmtStarMark(state: StarState, burst: Int, modifier: Modifier = Modifier) {
+internal fun FmtStarMark(state: StarState, burst: Int, modifier: Modifier = Modifier, iconSize: androidx.compose.ui.unit.Dp = FmtSize.iconLg) {
     val t = FmtCalendarTokens
     val reduced = LocalFmtReducedMotion.current
     val p = remember { Animatable(1f) }
@@ -78,9 +78,9 @@ internal fun FmtStarMark(state: StarState, burst: Int, modifier: Modifier = Modi
     ) {
         Box(Modifier.scale(scale).rotate(turn)) {
             when (state) {
-                StarState.Planned -> FmtIcon(FmtIcons.star, t.planned, FmtSize.iconLg)
-                StarState.Partial -> { FmtIcon(FmtIcons.starFilled, t.partial, FmtSize.iconLg); FmtIcon(FmtIcons.star, t.partialLine, FmtSize.iconLg) }
-                StarState.Done -> { FmtIcon(FmtIcons.starFilled, t.doneFill, FmtSize.iconLg); FmtIcon(FmtIcons.star, t.doneLine, FmtSize.iconLg) }
+                StarState.Planned -> FmtIcon(FmtIcons.star, t.planned, iconSize)
+                StarState.Partial -> { FmtIcon(FmtIcons.starFilled, t.partial, iconSize); FmtIcon(FmtIcons.star, t.partialLine, iconSize) }
+                StarState.Done -> { FmtIcon(FmtIcons.starFilled, t.doneFill, iconSize); FmtIcon(FmtIcons.star, t.doneLine, iconSize) }
             }
         }
     }
@@ -91,7 +91,7 @@ internal fun FmtStarMark(state: StarState, burst: Int, modifier: Modifier = Modi
  * Adding one bursts (see [FmtStarMark]); taking it away just goes back.
  */
 @Composable
-fun FmtStarToggle(on: Boolean, label: String, toggle: () -> Unit) {
+fun FmtStarToggle(on: Boolean, label: String, iconSize: androidx.compose.ui.unit.Dp = FmtSize.iconLg, toggle: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusVisibleAsState()
     val pressed by source.collectIsPressedAsState()
@@ -106,6 +106,6 @@ fun FmtStarToggle(on: Boolean, label: String, toggle: () -> Unit) {
             .scale(if (pressed) 0.85f else 1f),
         contentAlignment = Alignment.Center,
     ) {
-        FmtStarMark(if (on) StarState.Done else StarState.Planned, bursts)
+        FmtStarMark(if (on) StarState.Done else StarState.Planned, bursts, iconSize = iconSize)
     }
 }

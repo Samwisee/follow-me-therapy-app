@@ -58,7 +58,7 @@ enum class Area(val slug: String, val tab: Int?) {
     Today("today", 0), Plan("plan", 1), Activities("activities", 2), GrownUps("grown-ups", null),
     Morning("morning", null), Calm("calm", null), CalmNow("calm-now", null),
     WeekSetup("week-setup", null), Week("week", null), DesignSystem("design-system", null), Install("install", null),
-    PlanImport("plan-import", null), Planner("planner", null),
+    PlanImport("plan-import", null), Planner("planner", null), Task("task", null),
 }
 
 data class Route(val area: Area, val step: Int = 0) {
@@ -151,6 +151,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                             Area.CalmNow -> CalmNowFlow(store, nav, r.step)
                             Area.WeekSetup -> WeekSetupFlow(store, nav)
                             Area.Week -> WeekFlow(store, nav)
+                            Area.Task -> TaskScreen(nav, r.step)
                             Area.DesignSystem -> DesignSystemScreen(nav)
                             Area.Install -> InstallScreen(platform, nav, store, welcome = r.step == WELCOME)
                             Area.GrownUps -> GrownUpsScreen(store, nav, platform)
@@ -202,6 +203,7 @@ private fun barFor(r: Route, store: AppStore, nav: Nav, planner: Boolean): Bar {
             else Bar("Calm-down plan", home, (r.step + 1) / n.toFloat(), "${r.step + 1} of $n")
         }
         Area.WeekSetup, Area.Week -> Bar("Practice week", home)
+        Area.Task -> Bar("How to", { nav.tab(2) })
         Area.DesignSystem -> Bar("Design system", { nav.go(Route(Area.GrownUps)) })
         Area.Install -> if (r.step == WELCOME) Bar("Follow Me Therapy", brand = true) else Bar("Add to your Home Screen", { nav.go(Route(Area.GrownUps)) })
     }

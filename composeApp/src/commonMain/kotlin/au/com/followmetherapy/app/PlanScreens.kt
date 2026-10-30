@@ -56,7 +56,7 @@ fun PlanTab(store: AppStore, nav: Nav, platform: Platform, inbox: PlanInbox) {
     var message by remember { mutableStateOf<String?>(null) }
     if (p != null) {
         FmtHead("My plan", swash = "plan", tag = p.service ?: "From Simone", tone = Tone.Purple, note = p.note?.takeIf { it.isNotBlank() }, noteLeadIn = "From Simone:")
-        PlanCalendar(store)
+        PlanCalendar(store, nav)
         FmtPanel("Reminders and progress", Tone.Purple) {
             if (p.hasReminders) {
                 FmtText("Add a reminder to your phone's calendar for each activity, at its time.", FmtTheme.type.small)
@@ -76,7 +76,7 @@ fun PlanTab(store: AppStore, nav: Nav, platform: Platform, inbox: PlanInbox) {
             FmtText("Your plan from me goes here: which activities, on which days. After a session I'll send you a link. Open it, or copy it and paste it here.", FmtTheme.type.lead)
         }
         PastePlan(platform, nav, inbox, null)
-        PlanCalendar(store)
+        PlanCalendar(store, nav)
     }
 }
 
@@ -86,7 +86,7 @@ fun PlanTab(store: AppStore, nav: Nav, platform: Platform, inbox: PlanInbox) {
  * back through earlier weeks (or one ahead).
  */
 @Composable
-private fun PlanCalendar(store: AppStore) {
+private fun PlanCalendar(store: AppStore, nav: Nav) {
     var offset by remember { mutableStateOf(0) }
     val monday = Dates.add(store.weekStart, offset * 7)
     val dates = (0..6).map { Dates.add(monday, it) }
@@ -102,10 +102,11 @@ private fun PlanCalendar(store: AppStore) {
                     planned != null && i in planned -> CalendarDay.Planned
                     else -> CalendarDay.None
                 }
-            }))
+            }, onOpen = { nav.go(Route(Area.Morning)) }))
         }
         if (plan?.calm == true || store.calmSaved) {
-            add(CalendarRow("Calm-down plan · when needed", Tone.Teal, dates.map { if (store.calmUsedOn(it) > 0) CalendarDay.Done else CalendarDay.None }))
+            add(CalendarRow("Calm-down plan · when needed", Tone.Teal, dates.map { if (store.calmUsedOn(it) > 0) CalendarDay.Done else CalendarDay.None },
+                onOpen = { nav.go(if (store.calmSaved) Route(Area.CalmNow) else Route(Area.Calm)) }))
         }
         store.weekNames.forEachIndexed { r, name ->
             if (name.isNotBlank()) {
@@ -118,7 +119,8 @@ private fun PlanCalendar(store: AppStore) {
                         planned != null && d in planned -> CalendarDay.Planned
                         else -> CalendarDay.None
                     }
-                }, onToggle = if (offset == 0) { d -> store.togglePractice(r, d) } else null))
+                }, onToggle = if (offset == 0) { d -> store.togglePractice(r, d) } else null,
+                    onOpen = { nav.go(taskIndex(name)?.let { Route(Area.Task, it) } ?: Route(Area.Week)) }))
             }
         }
     }.filter { row ->
