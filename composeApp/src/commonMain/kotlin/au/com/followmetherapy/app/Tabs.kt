@@ -129,7 +129,7 @@ fun TodayTab(store: AppStore, nav: Nav) {
 
 /** A tappable star (44dp), filled sun when practised. */
 @Composable
-fun StarButton(on: Boolean, label: String, toggle: () -> Unit) = FmtStarToggle(on, label, toggle)
+fun StarButton(on: Boolean, label: String, toggle: () -> Unit) = FmtStarToggle(on, label, toggle = toggle)
 
 
 /** The kinds of activity, as on the worksheets' tags: the Activities tab filters by them. */
