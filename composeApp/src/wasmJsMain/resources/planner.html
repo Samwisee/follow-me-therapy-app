@@ -39,17 +39,28 @@
     // before the app starts. version.json (never cached) says which is newest.
     window.FMT_BUILD = "__BUILD__";
     window.FMT_ENTRY = "planner";
+    // The app starts once we know no newer build is waiting (or after 1.5s at most).
+    var fmtStart = (function () {
+      var started = false;
+      return function () {
+        if (started) return; started = true;
+        var js = document.createElement("script");
+        js.src = "composeApp.js?v=" + window.FMT_BUILD;
+        document.head.appendChild(js);
+      };
+    })();
     (function () {
-      if (window.FMT_BUILD.indexOf("__") === 0) return; // local dev
-      if (!("serviceWorker" in navigator)) return;
+      if (window.FMT_BUILD.indexOf("__") === 0 || !("serviceWorker" in navigator)) return fmtStart(); // local dev, or no workers
       var sw = navigator.serviceWorker;
+      setTimeout(fmtStart, 1500);
       sw.getRegistration().then(function (reg) {
-        // A build downloaded last time is ready: switch to it before the app starts.
-        if (reg && reg.waiting && sw.controller && !window.fmtStarted) {
-          sw.addEventListener("controllerchange", function () { if (!window.fmtStarted) location.reload(); });
+        // A build downloaded last time is ready: switch to it, then start.
+        if (reg && reg.waiting && sw.controller) {
+          sw.addEventListener("controllerchange", function () { location.reload(); });
           reg.waiting.postMessage("fmt-take-over");
           return;
         }
+        fmtStart();
         // The first visit, or a phone still on an older kind of worker (that
         // served this page from the network): keep this build on the phone.
         var mine = reg && reg.active && reg.active.scriptURL.indexOf("v=" + window.FMT_BUILD) >= 0;
@@ -59,14 +70,13 @@
           .then(function (r) { return r.json(); })
           .then(function (v) { if (v.build && v.build !== window.FMT_BUILD) sw.register("sw.js?v=" + v.build).catch(function () {}); })
           .catch(function () {});
-      }).catch(function () {});
+      }).catch(fmtStart);
     })();
     // Chrome and Edge offer a one-tap install; keep the offer for the app's Install now button.
     window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.fmtInstallPrompt = e; });
     window.addEventListener("appinstalled", function () { window.fmtInstallPrompt = null; });
   </script>
   <script src="vendor/qrcode.js"></script>
-  <script type="application/javascript" src="composeApp.js?v=__BUILD__"></script>
 </head>
 <body>
   <div id="splash"><div>
@@ -79,7 +89,6 @@
     window.fmtReady = function () {
       var s = document.getElementById("splash");
       if (!s) return;
-      window.fmtStarted = true;
       s.classList.add("is-done");
       setTimeout(function () { s.remove(); }, 600);
     };
