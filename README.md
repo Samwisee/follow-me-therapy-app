@@ -24,8 +24,17 @@ later without changing the shared code.
 CI builds every push and publishes `main` to GitHub Pages:
 https://samwisee.github.io/follow-me-therapy-app/
 
+**Plans from Simone.** Simone makes a family's plan at `#planner` (her
+service, a note, the morning routine and practice activities with days and
+reminder times, the calm-down plan) and shares the link it makes. The plan is
+inside the link (`#plan=<code>`, `Plan.kt`): the part after # never reaches a
+server. Opening it shows the plan; Add my plan keeps it on the device. The
+Plan tab adds reminders to the phone's calendar (a weekly `.ics`, no server)
+and sends Simone the week's progress in words (shared or copied, only where
+the family sends it). Today shows what's planned for today.
+
 Every screen has its own address, so a link can go straight to it:
-`#activities`, `#morning`, `#calm`, `#calm-now`, `#week`, `#grown-ups`,
+`#plan`, `#planner`, `#morning`, `#calm`, `#calm-now`, `#week`, `#grown-ups`,
 `#design-system` (flow steps add `/n`, e.g. `#morning/2`).
 
 Progress, the calm-down plan and the week's stars are saved on the device as
