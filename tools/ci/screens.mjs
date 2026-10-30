@@ -106,7 +106,9 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
 }
 // Launching again opens from the phone's copy at once, even on slow 3G; a new
 // build downloads in the background and takes over on the next launch.
-{
+// Four rounds, each from a fresh browser: the switch has to be reliable.
+report.updateRounds = [];
+for (let round = 0; round < 4; round++) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
   const ready = () => page.waitForFunction(() => !document.getElementById('splash'), null, { timeout: 60000 }).then(() => true).catch(() => false);
@@ -154,7 +156,8 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   await writeFile(join(dist, 'version.json'), realVersion);
   await writeFile(join(dist, 'index.html'), realIndex);
   }
-  report.update = update;
+  report.updateRounds.push({ controller: update.after?.controller, page: update.after?.page, ms: update.launchTakingOverMs, trace: update.after?.page === 'next' ? undefined : update.trace });
+  if (round === 0) report.update = update;
   await ctx.close();
 }
 // Data saved by older versions (one key per entry) moves into the record, once.
@@ -266,7 +269,7 @@ check(report.pwa?.serviceWorker && report.pwa?.controlled, 'the service worker k
 check(report.pwa?.offlineCanvas, 'the app opens with no internet');
 check(report.update?.cachedLaunchSlow3gMs != null && report.update.cachedLaunchSlow3gMs < 2500, `it opens from the phone's copy within 2.5s on slow 3G (${report.update?.cachedLaunchSlow3gMs}ms)`);
 check(report.update?.waitingAfter?.waiting === 'next', 'a new build downloads in the background');
-check(report.update?.after?.controller === 'next' && report.update?.after?.page === 'next', 'a new build takes over on the next launch');
+check(report.updateRounds.length === 4 && report.updateRounds.every(r => r.controller === 'next' && r.page === 'next'), `a new build takes over on the next launch, every time (${report.updateRounds.map(r => r.page === 'next' ? 'ok' : 'stuck').join(', ')})`);
 check(report.migration?.idea === 'Hug my dog' && report.migration?.oldKeysLeft === 0, 'older saved data moves into the record');
 check(report.fontRetry?.splashGone && report.fontRetry?.canvas, 'the app opens when a font download fails once');
 check(report.plan?.saved && !String(report.plan?.addressAfterOpening).includes('plan='), "a plan link adds the plan and leaves the address");
