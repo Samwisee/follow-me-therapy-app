@@ -49,7 +49,7 @@ fun TodayTab(store: AppStore, nav: Nav) {
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(m.groupGap)) {
         FmtSwashTitle("$greeting!", swash = greeting.substringAfter(" "))
-        FmtText("Here's today, ${days[store.weekday]}.", FmtTheme.type.lead)
+        FmtText("Here's the plan for the day!", FmtTheme.type.lead)
     }
 
     // Morning routine, with today's progress.
