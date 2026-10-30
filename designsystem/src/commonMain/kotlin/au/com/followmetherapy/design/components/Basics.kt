@@ -74,6 +74,7 @@ import au.com.followmetherapy.design.tokens.FmtShadowToken
 import au.com.followmetherapy.design.tokens.FmtShadow
 import au.com.followmetherapy.design.tokens.FmtSize
 import au.com.followmetherapy.design.tokens.FmtSpace
+import androidx.compose.ui.graphics.vector.ImageVector
 
 /** The four tones (generated from tokens.json › tone). Fixed meanings: purple = who it's for, teal = telehealth, sun = in person, pink = reports. */
 typealias Tone = FmtTone
@@ -240,7 +241,7 @@ fun FmtTag(text: String, tone: Tone = Tone.Purple, modifier: Modifier = Modifier
 
 /** A bordered pastel pill that states one fact. Say it in words; the colour only reinforces. */
 @Composable
-fun FmtChip(text: String, tone: Tone = Tone.Purple, icon: androidx.compose.ui.graphics.vector.ImageVector? = null, modifier: Modifier = Modifier) {
+fun FmtChip(text: String, tone: Tone = Tone.Purple, icon: ImageVector? = null, modifier: Modifier = Modifier) {
     val t = FmtChipTokens
     // On its own tone's ground (an ages chip on the lilac hero or app bar) a chip turns paper, keeping its line and ink.
     val fill = if (onOwnGround(tone)) t.fillOnGround else t.fill(tone)
@@ -294,12 +295,12 @@ fun FmtToggleChip(text: String, on: Boolean, onToggle: (Boolean) -> Unit, tone: 
  * Feelings teal, Home practice sun), or an [icon]-only chip that shows or hides
  * part of a page (info). Off: paper, the tone's line and ink. On: the tone's
  * ink as the fill with white words, no tick; the light-to-dark change shows it.
- * An icon-only chip needs a spoken [label]. [toggle] chips are announced on/off,
- * the rest as a selected tab of the filters.
+ * An icon-only chip needs a spoken [label]. Announced as the selected tab of
+ * the filters.
  */
 @Composable
-fun FmtFilterChip(text: String?, on: Boolean, onSelect: () -> Unit, tone: Tone = Tone.Purple, icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
-                  label: String? = null, toggle: Boolean = false, modifier: Modifier = Modifier) {
+fun FmtFilterChip(text: String?, on: Boolean, onSelect: () -> Unit, tone: Tone = Tone.Purple, icon: ImageVector? = null,
+                  label: String? = null, modifier: Modifier = Modifier) {
     val t = FmtChipTokens
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusVisibleAsState()
@@ -309,8 +310,7 @@ fun FmtFilterChip(text: String?, on: Boolean, onSelect: () -> Unit, tone: Tone =
     val fill by animateColorAsState(if (on) t.fillSelected(tone) else t.outlineFill, anim)
     val line by animateColorAsState(if (on) t.fillSelected(tone) else t.line(tone), anim)
     val ink by animateColorAsState(if (on) t.inkSelected else t.ink(tone), anim)
-    val target = if (toggle) Modifier.toggleable(value = on, interactionSource = source, indication = null, role = Role.Checkbox) { onSelect() }
-    else Modifier.filterSelectable(on, source, onSelect)
+    val target = Modifier.filterSelectable(on, source, onSelect)
     Row(
         modifier
             .scale(scale)
@@ -338,7 +338,7 @@ private fun Modifier.filterSelectable(on: Boolean, source: MutableInteractionSou
  * [small] is the 60dp tile (in notes and choices); otherwise 76dp.
  */
 @Composable
-fun FmtIconTile(icon: androidx.compose.ui.graphics.vector.ImageVector, tone: Tone = Tone.Purple, small: Boolean = false, ground: Color? = null, modifier: Modifier = Modifier) {
+fun FmtIconTile(icon: ImageVector, tone: Tone = Tone.Purple, small: Boolean = false, ground: Color? = null, modifier: Modifier = Modifier) {
     val t = FmtTileTokens
     val size: Dp = if (small) FmtSize.tileMd else FmtSize.tileLg
     val shape = RoundedCornerShape(au.com.followmetherapy.design.tokens.FmtRadius.tile)

@@ -37,13 +37,11 @@
     // in the background while this one runs, and takes over on the next launch,
     // before the app starts. version.json (never cached) says which is newest.
     window.FMT_BUILD = "__BUILD__";
-    // A short log of how the app started (read by CI; kept for the tab's life).
-    function fmtLog(m) { try { var l = JSON.parse(sessionStorage.getItem("fmt.boot") || "[]"); l.push(window.FMT_BUILD + " " + Math.round(performance.now()) + " " + m); sessionStorage.setItem("fmt.boot", JSON.stringify(l.slice(-30))); } catch (e) {} }
     // The app starts once we know no newer build is waiting (or after 1.5s at most).
     var fmtStart = (function () {
       var started = false;
       return function () {
-        if (started) return; started = true; fmtLog("start");
+        if (started) return; started = true;
         var js = document.createElement("script");
         js.src = "composeApp.js?v=" + window.FMT_BUILD;
         document.head.appendChild(js);
@@ -52,12 +50,11 @@
     (function () {
       if (window.FMT_BUILD.indexOf("__") === 0 || !("serviceWorker" in navigator)) return fmtStart(); // local dev, or no workers
       var sw = navigator.serviceWorker;
-      setTimeout(function () { if (!document.querySelector('script[src^="composeApp.js"]')) fmtLog("timeout"); fmtStart(); }, 1500);
+      setTimeout(fmtStart, 1500);
       sw.getRegistration().then(function (reg) {
-        fmtLog("reg active=" + (reg && reg.active ? reg.active.scriptURL.split("v=")[1] : "-") + " waiting=" + (reg && reg.waiting ? reg.waiting.scriptURL.split("v=")[1] : "-") + " controlled=" + !!sw.controller);
         // A build downloaded last time is ready: switch to it, then start.
         if (reg && reg.waiting && sw.controller) {
-          sw.addEventListener("controllerchange", function () { fmtLog("switched"); location.reload(); });
+          sw.addEventListener("controllerchange", function () { location.reload(); });
           reg.waiting.postMessage("fmt-take-over");
           return;
         }

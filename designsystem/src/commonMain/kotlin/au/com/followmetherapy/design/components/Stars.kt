@@ -35,6 +35,7 @@ import au.com.followmetherapy.design.tokens.FmtSpace
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import androidx.compose.ui.unit.Dp
 
 /** The reader asked for less motion (prefers-reduced-motion): bursts and springs are skipped. */
 val LocalFmtReducedMotion = staticCompositionLocalOf { false }
@@ -50,7 +51,7 @@ private fun lerp(a: Float, b: Float, t: Float) = a + (b - a) * t
  * sparkles fly out in purple, teal, pink and sun. Not with reduced motion.
  */
 @Composable
-internal fun FmtStarMark(state: StarState, burst: Int, modifier: Modifier = Modifier, iconSize: androidx.compose.ui.unit.Dp = FmtSize.iconLg) {
+internal fun FmtStarMark(state: StarState, burst: Int, modifier: Modifier = Modifier, iconSize: Dp = FmtSize.iconLg) {
     val t = FmtCalendarTokens
     val reduced = LocalFmtReducedMotion.current
     val p = remember { Animatable(1f) }
@@ -91,7 +92,7 @@ internal fun FmtStarMark(state: StarState, burst: Int, modifier: Modifier = Modi
  * Adding one bursts (see [FmtStarMark]); taking it away just goes back.
  */
 @Composable
-fun FmtStarToggle(on: Boolean, label: String, iconSize: androidx.compose.ui.unit.Dp = FmtSize.iconLg, toggle: () -> Unit) {
+fun FmtStarToggle(on: Boolean, label: String, iconSize: Dp = FmtSize.iconLg, toggle: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusVisibleAsState()
     val pressed by source.collectIsPressedAsState()

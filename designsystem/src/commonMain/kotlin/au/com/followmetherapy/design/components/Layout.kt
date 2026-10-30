@@ -154,8 +154,8 @@ fun FmtHead(title: String, swash: String?, tag: String, tone: Tone = Tone.Purple
                 // A note that belongs to the header (From Simone: …) sits inside it, under the tag.
                 note?.let {
                     FmtText(
-                        androidx.compose.ui.text.buildAnnotatedString {
-                            noteLeadIn?.let { l -> pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)); append("$l "); pop() }
+                        buildAnnotatedString {
+                            noteLeadIn?.let { l -> pushStyle(SpanStyle(fontWeight = FontWeight.Bold)); append("$l "); pop() }
                             append(it)
                         },
                         FmtTheme.type.body,
