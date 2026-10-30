@@ -65,11 +65,8 @@ const val PLANNER_SEND = 2
 /** Simone's services a plan can belong to (as on the website). */
 val SERVICES = listOf("5 Steps Forward", "Steady Steps", "Early Start Denver Model")
 
-/** Practice activities to pick from (the worksheets' activities, and more as they're made). */
-val ACTIVITY_LIBRARY = listOf(
-    "Cutting practice", "Ball skills", "Getting dressed", "Handwriting practice", "Threading beads",
-    "Playdough squeeze", "Animal walks", "Obstacle course", "Shoelaces", "Using a spoon and fork",
-)
+/** Practice activities to pick from: the names of TASKS (Tasks.kt), so each one has its how-to page. */
+val ACTIVITY_LIBRARY: List<String> get() = TASKS.map { it.name }
 
 /** A family on Simone's phone: what she calls them, their plan, when she last sent it, what they sent back. */
 data class Family(val id: String, val name: String, val plan: Plan, val sent: String? = null, val progress: String? = null, val progressOn: String? = null) {

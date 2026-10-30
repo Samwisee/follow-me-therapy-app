@@ -12,7 +12,8 @@ import au.com.followmetherapy.design.components.Tone
 import au.com.followmetherapy.design.theme.FmtTheme
 
 /**
- * How to do each home-practice activity from the library (ACTIVITY_LIBRARY),
+ * The home-practice activities Simone can choose from in her planner (this list
+ * is ACTIVITY_LIBRARY), each with how to do it,
  * in Simone's voice: a few steps for grown-ups and a line on why it helps.
  * Drafts for Simone to check and change.
  */
