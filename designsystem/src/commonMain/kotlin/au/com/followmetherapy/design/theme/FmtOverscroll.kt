@@ -35,7 +35,8 @@ import kotlin.math.sign
 /**
  * Elastic edges, like a phone's own apps: pull past the top or bottom and the
  * page follows your finger with growing resistance, then springs back when you
- * let go; a fast fling that reaches an edge bounces softly. Every scrolling
+ * let go; a fling that reaches an edge glides past it at its own speed and
+ * eases back in one smooth arc (critically damped springs: no bump, no hard stop). Every scrolling
  * area gets it through [FmtTheme] (LocalOverscrollFactory).
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -77,14 +78,16 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
     override suspend fun applyToFling(velocity: Velocity, performFling: suspend (Velocity) -> Velocity) {
         settle?.cancel()
         if (offset != 0f) {
-            // Let go while stretched: spring back, with a little give past the edge.
-            animate(offset, 0f, animationSpec = SPRING_BACK) { v, _ -> offset = v }
+            // Let go while stretched: spring back, carrying the finger's speed so there's no jolt.
+            animate(offset, 0f, initialVelocity = velocity.y, animationSpec = SPRING_BACK) { v, _ -> offset = v }
             return
         }
         val left = performFling(velocity)
         if (abs(left.y) > 1f) {
-            // A fling that reached the edge: a small, soft bounce carrying some of its speed.
-            animate(0f, 0f, initialVelocity = left.y * 0.25f, animationSpec = BOUNCE) { v, _ -> offset = v }
+            // A fling that reaches the edge carries on past it at the same speed, slows
+            // and glides back (critically damped: one smooth arc, no bump, no hard stop).
+            val cap = reach * 0.6f
+            animate(0f, 0f, initialVelocity = left.y, animationSpec = GLIDE) { v, _ -> offset = v.coerceIn(-cap, cap) }
         }
     }
 
@@ -110,8 +113,8 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
 
     private companion object {
         const val SETTLE_MS = 120L
-        val SPRING_BACK = spring<Float>(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow)
-        val BOUNCE = spring<Float>(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow)
+        val SPRING_BACK = spring<Float>(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)
+        val GLIDE = spring<Float>(dampingRatio = 1f, stiffness = Spring.StiffnessLow)
     }
 }
 

@@ -137,28 +137,21 @@ private enum class Kind(val label: String, val tone: Tone) { SelfCare("Self-care
 
 /**
  * Activities: everything there is to do, filtered by kind (more kinds arrive
- * as the worksheets do), each filter in its kind's colour. The info chip shows
- * the grown-ups' note (on until it's closed). Rows slide in and out as the
- * filter changes. Each shows its progress, and a tick when it's done.
+ * as the worksheets do), each filter in its kind's colour, the words for
+ * grown-ups above them. Rows slide in and out as the filter changes. Each shows its progress, and a tick when it's done.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ActivitiesTab(store: AppStore, nav: Nav) {
     var only by remember { mutableStateOf<Kind?>(null) }
+    FmtText("Small, everyday practice between our sessions, for you and your child to do together. They're the same activities as my printed worksheets: use whichever suits your family.", FmtTheme.type.lead)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
-        FmtFilterChip(null, store.activitiesInfo, { store.setActivitiesInfo(!store.activitiesInfo) }, icon = FmtIcons.info, label = "About these activities", toggle = true)
         FmtFilterChip("All", only == null, { only = null })
         Kind.entries.forEach { k -> FmtFilterChip(k.label, only == k, { only = k }, tone = k.tone) }
     }
     Column {
-        Reveal(store.activitiesInfo, first = true) {
-            FmtInfoNote(
-                "small, everyday practice between our sessions, for you and your child to do together. They're the same activities as my printed worksheets: use whichever suits your family, paper on the fridge or this on a phone or tablet.",
-                leadIn = "For grown-ups:", icon = FmtIcons.info,
-            )
-        }
         val shown = Kind.entries.filter { only == null || only == it }
-        val firstRow = shown.firstOrNull().takeUnless { store.activitiesInfo }
+        val firstRow = shown.firstOrNull()
         Reveal(Kind.SelfCare in shown, first = firstRow == Kind.SelfCare) {
             val done = store.routineDone.size
             val total = store.routineSteps.size

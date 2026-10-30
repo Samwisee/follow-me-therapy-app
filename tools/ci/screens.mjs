@@ -74,6 +74,30 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   report.pwa = pwa;
   await ctx.close();
 }
+// Touch scrolling as on a phone: 3x pixels, a CPU 4x slower than the runner,
+// flings up and down (to the bottom and back), every frame timed.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  const cdp = await ctx.newCDPSession(page);
+  report.touch = {};
+  for (const screen of ['', 'activities', 'week']) {
+    await page.goto(`http://localhost:8099/#${screen}`);
+    await page.waitForTimeout(5000);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+    await page.evaluate(() => { window.__ft = []; let l = performance.now(); window.__on = true; const f = t => { window.__ft.push(t - l); l = t; if (window.__on) requestAnimationFrame(f); }; requestAnimationFrame(f); });
+    for (const dy of [-700, -700, 900]) {
+      await cdp.send('Input.synthesizeScrollGesture', { x: 195, y: 500, yDistance: dy, speed: 2400, gestureSourceType: 'touch', preventFling: false });
+      await page.waitForTimeout(1200);
+    }
+    const ft = await page.evaluate(() => { window.__on = false; return window.__ft; });
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    const f = ft.slice(2), sorted = [...f].sort((a, b) => a - b);
+    const pct = q => Math.round(sorted[Math.floor(sorted.length * q)] * 10) / 10;
+    report.touch[screen || 'today'] = { frames: f.length, medianMs: pct(0.5), p90Ms: pct(0.9), p99Ms: pct(0.99), over20: f.filter(x => x > 20).length, over34: f.filter(x => x > 34).length };
+  }
+  await ctx.close();
+}
 // Launching again opens from the phone's copy at once, even on slow 3G; a new
 // build downloads in the background and takes over on the next launch.
 {

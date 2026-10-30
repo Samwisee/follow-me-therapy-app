@@ -58,8 +58,6 @@ fun PlanTab(store: AppStore, nav: Nav, platform: Platform, inbox: PlanInbox) {
         FmtHead("My plan", swash = "plan", tag = p.service ?: "From Simone", tone = Tone.Purple)
         p.note?.takeIf { it.isNotBlank() }?.let { FmtInfoNote(it, leadIn = "From Simone:", icon = FmtIcons.heart) }
         PlanCalendar(store)
-        FmtGroup("Each week") {}
-        PlanRows(p, store, nav)
         FmtPanel("Reminders and progress", Tone.Purple) {
             if (p.hasReminders) {
                 FmtText("Add a reminder to your phone's calendar for each activity, at its time.", FmtTheme.type.small)
@@ -97,7 +95,7 @@ private fun PlanCalendar(store: AppStore) {
     val rows = buildList {
         if (plan == null || plan.routine != null) {
             val planned = plan?.routine?.days
-            add(CalendarRow("Morning routine", Tone.Purple, dates.mapIndexed { i, d ->
+            add(CalendarRow("Morning routine" + (plan?.routine?.time?.let { " · " + Plan.showTime(it) } ?: ""), Tone.Purple, dates.mapIndexed { i, d ->
                 val n = store.routineStepsOn(d)
                 when {
                     n >= store.routineSteps.size -> CalendarDay.Done
@@ -114,7 +112,8 @@ private fun PlanCalendar(store: AppStore) {
             if (name.isNotBlank()) {
                 val planned = plan?.practice?.getOrNull(r)?.days
                 // This week's practice stars tap like the practice week's (and burst).
-                add(CalendarRow(name, Tone.Sun, (0..6).map { d ->
+                val time = plan?.practice?.getOrNull(r)?.time?.let { " · " + Plan.showTime(it) } ?: ""
+                add(CalendarRow(name + time, Tone.Sun, (0..6).map { d ->
                     when {
                         store.practisedOn(monday, r, d) -> CalendarDay.Done
                         planned != null && d in planned -> CalendarDay.Planned
