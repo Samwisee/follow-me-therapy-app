@@ -132,11 +132,23 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   update.waitingAfter = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { active: r.active && r.active.scriptURL.split('?v=')[1], waiting: r.waiting && r.waiting.scriptURL.split('?v=')[1] }; });
   // The next launch switches to it (before the app starts, or just after when the
   // worker is slow to answer): wait for the page to be the new build.
+  // Trace the switch (test only): messages posted to workers, state changes, controller changes.
+  await page.addInitScript(() => {
+    const log = JSON.parse(sessionStorage.getItem('t.log') || '[]');
+    const put = m => { log.push(Math.round(performance.now()) + ' ' + (window.FMT_BUILD || '?') + ' ' + m); sessionStorage.setItem('t.log', JSON.stringify(log.slice(-40))); };
+    const post = ServiceWorker.prototype.postMessage;
+    ServiceWorker.prototype.postMessage = function (m) { put('post ' + m + ' to ' + this.scriptURL.split('v=')[1] + ' (' + this.state + ')'); this.addEventListener('statechange', () => put('worker ' + this.scriptURL.split('v=')[1] + ' ' + this.state)); return post.apply(this, arguments); };
+    navigator.serviceWorker.addEventListener('controllerchange', () => put('controllerchange'));
+    const gr = navigator.serviceWorker.getRegistration.bind(navigator.serviceWorker);
+    navigator.serviceWorker.getRegistration = (...a) => gr(...a).then(r => { put('reg active=' + (r && r.active && r.active.scriptURL.split('v=')[1]) + ' waiting=' + (r && r.waiting && r.waiting.scriptURL.split('v=')[1]) + ' ctl=' + !!navigator.serviceWorker.controller); return r; });
+    addEventListener('load', () => put('load'));
+  });
   t = Date.now(); await page.reload();
   await page.waitForFunction(() => window.FMT_BUILD === 'next' && !!navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL.includes('v=next'), null, { timeout: 20000 }).catch(() => {});
   await ready(); update.launchTakingOverMs = Date.now() - t;
   update.after = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { page: window.FMT_BUILD, waiting: !!r.waiting, installing: !!r.installing, controller: navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL.split('?v=')[1], caches: await caches.keys() }; });
   update.files = files.files.length;
+  update.trace = await page.evaluate(() => JSON.parse(sessionStorage.getItem('t.log') || '[]')).catch(() => null);
 
   } finally {
   await writeFile(join(dist, 'version.json'), realVersion);
