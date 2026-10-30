@@ -14,6 +14,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -284,6 +288,50 @@ fun FmtToggleChip(text: String, on: Boolean, onToggle: (Boolean) -> Unit, tone: 
         FmtText(text, FmtTheme.type.chip, color = t.ink(tone))
     }
 }
+
+/**
+ * A chip that filters a list, in the tone of what it filters (Self-care purple,
+ * Feelings teal, Home practice sun), or an [icon]-only chip that shows or hides
+ * part of a page (info). Off: paper, the tone's line and ink. On: the tone's
+ * ink as the fill with white words, no tick; the light-to-dark change shows it.
+ * An icon-only chip needs a spoken [label]. [toggle] chips are announced on/off,
+ * the rest as a selected tab of the filters.
+ */
+@Composable
+fun FmtFilterChip(text: String?, on: Boolean, onSelect: () -> Unit, tone: Tone = Tone.Purple, icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+                  label: String? = null, toggle: Boolean = false, modifier: Modifier = Modifier) {
+    val t = FmtChipTokens
+    val source = remember { MutableInteractionSource() }
+    val focused by source.collectIsFocusVisibleAsState()
+    val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed) 0.95f else 1f, tween(FmtMotion.durBase, easing = FmtMotion.easeSpring))
+    val anim = tween<Color>(FmtMotion.durFast, easing = FmtMotion.easeStandard)
+    val fill by animateColorAsState(if (on) t.fillSelected(tone) else t.outlineFill, anim)
+    val line by animateColorAsState(if (on) t.fillSelected(tone) else t.line(tone), anim)
+    val ink by animateColorAsState(if (on) t.inkSelected else t.ink(tone), anim)
+    val target = if (toggle) Modifier.toggleable(value = on, interactionSource = source, indication = null, role = Role.Checkbox) { onSelect() }
+    else Modifier.filterSelectable(on, source, onSelect)
+    Row(
+        modifier
+            .scale(scale)
+            .fmtFocusRing(focused, CircleShape)
+            .heightIn(min = FmtSize.target)
+            .widthIn(min = FmtSize.target)
+            .background(fill, CircleShape)
+            .border(FmtBorder.outline, line, CircleShape)
+            .then(target)
+            .then(if (label != null) Modifier.semantics { contentDescription = label } else Modifier)
+            .padding(horizontal = if (text == null) FmtSpace.s2 else FmtSpace.s3, vertical = FmtSpace.s2),
+        horizontalArrangement = Arrangement.spacedBy(FmtSpace.s1, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        icon?.let { FmtIcon(it, ink, FmtSize.iconSm) }
+        text?.let { FmtText(it, FmtTheme.type.chip, color = ink) }
+    }
+}
+
+private fun Modifier.filterSelectable(on: Boolean, source: MutableInteractionSource, onSelect: () -> Unit) =
+    selectable(selected = on, interactionSource = source, indication = null, role = Role.Tab, onClick = onSelect)
 
 /**
  * A rounded tint square with a 40×40 line icon in the tone's colour.

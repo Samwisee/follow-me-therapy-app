@@ -113,6 +113,11 @@ class AppStore(private val p: Platform) {
         p.saveRecord(record.toJson(at))
     }
 
+    /** The grown-ups' note on Activities (the info chip): shown until it's closed. */
+    var activitiesInfo by mutableStateOf(get("activities.info") != "off")
+        private set
+    fun setActivitiesInfo(on: Boolean) { activitiesInfo = on; put("activities.info", if (on) null else "off") }
+
     // ── Morning routine ──
     val routineSteps = listOf("Toilet and wash hands", "Get dressed", "Eat breakfast", "Brush teeth", "Shoes on", "Bag on, out the door")
     val routineDone = mutableStateListOf<Int>()

@@ -73,8 +73,12 @@ data class FmtMetrics(
     val content: Dp,
     val measure: Dp,
 ) {
-    /** Where words outside containers start: card-pad + outline in, so they line up with words inside the header and notes. */
-    val textInset: Dp get() = cardPad + FmtBorder.outline
+    /**
+     * Where words outside containers start. On a screen they line up with the
+     * containers' outer edge (printed sheets inset them card-pad + outline;
+     * see the Design System's "One text edge").
+     */
+    val textInset: Dp get() = 0.dp
 
     /** Corner of a container holding a radius-tile thing card-pad in from its edge, with an outline. */
     val containerRadius: Dp get() = au.com.followmetherapy.design.tokens.FmtRadius.tile + cardPad + FmtBorder.outline

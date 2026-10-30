@@ -52,6 +52,29 @@
    },
    "app": "FmtToggleChip"
   },
+  "FilterChip": {
+   "description": "A chip that filters a list (All, Self-care, Feelings…), or an icon chip that shows or hides a part of the page (the info chip).",
+   "tokens": "chip",
+   "tones": [
+    "purple",
+    "teal",
+    "sun",
+    "pink"
+   ],
+   "rules": [
+    "In the tone of what it filters (Self-care purple, Feelings teal, Home practice sun).",
+    "Off: paper with the tone's line and ink. On: the tone's ink as the fill with white words, no tick: the light-to-dark change shows it (at least 3:1 against paper), so it never relies on hue.",
+    "An icon-only chip (info) carries a spoken label; a 44px target; announced as selected or on."
+   ],
+   "website": {
+    "none": "The website has nothing to filter."
+   },
+   "designSystem": {
+    "css": ".fmt-chip.is-filter",
+    "react": "FilterChip"
+   },
+   "app": "FmtFilterChip"
+  },
   "Tag": {
    "description": "A small solid label above a title (Self-care, Telehealth).",
    "tokens": "tag",

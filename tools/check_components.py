@@ -76,6 +76,7 @@ def ratio(a, b):
 TEXT, ICON = 7.0, 3.0
 PAIRS = [  # (component, foreground part or colour, background part or colour, minimum)
     ("chip", "ink", "fill", TEXT), ("chip", "ink", "fill-on-ground", TEXT),
+    ("chip", "ink-selected", "fill-selected", TEXT), ("chip", "fill-selected", "outline-fill", ICON),
     ("tag", "ink", "fill", TEXT),
     ("tile", "icon", "fill", ICON), ("tile", "icon", "fill-on-ground", ICON),
     ("note", "#ink-soft", "fill", TEXT), ("note", "lead-in", "fill", TEXT), ("note", "icon", "#paper", ICON),

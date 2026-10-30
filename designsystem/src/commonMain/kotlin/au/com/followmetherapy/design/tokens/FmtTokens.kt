@@ -414,6 +414,10 @@ object FmtChipTokens {
     /** The 'Spots available' dot. */
     val live: Color = FmtColors.live
     val liveInk: Color = FmtColors.liveInk
+    /** A filter chip that's chosen: the tone's ink, dark enough for white words in every tone and a big light-to-dark change from paper, so it never relies on hue alone. */
+    fun fillSelected(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Ink)
+    /** Words and icon on a chosen filter chip. */
+    val inkSelected: Color = FmtColors.paper
 }
 
 /** A small solid label above a title (Self-care). */

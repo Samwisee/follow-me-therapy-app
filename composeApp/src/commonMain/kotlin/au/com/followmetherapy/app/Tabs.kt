@@ -7,7 +7,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import au.com.followmetherapy.design.components.FmtToggleChip
+import au.com.followmetherapy.design.components.FmtFilterChip
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.unit.dp
+import au.com.followmetherapy.design.tokens.FmtMotion
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import au.com.followmetherapy.design.components.FmtFlowScaffold
@@ -124,54 +133,76 @@ fun StarButton(on: Boolean, label: String, toggle: () -> Unit) = FmtStarToggle(o
 
 
 /** The kinds of activity, as on the worksheets' tags: the Activities tab filters by them. */
-private enum class Kind(val label: String) { SelfCare("Self-care"), Feelings("Feelings"), HomePractice("Home practice") }
+private enum class Kind(val label: String, val tone: Tone) { SelfCare("Self-care", Tone.Purple), Feelings("Feelings", Tone.Teal), HomePractice("Home practice", Tone.Sun) }
 
 /**
  * Activities: everything there is to do, filtered by kind (more kinds arrive
- * as the worksheets do). Each shows its progress, and a tick when it's done.
+ * as the worksheets do), each filter in its kind's colour. The info chip shows
+ * the grown-ups' note (on until it's closed). Rows slide in and out as the
+ * filter changes. Each shows its progress, and a tick when it's done.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ActivitiesTab(store: AppStore, nav: Nav) {
     var only by remember { mutableStateOf<Kind?>(null) }
-    FmtGroup {
-        FmtText("Small, everyday practice between our sessions, for you and your child to do together.", FmtTheme.type.lead)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
-            FmtToggleChip("All", only == null, { only = null })
-            Kind.entries.forEach { k -> FmtToggleChip(k.label, only == k, { on -> only = if (on) k else null }) }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
+        FmtFilterChip(null, store.activitiesInfo, { store.setActivitiesInfo(!store.activitiesInfo) }, icon = FmtIcons.info, label = "About these activities", toggle = true)
+        FmtFilterChip("All", only == null, { only = null })
+        Kind.entries.forEach { k -> FmtFilterChip(k.label, only == k, { only = k }, tone = k.tone) }
+    }
+    Column {
+        Reveal(store.activitiesInfo, first = true) {
+            FmtInfoNote(
+                "small, everyday practice between our sessions, for you and your child to do together. They're the same activities as my printed worksheets: use whichever suits your family, paper on the fridge or this on a phone or tablet.",
+                leadIn = "For grown-ups:", icon = FmtIcons.info,
+            )
+        }
+        val shown = Kind.entries.filter { only == null || only == it }
+        val firstRow = shown.firstOrNull().takeUnless { store.activitiesInfo }
+        Reveal(Kind.SelfCare in shown, first = firstRow == Kind.SelfCare) {
+            val done = store.routineDone.size
+            val total = store.routineSteps.size
+            FmtListRow(
+                "My morning routine",
+                "Self-care · " + if (store.routineComplete) "all done today" else "$done of $total steps today",
+                FmtIcons.sunrise, Tone.Purple, onClick = { nav.go(Route(Area.Morning)) },
+                progress = done / total.toFloat(), progressLabel = "$done of $total steps done today", done = store.routineComplete,
+            )
+        }
+        Reveal(Kind.Feelings in shown, first = firstRow == Kind.Feelings) {
+            FmtListRow(
+                "My calm-down plan",
+                if (store.calmSaved) "Feelings · your plan is ready" else "Feelings · choose what helps when feelings get big",
+                FmtIcons.breathe, Tone.Teal,
+                onClick = { nav.go(if (store.calmSaved) Route(Area.Calm, CALM_PLAN_STEP) else Route(Area.Calm)) },
+                progress = store.calmProgress, progressLabel = if (store.calmSaved) "Plan ready" else "Making the plan", done = store.calmSaved,
+            )
+        }
+        Reveal(Kind.HomePractice in shown, first = firstRow == Kind.HomePractice) {
+            val target = store.practiceTarget
+            FmtListRow(
+                "My practice week",
+                "Home practice · " + if (store.weekSetUp) "${store.starsThisWeek} of $target stars this week" else "a star for each day you practise",
+                FmtIcons.calendar, Tone.Sun,
+                onClick = { nav.go(Route(if (store.weekSetUp) Area.Week else Area.WeekSetup)) },
+                progress = store.practiceProgress, progressLabel = "${store.starsThisWeek} of $target stars this week",
+                done = target > 0 && store.starsThisWeek >= target,
+            )
         }
     }
-    val done = store.routineDone.size
-    val total = store.routineSteps.size
-    if (only == null || only == Kind.SelfCare) {
-        FmtListRow(
-            "My morning routine",
-            "Self-care · " + if (store.routineComplete) "all done today" else "$done of $total steps today",
-            FmtIcons.sunrise, Tone.Purple, onClick = { nav.go(Route(Area.Morning)) },
-            progress = done / total.toFloat(), progressLabel = "$done of $total steps done today", done = store.routineComplete,
-        )
+}
+
+/** A part of a list that grows in (and fades) when shown and folds away when hidden, a stack gap above it unless it's [first]. */
+@Composable
+private fun Reveal(visible: Boolean, first: Boolean, content: @Composable () -> Unit) {
+    val gap by animateDpAsState(if (first) 0.dp else FmtTheme.metrics.stack, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
+    AnimatedVisibility(
+        visible,
+        enter = expandVertically(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard)) + fadeIn(tween(FmtMotion.durBase, FmtMotion.durFast)),
+        exit = fadeOut(tween(FmtMotion.durFast)) + shrinkVertically(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard)),
+    ) {
+        Box(Modifier.padding(top = gap)) { content() }
     }
-    if (only == null || only == Kind.Feelings) {
-        FmtListRow(
-            "My calm-down plan",
-            if (store.calmSaved) "Feelings · your plan is ready" else "Feelings · choose what helps when feelings get big",
-            FmtIcons.breathe, Tone.Teal,
-            onClick = { nav.go(if (store.calmSaved) Route(Area.Calm, CALM_PLAN_STEP) else Route(Area.Calm)) },
-            progress = store.calmProgress, progressLabel = if (store.calmSaved) "Plan ready" else "Making the plan", done = store.calmSaved,
-        )
-    }
-    if (only == null || only == Kind.HomePractice) {
-        val target = store.practiceTarget
-        FmtListRow(
-            "My practice week",
-            "Home practice · " + if (store.weekSetUp) "${store.starsThisWeek} of $target stars this week" else "a star for each day you practise",
-            FmtIcons.calendar, Tone.Sun,
-            onClick = { nav.go(Route(if (store.weekSetUp) Area.Week else Area.WeekSetup)) },
-            progress = store.practiceProgress, progressLabel = "${store.starsThisWeek} of $target stars this week",
-            done = target > 0 && store.starsThisWeek >= target,
-        )
-    }
-    FmtInfoNote("these are the same activities as my printed worksheets. Use whichever suits your family: paper on the fridge, or this on a phone or tablet.", leadIn = "For grown-ups:")
 }
 
 /** For grown-ups (from the menu button on the tabs): install, privacy, backups and starting again. */
