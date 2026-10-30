@@ -459,6 +459,12 @@ object FmtHeadTokens {
     fun line(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Line)
 }
 
+/** A tinted section of a page (Keep a backup): the tone's ground, outlined in its line; its words sit at the text edge. */
+object FmtPanelTokens {
+    fun fill(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Ground)
+    fun line(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Line)
+}
+
 /** A container you tap (service card, list row). Tappable things are outlined in the solid colour; static ones in the line colour. */
 object FmtCardTokens {
     val fill: Color = FmtColors.paper

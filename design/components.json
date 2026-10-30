@@ -116,6 +116,29 @@
    },
    "app": "FmtHead"
   },
+  "Panel": {
+   "description": "A tinted section of a screen: a heading and what it holds, on the tone's ground, outlined in its line.",
+   "tokens": "panel",
+   "tones": [
+    "purple",
+    "teal",
+    "sun",
+    "pink"
+   ],
+   "rules": [
+    "Ground fill, line outline, corner nested (radius-tile + card-pad + outline).",
+    "Its words start card-pad + outline in: the same text edge as every group and note on the screen.",
+    "Something on a panel sits on that ground: a chip of the same tone turns paper, tiles turn paper."
+   ],
+   "website": {
+    "none": "The website's full-width bands (lilac, butter, mint) play this part."
+   },
+   "designSystem": {
+    "css": ".fmt-panel",
+    "react": "Panel"
+   },
+   "app": "FmtPanel"
+  },
   "Card": {
    "description": "A container you tap: service card (tile beside the title, a sentence, centred Learn more ›), action card (button at the foot), list row (tile, words, chevron).",
    "tokens": "card",

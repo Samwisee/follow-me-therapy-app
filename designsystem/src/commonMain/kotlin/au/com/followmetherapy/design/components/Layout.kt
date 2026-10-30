@@ -271,3 +271,25 @@ fun FmtTickList(items: List<String>, modifier: Modifier = Modifier) {
         }
     }
 }
+
+/**
+ * A tinted section of a screen: a heading and what it holds on the tone's
+ * ground, outlined in its line, corner nested. Its words start card-pad +
+ * outline in, the same text edge as every group and note on the screen.
+ */
+@Composable
+fun FmtPanel(title: String? = null, tone: Tone = Tone.Purple, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    val m = FmtTheme.metrics
+    val t = au.com.followmetherapy.design.tokens.FmtPanelTokens
+    val shape = RoundedCornerShape(m.containerRadius)
+    val ground = t.fill(tone)
+    FmtOnGround(ground) {
+        Column(
+            modifier.fillMaxWidth().background(ground, shape).border(FmtBorder.outline, t.line(tone), shape).padding(m.cardPad + FmtBorder.outline),
+            verticalArrangement = Arrangement.spacedBy(m.groupGap),
+        ) {
+            if (title != null) FmtText(title, FmtTheme.type.groupTitle, Modifier.semantics { heading() })
+            content()
+        }
+    }
+}

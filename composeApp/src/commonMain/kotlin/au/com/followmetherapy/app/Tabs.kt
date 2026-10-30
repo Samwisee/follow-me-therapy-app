@@ -23,6 +23,7 @@ import au.com.followmetherapy.design.components.FmtChip
 import au.com.followmetherapy.design.components.FmtGroup
 import au.com.followmetherapy.design.components.FmtInfoNote
 import au.com.followmetherapy.design.components.FmtListRow
+import au.com.followmetherapy.design.components.FmtPanel
 import au.com.followmetherapy.design.components.FmtLockup
 import au.com.followmetherapy.design.components.FmtProgressBar
 import au.com.followmetherapy.design.components.FmtStarToggle
@@ -47,7 +48,8 @@ fun TodayTab(store: AppStore, nav: Nav) {
         store.hour < 17 -> "Good afternoon"
         else -> "Good evening"
     }
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(m.groupGap)) {
+    // At the text edge, in line with the words inside the cards below.
+    FmtGroup {
         FmtSwashTitle("$greeting!", swash = greeting.substringAfter(" "))
         FmtText("Here's the plan for the day!", FmtTheme.type.lead)
     }
@@ -104,7 +106,7 @@ fun StarButton(on: Boolean, label: String, toggle: () -> Unit) = FmtStarToggle(o
 @Composable
 fun ActivitiesTab(store: AppStore, nav: Nav) {
     val m = FmtTheme.metrics
-    FmtText("Small, everyday practice between our sessions, for you and your child to do together.", FmtTheme.type.lead)
+    FmtGroup { FmtText("Small, everyday practice between our sessions, for you and your child to do together.", FmtTheme.type.lead) }
     Column(verticalArrangement = Arrangement.spacedBy(m.gridGap)) {
         FmtListRow("My morning routine", "Self-care · six steps from waking up to out the door", FmtIcons.sunrise, Tone.Purple, onClick = { nav.go(Route(Area.Morning)) })
         FmtListRow("My calm-down plan", if (store.calmSaved) "Feelings · your plan is ready" else "Feelings · choose what helps when feelings get big", FmtIcons.breathe, Tone.Teal,
@@ -124,10 +126,13 @@ fun GrownUpsTab(store: AppStore, nav: Nav, platform: Platform) {
     val installed = remember { platform.installed() }
     // Ask the device to keep this app's data even when it's short of space.
     LaunchedEffect(Unit) { platform.keepData { kept = it } }
-    FmtText(
-        "I'm Simone, a paediatric occupational therapist. These activities are the ones we practise in our sessions, for you and your child to keep going with at home. Short and often is best: five minutes a day is plenty.",
-        FmtTheme.type.body,
-    )
+    // Words line up on one edge: loose text sits in a group, at the same inset as the words inside panels and notes.
+    FmtGroup {
+        FmtText(
+            "I'm Simone, a paediatric occupational therapist. These activities are the ones we practise in our sessions, for you and your child to keep going with at home. Short and often is best: five minutes a day is plenty.",
+            FmtTheme.type.body,
+        )
+    }
     if (!installed) {
         FmtListRow("Add the app to your Home Screen", "It opens like an app, works without the internet, and keeps your progress safer", FmtIcons.addToHome, Tone.Purple, onClick = { nav.go(Route(Area.Install)) })
     }
@@ -135,7 +140,7 @@ fun GrownUpsTab(store: AppStore, nav: Nav, platform: Platform) {
         "everything you enter stays on this device. Nothing is sent to me or anyone else, and there's no account.",
         leadIn = "Your privacy:", tone = Tone.Teal, icon = FmtIcons.shieldTick,
     )
-    FmtGroup("Keep a backup") {
+    FmtPanel("Keep a backup", Tone.Purple) {
         FmtText(
             when (kept) {
                 true -> "This device will keep your progress even when it's short of space. Clearing your browser's data still clears it, so keep a backup too."
@@ -162,12 +167,12 @@ fun GrownUpsTab(store: AppStore, nav: Nav, platform: Platform) {
         }
         message?.let { FmtText(it, FmtTheme.type.small, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, color = FmtColors.ink) }
     }
-    FmtGroup("Start again") {
+    FmtPanel("Start again", Tone.Sun) {
         FmtText("Clear the routine, the calm-down plan and this week's stars from this device.", FmtTheme.type.small)
         Row {
             FmtButton(if (confirm) "Tap again to clear everything" else "Clear everything on this device", {
                 if (confirm) { store.forgetEverything(); confirm = false } else confirm = true
-            }, kind = ButtonKind.OutlineTeal)
+            }, kind = ButtonKind.Outline)
         }
     }
     FmtListRow("The design system", "Colours, type and parts this app is built from", FmtIcons.blocks, Tone.Purple, onClick = { nav.go(Route(Area.DesignSystem)) })
