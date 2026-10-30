@@ -50,8 +50,10 @@
           reg.waiting.postMessage("fmt-take-over");
           return;
         }
-        // The first visit: keep this build on the phone.
-        if (!reg) sw.register("sw.js?v=" + window.FMT_BUILD).catch(function () {});
+        // The first visit, or a phone still on an older kind of worker (that
+        // served this page from the network): keep this build on the phone.
+        var mine = reg && reg.active && reg.active.scriptURL.indexOf("v=" + window.FMT_BUILD) >= 0;
+        if (!reg || (!mine && !reg.installing && !reg.waiting)) sw.register("sw.js?v=" + window.FMT_BUILD).catch(function () {});
         // A newer build? Download it in the background for next time.
         fetch("version.json?t=" + Date.now(), { cache: "no-store" })
           .then(function (r) { return r.json(); })
