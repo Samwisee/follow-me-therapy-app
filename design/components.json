@@ -30,6 +30,28 @@
    },
    "app": "FmtChip"
   },
+  "ToggleChip": {
+   "description": "A chip you tap to choose (days of the week, an option): a toggle button.",
+   "tokens": "chip",
+   "tones": [
+    "purple",
+    "teal",
+    "sun",
+    "pink"
+   ],
+   "rules": [
+    "Off: paper with the tone's line and ink. On: the tone's tint, a solid outline and a tick, so it never relies on colour alone.",
+    "A 44px target; announced as on or off."
+   ],
+   "website": {
+    "none": "The website has nothing to choose."
+   },
+   "designSystem": {
+    "css": ".fmt-chip.is-toggle",
+    "react": "ToggleChip"
+   },
+   "app": "FmtToggleChip"
+  },
   "Tag": {
    "description": "A small solid label above a title (Self-care, Telehealth).",
    "tokens": "tag",
@@ -362,7 +384,11 @@
     "css": ".fmt-stepfocus",
     "react": "StepFocus"
    },
-   "app": "FmtStepFocus"
+   "app": "FmtStepFocus",
+   "tokens": "step",
+   "rules": [
+    "Purple tint disc with the number; done turns teal with a white tick (and says 'done' to screen readers), never colour alone."
+   ]
   },
   "Celebration": {
    "description": "The end of a flow: a sun disc with a star that springs in, a title with the swash, a short message.",
@@ -373,7 +399,26 @@
     "css": ".fmt-celebrate",
     "react": "Celebration"
    },
-   "app": "FmtCelebration"
+   "app": "FmtCelebration",
+   "tokens": "celebrate",
+   "rules": [
+    "Sun disc, a sun star outlined in sun-deep, springs in; the title carries the swash."
+   ]
+  },
+  "Breathing": {
+   "description": "A breathing guide: a teal disc that grows for four seconds (breathe in) and shrinks for four (breathe out), the words changing to match.",
+   "tokens": "breathe",
+   "rules": [
+    "Teal tint disc, teal-line outline, a teal centre; 8s loop; with reduced motion it holds still and the words lead."
+   ],
+   "website": {
+    "none": "The website has no flows."
+   },
+   "designSystem": {
+    "css": ".fmt-breathe",
+    "react": "Breathing"
+   },
+   "app": "FmtBreathing"
   },
   "FootstepTrail": {
    "description": "Anatomical footprints walking left and right (the brand's 'follow me').",

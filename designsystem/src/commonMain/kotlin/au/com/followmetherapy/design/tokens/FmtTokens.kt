@@ -527,3 +527,31 @@ object FmtSwashTokens {
     val height = 16.0.dp
 }
 
+/** One step, big (the app's routine steps): a disc with the number, teal with a tick when done. */
+object FmtStepTokens {
+    val fill: Color = FmtColors.purpleTint
+    val line: Color = FmtColors.purpleLine
+    /** The number and 'Step n of N'. */
+    val ink: Color = FmtColors.purpleInk
+    /** Done: teal (done is teal everywhere, like the tick list). */
+    val doneFill: Color = FmtColors.teal
+    val doneLine: Color = FmtColors.teal
+    /** The tick on a done step. */
+    val doneInk: Color = FmtColors.paper
+}
+
+/** The end of a flow: a sun disc with a star. */
+object FmtCelebrateTokens {
+    val fill: Color = FmtColors.sunTint
+    val line: Color = FmtColors.sunLine
+    val star: Color = FmtColors.sun
+    val starLine: Color = FmtColors.sunDeep
+}
+
+/** The breathing guide: a teal disc that grows and shrinks. */
+object FmtBreatheTokens {
+    val fill: Color = FmtColors.tealTint
+    val line: Color = FmtColors.tealLine
+    val dot: Color = FmtColors.teal
+}
+

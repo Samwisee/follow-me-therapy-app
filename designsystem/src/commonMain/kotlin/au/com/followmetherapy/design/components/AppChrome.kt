@@ -88,6 +88,9 @@ import au.com.followmetherapy.design.icons.FmtIcons
 import au.com.followmetherapy.design.theme.FmtTheme
 import au.com.followmetherapy.design.tokens.FmtBorder
 import au.com.followmetherapy.design.tokens.FmtBarTokens
+import au.com.followmetherapy.design.tokens.FmtBreatheTokens
+import au.com.followmetherapy.design.tokens.FmtCelebrateTokens
+import au.com.followmetherapy.design.tokens.FmtStepTokens
 import au.com.followmetherapy.design.tokens.FmtCardTokens
 import au.com.followmetherapy.design.tokens.FmtColors
 import au.com.followmetherapy.design.tokens.FmtLayout
@@ -466,20 +469,20 @@ fun FmtFlowScaffold(
 @Composable
 fun FmtStepFocus(number: Int, total: Int, label: String, done: Boolean, modifier: Modifier = Modifier) {
     val m = FmtTheme.metrics
-    val disc by animateColorAsState(if (done) FmtColors.teal else FmtColors.purpleTint, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
+    val disc by animateColorAsState(if (done) FmtStepTokens.doneFill else FmtStepTokens.fill, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
     val pop by animateFloatAsState(if (done) 1.08f else 1f, tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
     Column(
         modifier.fillMaxWidth().semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(m.stack),
     ) {
-        FmtText("Step $number of $total", FmtTheme.type.chip.copy(fontSize = m.textMd), color = FmtColors.purpleInk)
+        FmtText("Step $number of $total", FmtTheme.type.chip.copy(fontSize = m.textMd), color = FmtStepTokens.ink)
         Box(
-            Modifier.size(FmtSpace.s30).scale(pop).background(disc, CircleShape).border(FmtBorder.outline * 2, if (done) FmtColors.teal else FmtColors.purpleLine, CircleShape),
+            Modifier.size(FmtSpace.s30).scale(pop).background(disc, CircleShape).border(FmtBorder.outline * 2, if (done) FmtStepTokens.doneLine else FmtStepTokens.line, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            if (done) FmtIcon(FmtIcons.tick, FmtColors.paper, FmtSize.iconXl * 1.4f)
-            else FmtText(number.toString(), FmtTheme.type.title.copy(fontSize = m.textDisplay), color = FmtColors.purpleInk)
+            if (done) FmtIcon(FmtIcons.tick, FmtStepTokens.doneInk, FmtSize.iconXl * 1.4f)
+            else FmtText(number.toString(), FmtTheme.type.title.copy(fontSize = m.textDisplay), color = FmtStepTokens.ink)
         }
         FmtText(label, FmtTheme.type.title, align = TextAlign.Center)
     }
@@ -500,12 +503,12 @@ fun FmtCelebration(title: String, swash: String?, message: String, modifier: Mod
         verticalArrangement = Arrangement.spacedBy(m.stack),
     ) {
         Box(
-            Modifier.size(FmtSpace.s30 + FmtSpace.s10).scale(pop.value).background(FmtColors.sunTint, CircleShape).border(FmtBorder.outline * 2, FmtColors.sunLine, CircleShape),
+            Modifier.size(FmtSpace.s30 + FmtSpace.s10).scale(pop.value).background(FmtCelebrateTokens.fill, CircleShape).border(FmtBorder.outline * 2, FmtCelebrateTokens.line, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Box(contentAlignment = Alignment.Center) {
-                FmtIcon(FmtIcons.starFilled, FmtColors.sun, FmtSpace.s24)
-                FmtIcon(FmtIcons.star, FmtColors.sunDeep, FmtSpace.s24)
+                FmtIcon(FmtIcons.starFilled, FmtCelebrateTokens.star, FmtSpace.s24)
+                FmtIcon(FmtIcons.star, FmtCelebrateTokens.starLine, FmtSpace.s24)
             }
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(m.groupGap)) {
@@ -530,8 +533,8 @@ fun FmtBreathing(modifier: Modifier = Modifier) {
     val m = FmtTheme.metrics
     Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(m.stack)) {
         Box(Modifier.size(FmtSpace.s30 * 2), contentAlignment = Alignment.Center) {
-            Box(Modifier.size(FmtSpace.s30 * 2).scale(0.55f + 0.45f * eased).background(FmtColors.tealTint, CircleShape).border(FmtBorder.outline * 2, FmtColors.tealLine, CircleShape))
-            Box(Modifier.size(FmtSpace.s16).background(FmtColors.teal, CircleShape))
+            Box(Modifier.size(FmtSpace.s30 * 2).scale(0.55f + 0.45f * eased).background(FmtBreatheTokens.fill, CircleShape).border(FmtBorder.outline * 2, FmtBreatheTokens.line, CircleShape))
+            Box(Modifier.size(FmtSpace.s16).background(FmtBreatheTokens.dot, CircleShape))
         }
         FmtText(if (inhale) "Breathe in…" else "Breathe out…", FmtTheme.type.title, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, align = TextAlign.Center)
     }

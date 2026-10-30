@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -249,6 +250,37 @@ fun FmtChip(text: String, tone: Tone = Tone.Purple, icon: androidx.compose.ui.gr
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) FmtIcon(icon, t.ink(tone), FmtSize.icon)
+        FmtText(text, FmtTheme.type.chip, color = t.ink(tone))
+    }
+}
+
+/**
+ * A chip you tap to choose (a day, an option). Off: paper with the tone's line
+ * and ink. On: the tone's tint, a solid outline and a tick, so it never relies
+ * on colour alone. A 44dp target, announced as a checkbox that's on or off.
+ */
+@Composable
+fun FmtToggleChip(text: String, on: Boolean, onToggle: (Boolean) -> Unit, tone: Tone = Tone.Purple, modifier: Modifier = Modifier) {
+    val t = FmtChipTokens
+    val source = remember { MutableInteractionSource() }
+    val focused by source.collectIsFocusVisibleAsState()
+    val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed) 0.95f else 1f, tween(FmtMotion.durBase, easing = FmtMotion.easeSpring))
+    val fill by animateColorAsState(if (on) t.fill(tone) else t.outlineFill, tween(FmtMotion.durFast, easing = FmtMotion.easeStandard))
+    val line by animateColorAsState(if (on) t.lineHover(tone) else t.line(tone), tween(FmtMotion.durFast, easing = FmtMotion.easeStandard))
+    Row(
+        modifier
+            .scale(scale)
+            .fmtFocusRing(focused, CircleShape)
+            .heightIn(min = FmtSize.target)
+            .background(fill, CircleShape)
+            .border(FmtBorder.outline, line, CircleShape)
+            .toggleable(value = on, interactionSource = source, indication = null, role = Role.Checkbox, onValueChange = onToggle)
+            .padding(horizontal = FmtSpace.s3, vertical = FmtSpace.s2),
+        horizontalArrangement = Arrangement.spacedBy(FmtSpace.s1),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (on) FmtIcon(FmtIcons.tick, t.ink(tone), FmtSize.iconSm)
         FmtText(text, FmtTheme.type.chip, color = t.ink(tone))
     }
 }

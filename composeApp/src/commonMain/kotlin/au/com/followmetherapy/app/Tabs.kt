@@ -176,13 +176,12 @@ fun GrownUpsTab(store: AppStore, nav: Nav, platform: Platform) {
         }
     }
     FmtListRow("The design system", "Colours, type and parts this app is built from", FmtIcons.blocks, Tone.Purple, onClick = { nav.go(Route(Area.DesignSystem)) })
-    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+    // The sign-off, on the same text edge as everything above.
+    FmtGroup {
         Row(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalAlignment = Alignment.CenterVertically) {
             FmtIcon(FmtIcons.heart, FmtColors.purple, FmtSize.iconSm)
             FmtText("Simone · Paediatric OT · followmetherapy.com.au", FmtTheme.type.small)
         }
-    }
-    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         FmtText("Version ${store.build}", FmtTheme.type.small.copy(fontSize = FmtTheme.metrics.textXs))
     }
 }
