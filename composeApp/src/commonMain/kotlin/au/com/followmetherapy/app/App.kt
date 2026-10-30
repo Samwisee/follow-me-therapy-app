@@ -53,9 +53,10 @@ import androidx.compose.ui.unit.dp
 
 /** Where the app is: an area, and for flows the step within it. */
 enum class Area(val slug: String, val tab: Int?) {
-    Today("today", 0), Activities("activities", 1), GrownUps("grown-ups", 2),
+    Today("today", 0), Plan("plan", 1), GrownUps("grown-ups", 2),
     Morning("morning", null), Calm("calm", null), CalmNow("calm-now", null),
     WeekSetup("week-setup", null), Week("week", null), DesignSystem("design-system", null), Install("install", null),
+    PlanImport("plan-import", null), Planner("planner", null),
 }
 
 data class Route(val area: Area, val step: Int = 0) {
@@ -64,7 +65,8 @@ data class Route(val area: Area, val step: Int = 0) {
     companion object {
         fun parse(slug: String): Route {
             val parts = slug.split("/")
-            val area = Area.entries.firstOrNull { it.slug == parts[0] } ?: Area.Today
+            // "activities" was the Plan tab's old address.
+            val area = if (parts[0] == "activities") Area.Plan else Area.entries.firstOrNull { it.slug == parts[0] } ?: Area.Today
             return Route(area, parts.getOrNull(1)?.toIntOrNull() ?: 0)
         }
     }
@@ -82,19 +84,24 @@ class Nav(start: Route, private val onChange: (String) -> Unit) {
 
 private val tabs = listOf(
     FmtTab("Today", FmtIcons.sunrise),
-    FmtTab("Activities", FmtIcons.blocks),
+    FmtTab("Plan", FmtIcons.calendar),
     FmtTab("For grown-ups", FmtIcons.heart),
 )
 
 @Composable
 fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (String) -> Unit = {}) {
     val store = remember { AppStore(platform) }
+    // A plan link (#plan=…) opens on the plan, waiting to be added.
+    val inbox = remember { PlanInbox().apply { if (startAt.startsWith("plan=")) plan = Plan.fromLink(startAt) } }
+    val fromLink = startAt.startsWith("plan=")
     // In a phone's or tablet's browser the app opens on its install page first
     // (it works best from the Home Screen); installed, or once skipped, it opens on Today.
     val nav = remember {
         val welcome = startAt.isEmpty() && !platform.installed() && platform.device() != Device.Computer && !store.installSkipped
-        Nav(if (welcome) Route(Area.Install, WELCOME) else Route.parse(startAt), onNavigate)
+        Nav(if (fromLink) Route(Area.PlanImport) else if (welcome) Route(Area.Install, WELCOME) else Route.parse(startAt), onNavigate)
     }
+    // Take the plan's code out of the address once it's read.
+    LaunchedEffect(Unit) { if (fromLink) onNavigate(nav.route.slug) }
     val actions = remember { FmtActionHost() }
     val safeBottom = remember { platform.safeBottom().dp }
     FmtTheme {
@@ -122,7 +129,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                     if (r.area.tab != null) {
                         TabShell(nav, r.area.tab) { t ->
                             when (t) {
-                                1 -> ActivitiesTab(store, nav)
+                                1 -> PlanTab(store, nav, platform, inbox)
                                 2 -> GrownUpsTab(store, nav, platform)
                                 else -> TodayTab(store, nav)
                             }
@@ -136,6 +143,8 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                             Area.Week -> WeekFlow(store, nav)
                             Area.DesignSystem -> DesignSystemScreen(nav)
                             Area.Install -> InstallScreen(platform, nav, store, welcome = r.step == WELCOME)
+                            Area.PlanImport -> PlanImportScreen(store, nav, platform, inbox)
+                            Area.Planner -> PlannerScreen(store, nav, platform, r.step, inbox)
                             else -> Unit
                         }
                     }
@@ -157,7 +166,9 @@ private fun barFor(r: Route, store: AppStore, nav: Nav): Bar {
     val home = nav::home
     return when (r.area) {
         // The three tabs share one bar with the lockup: the tab bar says where you are.
-        Area.Today, Area.Activities, Area.GrownUps -> Bar(tabs[r.area.tab ?: 0].label, brand = true)
+        Area.Today, Area.Plan, Area.GrownUps -> Bar(tabs[r.area.tab ?: 0].label, brand = true)
+        Area.PlanImport -> Bar("A plan from Simone", home)
+        Area.Planner -> if (r.step == 0) Bar("Make a plan", home) else Bar("Send the plan", { nav.go(Route(Area.Planner)) })
         Area.Morning -> {
             val total = store.routineSteps.size
             val last = total + 2

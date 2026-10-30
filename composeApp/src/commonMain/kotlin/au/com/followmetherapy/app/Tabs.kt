@@ -54,13 +54,22 @@ fun TodayTab(store: AppStore, nav: Nav) {
         FmtText("Here's the plan for the day!", FmtTheme.type.lead)
     }
 
+    // With a plan from Simone, today shows what's planned for today.
+    val plan = store.plan
+    val day = store.weekday
+    val showRoutine = plan == null || plan.routineOn(day)
+    val showCalm = plan == null || plan.calm
+    val practiceToday = if (plan == null) store.activities
+        else store.activities.filter { (r, _) -> plan.practice.getOrNull(r)?.let { day in it.days } ?: false }
+
     // Morning routine, with today's progress.
     val done = store.routineDone.size
     val total = store.routineSteps.size
-    run {
+    val routineTime = plan?.routine?.time?.let { Plan.showTime(it) + " · " } ?: ""
+    if (showRoutine) {
         FmtListRow(
             title = "My morning routine",
-            subtitle = if (store.routineComplete) "All done today. Great job!" else if (done == 0) "Six steps, one at a time" else "$done of $total steps done",
+            subtitle = if (store.routineComplete) "All done today. Great job!" else if (done == 0) routineTime + "Six steps, one at a time" else "$done of $total steps done",
             icon = FmtIcons.sunrise, tone = Tone.Purple,
             onClick = {
                 val next = store.routineSteps.indices.firstOrNull { it !in store.routineDone }
@@ -72,16 +81,17 @@ fun TodayTab(store: AppStore, nav: Nav) {
     }
 
     // Calm-down plan: use it, or make it.
-    if (store.calmSaved) {
+    if (!showCalm) Unit
+    else if (store.calmSaved) {
         FmtListRow("Use my calm-down plan", "For when feelings get big", FmtIcons.breathe, Tone.Teal, onClick = { nav.go(Route(Area.CalmNow)) })
     } else {
         FmtListRow("Make my calm-down plan", "Choose what helps, in four short steps", FmtIcons.breathe, Tone.Teal, onClick = { nav.go(Route(Area.Calm)) })
     }
 
     // Practice: today's stars, or set the week up.
-    if (store.weekSetUp && store.activities.isNotEmpty()) {
+    if (store.weekSetUp && practiceToday.isNotEmpty()) {
         FmtGroup("Did you practise today?") {
-            store.activities.forEach { (r, name) ->
+            practiceToday.forEach { (r, name) ->
                 val on = (r to store.weekday) in store.weekDone
                 FmtListRow(
                     title = name, subtitle = if (on) "Done today" else "Tap the star when it's done", tone = Tone.Sun,
@@ -93,8 +103,11 @@ fun TodayTab(store: AppStore, nav: Nav) {
                 FmtButton("My week", { nav.go(Route(Area.Week)) }, kind = ButtonKind.Outline, trailingChevron = true)
             }
         }
-    } else {
+    } else if (plan == null) {
         FmtListRow("Set up my practice week", "Add the activities we chose together", FmtIcons.calendar, Tone.Sun, onClick = { nav.go(Route(Area.WeekSetup)) })
+    }
+    if (plan != null && !showRoutine && practiceToday.isEmpty()) {
+        FmtGroup { FmtText("Nothing else is planned for today. Enjoy it!", FmtTheme.type.body) }
     }
 }
 
@@ -102,20 +115,6 @@ fun TodayTab(store: AppStore, nav: Nav) {
 @Composable
 fun StarButton(on: Boolean, label: String, toggle: () -> Unit) = FmtStarToggle(on, label, toggle)
 
-/** Activities: everything Simone has given the family, in one list. */
-@Composable
-fun ActivitiesTab(store: AppStore, nav: Nav) {
-    val m = FmtTheme.metrics
-    FmtGroup { FmtText("Small, everyday practice between our sessions, for you and your child to do together.", FmtTheme.type.lead) }
-    Column(verticalArrangement = Arrangement.spacedBy(m.gridGap)) {
-        FmtListRow("My morning routine", "Self-care · six steps from waking up to out the door", FmtIcons.sunrise, Tone.Purple, onClick = { nav.go(Route(Area.Morning)) })
-        FmtListRow("My calm-down plan", if (store.calmSaved) "Feelings · your plan is ready" else "Feelings · choose what helps when feelings get big", FmtIcons.breathe, Tone.Teal,
-            onClick = { nav.go(if (store.calmSaved) Route(Area.Calm, CALM_PLAN_STEP) else Route(Area.Calm)) })
-        FmtListRow("My practice week", if (store.weekSetUp) "Home practice · ${store.starsThisWeek} stars this week" else "Home practice · a star for each day you practise", FmtIcons.calendar, Tone.Sun,
-            onClick = { nav.go(Route(if (store.weekSetUp) Area.Week else Area.WeekSetup)) })
-    }
-    FmtInfoNote("these are the same activities as my printed worksheets. Use whichever suits your family: paper on the fridge, or this on a phone or tablet.", leadIn = "For grown-ups:")
-}
 
 /** For grown-ups: what this is, privacy, and a way to clear the device. */
 @Composable

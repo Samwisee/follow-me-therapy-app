@@ -77,7 +77,7 @@ class Record(val entries: MutableMap<String, Entry> = mutableMapOf()) {
 }
 
 /** A small JSON reader (objects, arrays, strings, whole numbers, true/false/null): enough for records, with no library. */
-private class Json(private val s: String) {
+internal class Json(private val s: String) {
     private var i = 0
     fun value(): Any? {
         ws()

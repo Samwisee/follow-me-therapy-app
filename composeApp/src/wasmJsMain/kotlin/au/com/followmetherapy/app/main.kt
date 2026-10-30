@@ -17,12 +17,30 @@ private fun jsLegacy(): String = js("""(() => { const out = []; try { for (let i
 private fun jsClearLegacy(): Unit = js("""{ try { const ks = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf('fmt.') === 0 && k !== 'fmt.record') ks.push(k); } ks.forEach(k => localStorage.removeItem(k)); } catch (e) {} }""")
 
 /** A file to keep: shared (so it can go to Files on an iPhone, even from the Home Screen app), or downloaded. */
-private fun jsSaveFile(name: String, text: String): Unit = js("""{
-  const file = new File([text], name, { type: 'application/json' });
+private fun jsSaveFile(name: String, text: String, type: String): Unit = js("""{
+  const file = new File([text], name, { type: type });
   const download = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); };
   const touch = matchMedia('(pointer: coarse)').matches;
-  if (touch && navigator.canShare && navigator.canShare({ files: [file] })) navigator.share({ files: [file], title: name }).catch(e => { if (e && e.name !== 'AbortError') download(); });
+  // A calendar file opens straight in the calendar when downloaded; backups go through the share sheet on phones.
+  if (type !== 'text/calendar' && touch && navigator.canShare && navigator.canShare({ files: [file] })) navigator.share({ files: [file], title: name }).catch(e => { if (e && e.name !== 'AbortError') download(); });
   else download();
+}""")
+private fun jsShareText(title: String, text: String, onResult: (Boolean) -> Unit): Unit = js("""{
+  if (!navigator.share) { onResult(false); return; }
+  navigator.share({ title: title, text: text }).then(() => onResult(true)).catch(e => onResult(!!(e && e.name === 'AbortError')));
+}""")
+private fun jsCopyText(text: String, onResult: (Boolean) -> Unit): Unit = js("""{
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => onResult(true)).catch(() => onResult(false));
+  else onResult(false);
+}""")
+private fun jsReadClipboard(onText: (String) -> Unit): Unit = js("""{
+  if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(t => onText(t || '')).catch(() => onText(''));
+  else onText('');
+}""")
+private fun jsAppUrl(): String = js("location.origin + location.pathname")
+private fun jsReloadOnPlanLink(): Unit = js("""{
+  // A plan link opened while the app is already open: start again with it.
+  window.addEventListener('hashchange', () => { if (location.hash.indexOf('#plan=') === 0) location.reload(); });
 }""")
 private fun jsOpenFile(onText: (String) -> Unit): Unit = js("""{
   const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json';
@@ -61,7 +79,11 @@ private object WebPlatform : Platform {
     override fun hour() = jsHour()
     override fun weekStart() = jsWeekStart()
     override fun build() = jsBuild()
-    override fun saveFile(name: String, text: String) = jsSaveFile(name, text)
+    override fun saveFile(name: String, text: String, type: String) = jsSaveFile(name, text, type)
+    override fun shareText(title: String, text: String, onResult: (Boolean) -> Unit) = jsShareText(title, text, onResult)
+    override fun copyText(text: String, onResult: (Boolean) -> Unit) = jsCopyText(text, onResult)
+    override fun readClipboard(onText: (String?) -> Unit) = jsReadClipboard { onText(it.ifEmpty { null }) }
+    override fun appUrl() = jsAppUrl()
     override fun openFile(onText: (String) -> Unit) = jsOpenFile(onText)
     override fun keepData(onResult: (Boolean?) -> Unit) = jsKeepData { onResult(if (it < 0) null else it == 1) }
     override fun installed() = jsInstalled()
@@ -79,6 +101,7 @@ fun main() {
     // Each place in the app has its own address (#today, #calm, #morning…),
     // replaced rather than pushed, so the browser's Back button leaves the app.
     val start = window.location.hash.removePrefix("#")
+    jsReloadOnPlanLink()
     ComposeViewport("app") {
         App(platform = WebPlatform, startAt = start, onNavigate = { slug ->
             window.history.replaceState(null, "", if (slug.isEmpty()) window.location.pathname + window.location.search else "#$slug")

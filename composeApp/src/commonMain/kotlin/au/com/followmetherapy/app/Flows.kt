@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -158,6 +159,8 @@ fun CalmNowFlow(store: AppStore, nav: Nav, step: Int) {
     val go = { s: Int -> nav.go(Route(Area.CalmNow, s)) }
     if (items.isEmpty()) { CalmFlow(store, nav, 0); return }
     if (step >= items.size) {
+        // Counted (once per visit) for the week's summary to Simone.
+        LaunchedEffect(Unit) { store.calmUsed() }
         FmtFlowScaffold(
             start = FmtAction("Again", ButtonKind.Outline) { go(0) },
             end = FmtAction("Done", ButtonKind.Teal) { nav.home() },

@@ -22,7 +22,7 @@ await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', args: ['--enable-unsafe-swiftshader'] });
 const report = {};
 for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop', { width: 1280, height: 800 }]]) {
-  for (const screen of ['', 'activities', 'grown-ups', 'morning', 'morning/2', 'calm/1', 'calm-now', 'week-setup', 'design-system', 'install', 'install/1']) {
+  for (const screen of ['', 'plan', 'grown-ups', 'morning', 'morning/2', 'calm/1', 'calm-now', 'week-setup', 'design-system', 'install', 'install/1', 'planner', 'planner/1']) {
     const page = await browser.newPage({ viewport, deviceScaleFactor: name === 'phone' ? 2 : 1 });
     const errors = [];
     page.on('pageerror', e => errors.push(String(e)));
@@ -104,6 +104,29 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   }));
   report.fontRetry.failedRequests = failed;
   await page.screenshot({ path: join(out, 'phone-font-retry.png') });
+  await ctx.close();
+}
+// A plan from Simone: open its link, see it, add it (the action bar's end
+// button), then the Plan tab and Today follow it.
+{
+  const plan = { v: 1, s: '5 Steps Forward', n: 'This week we are working on getting dressed on his own.',
+    r: { n: 'Morning routine', d: [0, 1, 2, 3, 4, 5, 6], t: '07:30' }, c: 1,
+    p: [{ n: 'Cutting practice', d: [0, 1, 2, 3, 4, 5, 6], t: '16:00' }, { n: 'Ball skills', d: [1, 3], t: '16:30' }], m: '2026-10-30' };
+  const code = Buffer.from(JSON.stringify(plan)).toString('base64url');
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  const page = await ctx.newPage();
+  await page.goto(`http://localhost:8099/#plan=${code}`);
+  await page.waitForTimeout(5000);
+  await page.screenshot({ path: join(out, 'phone-plan-import.png') });
+  const address = await page.evaluate(() => location.hash);
+  await page.mouse.click(390 - 90, 844 - 40); // "Add my plan"
+  await page.waitForTimeout(2500);
+  await page.screenshot({ path: join(out, 'phone-plan-added.png') });
+  const saved = await page.evaluate(() => { const r = JSON.parse(localStorage.getItem('fmt.record') || '{}'); return r.entries && r.entries.plan && r.entries.plan.v; });
+  await page.goto('http://localhost:8099/');
+  await page.waitForTimeout(4000);
+  await page.screenshot({ path: join(out, 'phone-today-with-plan.png') });
+  report.plan = { addressAfterOpening: address, saved: saved || null };
   await ctx.close();
 }
 await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 1));

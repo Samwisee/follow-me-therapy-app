@@ -31,8 +31,16 @@ interface Platform {
     /** Which build is running (shown under For grown-ups). */
     fun build(): String = "dev"
 
-    /** Hands the person a file to keep (a backup). */
-    fun saveFile(name: String, text: String) {}
+    /** Hands the person a file to keep (a backup, a calendar of reminders). */
+    fun saveFile(name: String, text: String, type: String = "application/json") {}
+    /** Opens the share sheet with [text] (Messages, Mail…); false if there's none (then copy instead). */
+    fun shareText(title: String, text: String, onResult: (Boolean) -> Unit) { onResult(false) }
+    /** Copies [text]; true if it worked. */
+    fun copyText(text: String, onResult: (Boolean) -> Unit) { onResult(false) }
+    /** Reads what was copied (after a tap); null if the browser won't say. */
+    fun readClipboard(onText: (String?) -> Unit) { onText(null) }
+    /** This app's address, for links (plans). */
+    fun appUrl(): String = "https://samwisee.github.io/follow-me-therapy-app/"
     /** Lets the person pick a file, and gives back its text. */
     fun openFile(onText: (String) -> Unit) {}
     /** Asks the device to keep this app's data even when it's short of space: true kept, false not, null can't tell. */
@@ -151,6 +159,62 @@ class AppStore(private val p: Platform) {
     val activities: List<Pair<Int, String>> get() = weekNames.withIndex().filter { it.value.isNotBlank() }.map { it.index to it.value }
     val starsThisWeek: Int get() = weekDone.count { (r, _) -> weekNames.getOrNull(r)?.isNotBlank() == true }
 
+    // ── The plan from Simone ──
+    var plan by mutableStateOf<Plan?>(null)
+        private set
+
+    /** Takes a plan from Simone. Its practice activities become this week's practice. */
+    fun setPlan(p: Plan) {
+        plan = p
+        put("plan", p.toJson())
+        if (p.practice.isNotEmpty()) {
+            for (i in weekNames.indices) weekNames[i] = p.practice.getOrNull(i)?.name ?: ""
+            put("week.names", weekNames.joinToString(SEP))
+            weekSetUp = true
+            put("week.setup", "1")
+        }
+    }
+
+    /** The calm-down plan was used today (counted for Simone's summary). */
+    fun calmUsed() { put("calm.used.$today", ((get("calm.used.$today")?.toIntOrNull() ?: 0) + 1).toString()) }
+
+    /** Simone's plan builder keeps its draft here, on her device. */
+    fun plannerDraft(): Plan? = get("planner.draft")?.let { Plan.parse(it) }
+    fun savePlannerDraft(p: Plan) = put("planner.draft", p.toJson())
+
+    /** This week, Monday to Sunday, as yyyy-mm-dd. */
+    val weekDates: List<String> get() = (0..6).map { Dates.add(week, it) }
+
+    /** This week so far, in words, for the family to send to Simone before a session. */
+    fun progressSummary(): String = buildString {
+        val dates = weekDates.filter { it <= today }
+        val p = plan
+        appendLine("Follow Me: progress for the week of ${Dates.show(week)}")
+        val routine = dates.mapNotNull { d ->
+            val n = ints(get("routine.done.$d")).size
+            if (n == 0) null else Plan.DAY_SHORT[Dates.weekday(d)] + (if (n == routineSteps.size) " done" else " $n of ${routineSteps.size} steps")
+        }
+        append("Morning routine: ").append(if (routine.isEmpty()) "not yet this week" else routine.joinToString(", "))
+        p?.routine?.let { append(" (planned ${Plan.showDays(it.days).lowercase()})") }
+        appendLine()
+        val names = weekNames.withIndex().filter { it.value.isNotBlank() }
+        if (names.isNotEmpty()) {
+            appendLine("Practice:")
+            for ((r, name) in names) {
+                val done = weekDone.filter { it.first == r }.map { it.second }.sorted()
+                append("· $name: ").append(if (done.isEmpty()) "not yet" else done.joinToString(", ") { Plan.DAY_SHORT[it] })
+                val planned = p?.practice?.getOrNull(r)?.days.orEmpty()
+                if (planned.isNotEmpty()) append(" (${done.count { it in planned }} of ${planned.size} planned days)")
+                appendLine()
+            }
+        }
+        val calm = dates.sumOf { get("calm.used.$it")?.toIntOrNull() ?: 0 }
+        if (calmSaved || calm > 0) appendLine("Calm-down plan: used $calm ${if (calm == 1) "time" else "times"}")
+        val tricky = dates.mapNotNull { d -> get("routine.tricky.$d")?.takeIf { it.isNotBlank() }?.let { "$it (${Plan.DAY_SHORT[Dates.weekday(d)]})" } }
+        if (tricky.isNotEmpty()) appendLine("Tricky: " + tricky.joinToString("; "))
+        if (weekProud.isNotBlank()) appendLine("Proud of: $weekProud")
+    }.trimEnd()
+
     // ── Install ──
     /** Chose to use the app in the browser instead of adding it to the Home Screen. */
     var installSkipped by mutableStateOf(false)
@@ -178,6 +242,7 @@ class AppStore(private val p: Platform) {
         weekSetUp = get("week.setup") == "1"
         weekProud = get("week.proud.$week") ?: ""
         installSkipped = get("install.skipped") == "1"
+        plan = get("plan")?.let { Plan.parse(it) }
     }
 
     // ── Backup and restore ──
