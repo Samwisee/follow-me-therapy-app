@@ -129,6 +129,28 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   report.plan = { addressAfterOpening: address, saved: saved || null };
   await ctx.close();
 }
+// The morning routine, tapped through end to end: Start, Done on each step
+// (with a Back in the middle), the celebration, the reflection and Finish.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+  page.on('console', m => m.type() === 'error' && errors.push(m.text()));
+  await page.goto('http://localhost:8099/#morning');
+  await page.waitForTimeout(5000);
+  const end = [390 - 90, 844 - 40], start = [90, 844 - 40];
+  const taps = ['end', 'end', 'end', 'start', 'end', 'end', 'end', 'end', 'end', 'end', 'end', 'end'];
+  report.morningWalk = [{ tap: 'open', hash: await page.evaluate(() => location.hash) }];
+  for (const [i, t] of taps.entries()) {
+    await page.mouse.click(...(t === 'end' ? end : start));
+    await page.waitForTimeout(1200);
+    report.morningWalk.push({ tap: t, hash: await page.evaluate(() => location.hash), record: await page.evaluate(() => (localStorage.getItem('fmt.record') || '').match(/routine\.done[^}]*/g)) });
+    await page.screenshot({ path: join(out, `walk-morning-${String(i + 1).padStart(2, '0')}.png`) });
+  }
+  report.morningWalkErrors = errors;
+  await ctx.close();
+}
 // Simone's planner opens from its own page (planner.html): its Home Screen
 // name and start, the families list, and a new plan (the action bar's end).
 {
