@@ -141,7 +141,7 @@
    "app": "FmtInfoNote"
   },
   "Head": {
-   "description": "An activity's header: tinted panel, title with one swash, the tag beneath (worksheets, app activities).",
+   "description": "An activity's header: tinted panel, title with one swash, the tag beneath, and an optional note under the tag (worksheets, app activities, the family's plan).",
    "tokens": "head",
    "tones": [
     "purple",
@@ -150,7 +150,8 @@
     "pink"
    ],
    "rules": [
-    "Ground fill, line outline, corner nests (radius-tile + card-pad + outline)."
+    "Ground fill, line outline, corner nests (radius-tile + card-pad + outline).",
+    "A note that belongs to the header (From Simone: …) goes inside it, under the tag, in ink-soft with a bold lead-in, never as a separate note right beneath it."
    ],
    "website": {
     "none": "The website has no activities; its hero plays this part."

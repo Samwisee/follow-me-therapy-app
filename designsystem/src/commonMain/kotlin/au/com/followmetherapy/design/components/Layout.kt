@@ -135,7 +135,8 @@ fun FmtSwashTitle(text: String, swash: String?, modifier: Modifier = Modifier, s
  * corner nests: radius-tile + card-pad + outline.
  */
 @Composable
-fun FmtHead(title: String, swash: String?, tag: String, tone: Tone = Tone.Purple, modifier: Modifier = Modifier, trailing: (@Composable () -> Unit)? = null) {
+fun FmtHead(title: String, swash: String?, tag: String, tone: Tone = Tone.Purple, modifier: Modifier = Modifier,
+            note: String? = null, noteLeadIn: String? = null, trailing: (@Composable () -> Unit)? = null) {
     val m = FmtTheme.metrics
     val ground = FmtHeadTokens.fill(tone)
     Row(
@@ -150,6 +151,16 @@ fun FmtHead(title: String, swash: String?, tag: String, tone: Tone = Tone.Purple
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(m.groupGap)) {
                 FmtSwashTitle(title, swash)
                 FmtTag(tag, tone)
+                // A note that belongs to the header (From Simone: …) sits inside it, under the tag.
+                note?.let {
+                    FmtText(
+                        androidx.compose.ui.text.buildAnnotatedString {
+                            noteLeadIn?.let { l -> pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)); append("$l "); pop() }
+                            append(it)
+                        },
+                        FmtTheme.type.body,
+                    )
+                }
             }
         }
         FmtOnGround(ground) { trailing?.invoke() }

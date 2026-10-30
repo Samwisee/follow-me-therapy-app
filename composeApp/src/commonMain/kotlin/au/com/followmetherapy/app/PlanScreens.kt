@@ -55,8 +55,7 @@ fun PlanTab(store: AppStore, nav: Nav, platform: Platform, inbox: PlanInbox) {
     val p = store.plan
     var message by remember { mutableStateOf<String?>(null) }
     if (p != null) {
-        FmtHead("My plan", swash = "plan", tag = p.service ?: "From Simone", tone = Tone.Purple)
-        p.note?.takeIf { it.isNotBlank() }?.let { FmtInfoNote(it, leadIn = "From Simone:", icon = FmtIcons.heart) }
+        FmtHead("My plan", swash = "plan", tag = p.service ?: "From Simone", tone = Tone.Purple, note = p.note?.takeIf { it.isNotBlank() }, noteLeadIn = "From Simone:")
         PlanCalendar(store)
         FmtPanel("Reminders and progress", Tone.Purple) {
             if (p.hasReminders) {
@@ -218,8 +217,7 @@ fun PlanImportScreen(store: AppStore, nav: Nav, platform: Platform, inbox: PlanI
             nav.tab(1)
         },
     ) {
-        FmtHead("A plan from Simone", swash = "plan", tag = p.service ?: "From Simone")
-        p.note?.takeIf { it.isNotBlank() }?.let { FmtInfoNote(it, leadIn = "From Simone:", icon = FmtIcons.heart) }
+        FmtHead("A plan from Simone", swash = "plan", tag = p.service ?: "From Simone", note = p.note?.takeIf { it.isNotBlank() }, noteLeadIn = "From Simone:")
         FmtGroup("Each week") {}
         PlanRows(p, store, null)
         if (replacing) {
