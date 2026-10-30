@@ -48,6 +48,7 @@ private fun jsQr(text: String): String = js("""(() => {
   return rows.join(',');
 })()""")
 private fun jsPlannerEntry(): Boolean = js("window.FMT_ENTRY === 'planner'")
+private fun jsReducedMotion(): Boolean = js("!!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)")
 private fun jsReloadOnPlanLink(): Unit = js("""{
   // A plan link opened while the app is already open: start again with it.
   window.addEventListener('hashchange', () => { if (location.hash.indexOf('#plan=') === 0) location.reload(); });
@@ -96,6 +97,7 @@ private object WebPlatform : Platform {
     override fun appUrl() = jsAppUrl()
     override fun qrCode(text: String): List<BooleanArray>? = jsQr(text).takeIf { it.isNotEmpty() }?.split(',')?.map { r -> BooleanArray(r.length) { r[it] == '1' } }
     override fun plannerEntry() = jsPlannerEntry()
+    override fun reducedMotion() = jsReducedMotion()
     override fun openFile(onText: (String) -> Unit) = jsOpenFile(onText)
     override fun keepData(onResult: (Boolean?) -> Unit) = jsKeepData { onResult(if (it < 0) null else it == 1) }
     override fun installed() = jsInstalled()

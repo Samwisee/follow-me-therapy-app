@@ -43,6 +43,8 @@ interface Platform {
     fun qrCode(text: String): List<BooleanArray>? = null
     /** Opened from the Planner icon (Simone's planner), not the family app. */
     fun plannerEntry(): Boolean = false
+    /** The reader asked for less motion (prefers-reduced-motion). */
+    fun reducedMotion(): Boolean = false
     /** This app's address, for links (plans). */
     fun appUrl(): String = "https://samwisee.github.io/follow-me-therapy-app/"
     /** Lets the person pick a file, and gives back its text. */

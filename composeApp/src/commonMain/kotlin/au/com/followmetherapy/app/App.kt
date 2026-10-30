@@ -37,6 +37,7 @@ import au.com.followmetherapy.design.components.FmtIconButton
 import au.com.followmetherapy.design.components.FmtAppChrome
 import au.com.followmetherapy.design.components.FmtActionBarHost
 import au.com.followmetherapy.design.components.LocalFmtSafeBottom
+import au.com.followmetherapy.design.components.LocalFmtReducedMotion
 import au.com.followmetherapy.design.tokens.FmtBarTokens
 import au.com.followmetherapy.design.components.FmtActionHost
 import au.com.followmetherapy.design.components.FmtActionSlot
@@ -108,8 +109,9 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
     LaunchedEffect(Unit) { if (fromLink) onNavigate(nav.route.slug) }
     val actions = remember { FmtActionHost() }
     val safeBottom = remember { platform.safeBottom().dp }
+    val reduced = remember { platform.reducedMotion() }
     FmtTheme {
-      CompositionLocalProvider(LocalFmtSafeBottom provides safeBottom) {
+      CompositionLocalProvider(LocalFmtSafeBottom provides safeBottom, LocalFmtReducedMotion provides reduced) {
         // Opening: the page's splash (the logo on lilac) fades as the app fades and rises in.
         val enter = remember { Animatable(0f) }
         LaunchedEffect(Unit) {

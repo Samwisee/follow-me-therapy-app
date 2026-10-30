@@ -204,31 +204,6 @@ fun FmtTracker(
     }
 }
 
-/** A star to tap (44dp target): outlined purple, filled sun with a sun-deep outline when done. */
-@Composable
-fun FmtStarToggle(on: Boolean, label: String, toggle: () -> Unit) {
-    val source = remember { MutableInteractionSource() }
-    val focused by source.collectIsFocusVisibleAsState()
-    val pressed by source.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) 0.85f else if (on) 1.08f else 1f, tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
-    Box(
-        Modifier.size(FmtSize.target)
-            .fmtFocusRing(focused, CircleShape)
-            .toggleable(value = on, interactionSource = source, indication = null, role = Role.Checkbox, onValueChange = { toggle() })
-            .semantics { stateDescription = if (on) "practised" else "not yet"; contentDescription = label },
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(Modifier.scale(scale)) {
-            if (on) {
-                FmtIcon(FmtIcons.starFilled, FmtColors.sun, FmtSize.iconLg)
-                FmtIcon(FmtIcons.star, FmtColors.sunDeep, FmtSize.iconLg)
-            } else {
-                FmtIcon(FmtIcons.star, FmtColors.purple, FmtSize.iconLg)
-            }
-        }
-    }
-}
-
 /** A dashed write-on line under the content, in `rule` (3:1 or better on every ground). */
 fun Modifier.dashedBottom(color: Color = FmtColors.rule): Modifier = drawBehind {
     val w = FmtBorder.outline.toPx()

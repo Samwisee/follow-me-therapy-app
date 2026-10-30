@@ -84,8 +84,9 @@ fun PlanTab(store: AppStore, nav: Nav, platform: Platform, inbox: PlanInbox) {
 }
 
 /**
- * The week as a calendar: each activity's days planned, partly done or done,
- * today marked; step back through earlier weeks (or one ahead).
+ * The week as the practice week's stars: each activity's days planned, partly
+ * done or done, today marked; this week's practice stars can be tapped. Step
+ * back through earlier weeks (or one ahead).
  */
 @Composable
 private fun PlanCalendar(store: AppStore) {
@@ -112,13 +113,14 @@ private fun PlanCalendar(store: AppStore) {
         store.weekNames.forEachIndexed { r, name ->
             if (name.isNotBlank()) {
                 val planned = plan?.practice?.getOrNull(r)?.days
+                // This week's practice stars tap like the practice week's (and burst).
                 add(CalendarRow(name, Tone.Sun, (0..6).map { d ->
                     when {
                         store.practisedOn(monday, r, d) -> CalendarDay.Done
                         planned != null && d in planned -> CalendarDay.Planned
                         else -> CalendarDay.None
                     }
-                }))
+                }, onToggle = if (offset == 0) { d -> store.togglePractice(r, d) } else null))
             }
         }
     }.filter { row ->

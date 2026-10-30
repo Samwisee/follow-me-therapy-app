@@ -562,19 +562,30 @@ object FmtBreatheTokens {
     val dot: Color = FmtColors.teal
 }
 
-/** A week of an activity plan: days across, activities down; each day planned, partly done or done. */
+/** A week of an activity plan, as the practice week's stars: days across, activities down; each day not planned (a dot), planned (an outline star), partly done (a pale star) or done (a gold star). */
 object FmtCalendarTokens {
-    /** A planned day: a ring in the activity's line colour. */
-    fun planned(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Line)
-    /** Partly done (some steps): the activity's tint inside its ring. */
-    fun partial(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Tint)
-    fun partialLine(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Solid)
-    /** Done: teal with a tick. */
-    val doneFill: Color = FmtColors.teal
-    val doneInk: Color = FmtColors.paper
+    /** Not planned: a small dot. */
+    val none: Color = FmtColors.rule
+    /** Planned: an outline star, as on the practice week. */
+    val planned: Color = FmtColors.purple
+    /** Partly done (some steps): a pale star… */
+    val partial: Color = FmtColors.sunTint
+    /** …outlined in sun-deep. */
+    val partialLine: Color = FmtColors.sunDeep
+    /** Done: a gold star… */
+    val doneFill: Color = FmtColors.sun
+    /** …outlined in sun-deep. */
+    val doneLine: Color = FmtColors.sunDeep
+    /** The sparkles when a star is added: sun, purple, teal and pink. */
+    val burstSun: Color = FmtColors.sun
+    val burstPurple: Color = FmtColors.purple
+    val burstTeal: Color = FmtColors.teal
+    val burstPink: Color = FmtColors.pink
     /** Today's column. */
     val today: Color = FmtColors.purpleTint
     val ink: Color = FmtColors.ink
     val dayInk: Color = FmtColors.inkSoft
+    /** The dashed lines above and below each row of stars. */
+    val rule: Color = FmtColors.rule
 }
 

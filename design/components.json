@@ -316,10 +316,14 @@
     "css": ".fmt-tracker",
     "react": "Tracker"
    },
-   "app": "FmtTracker"
+   "app": "FmtTracker",
+   "rules": [
+    "Activities down, days across; each star a 44px target between dashed rules.",
+    "Tapping a star adds it with the same burst as the WeekCalendar (spring, twist, sparkles); not with reduced motion."
+   ]
   },
   "WeekCalendar": {
-   "description": "A week of an activity plan: the days across (today marked), each activity's days down: planned (a ring), partly done (tinted) or done (teal with a tick).",
+   "description": "A week of an activity plan as the practice week's stars: the days across (today marked), each activity's row of stars: not planned (a dot), planned (an outline star), partly done (a pale star) or done (a gold star).",
    "tokens": "calendar",
    "tones": [
     "purple",
@@ -328,9 +332,11 @@
     "pink"
    ],
    "rules": [
-    "Days Monday to Sunday with their dates; today's column on lilac.",
-    "Planned: a ring in the activity's line colour. Partly done: its tint, solid ring. Done: teal with a tick. Not planned: nothing.",
-    "Never colour alone: done has a tick, and each day is read out (Monday, Morning routine: done)."
+    "Days Monday to Sunday with their dates; today's column on lilac. Each row's stars sit between dashed rules, the activity's name above, as on the practice week (Tracker).",
+    "Not planned: a small dot. Planned: a purple outline star. Partly done: a pale sun star. Done: a gold star outlined in sun-deep.",
+    "A row can be tapped to add or take away a star (practice); the others are read-only.",
+    "Adding a star bursts: the star springs in with a twist and sparkles fly out (purple, teal, sun, pink). Not with reduced motion.",
+    "Never colour alone: filled against outline, and each day is read out (Monday, Morning routine: done)."
    ],
    "website": {
     "none": "The website has no plans."
