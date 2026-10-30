@@ -89,6 +89,23 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   });
   await ctx.close();
 }
+// A dropped connection while opening: the first try at a font fails. The app
+// must still open (fonts retry) and the splash must hand over.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
+  const page = await ctx.newPage();
+  let failed = 0;
+  await page.route(/fredoka_600\.ttf/, route => failed++ === 0 ? route.abort() : route.continue());
+  await page.goto('http://localhost:8099/');
+  await page.waitForTimeout(8000);
+  report.fontRetry = await page.evaluate(() => ({
+    splashGone: !document.getElementById('splash') || document.getElementById('splash').classList.contains('is-done'),
+    canvas: !![document, ...[...document.querySelectorAll('*')].map(e => e.shadowRoot).filter(Boolean)].find(r => r.querySelector('canvas')),
+  }));
+  report.fontRetry.failedRequests = failed;
+  await page.screenshot({ path: join(out, 'phone-font-retry.png') });
+  await ctx.close();
+}
 await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 1));
 console.log(JSON.stringify(report, null, 1));
 await browser.close();

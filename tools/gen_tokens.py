@@ -310,7 +310,22 @@ manifest = {
 page = RES / "index.html"
 html = page.read_text()
 html = re.sub(r'(<meta name="theme-color" content=")[^"]*(" data-token="bar-fill")', lambda m: m.group(1) + BAR + m.group(2), html)
-html = re.sub(r"(/\* token:bar-fill \*/ )#[0-9a-fA-F]{3,8}", lambda m: m.group(1) + BAR, html)
+def css_colour(name):
+    """A colour by its CSS name: a colour (ink), a fixed component part (bar-fill)
+    or a component part in a tone (button-purple-line)."""
+    if name in T["color"]:
+        return hex_of("color." + name)
+    for comp, parts in T["component"].items():
+        if comp.startswith("$") or not name.startswith(comp + "-"):
+            continue
+        rest = name[len(comp) + 1:]
+        if rest in parts:
+            return hex_of(f"component.{comp}.{rest}")
+        tone, _, part = rest.partition("-")
+        if tone in TONES and part in parts and parts[part].get("$type") == "other":
+            return hex_of(f"tone.{tone}.{parts[part]['$value']}")
+    raise SystemExit(f"index.html: unknown colour token {name}")
+html = re.sub(r"(/\* token:([a-z0-9-]+) \*/ )#[0-9a-fA-F]{3,8}", lambda m: m.group(1) + css_colour(m.group(2)), html)
 page.write_text(html)
 
 OUT.parent.mkdir(parents=True, exist_ok=True)

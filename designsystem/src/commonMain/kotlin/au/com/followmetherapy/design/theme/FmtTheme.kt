@@ -10,6 +10,15 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.async
+import kotlinx.coroutines.CancellationException
+import androidx.compose.ui.text.platform.Font
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -19,13 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import au.com.followmetherapy.design.resources.Res
-import au.com.followmetherapy.design.resources.fredoka_400
-import au.com.followmetherapy.design.resources.fredoka_500
-import au.com.followmetherapy.design.resources.fredoka_600
-import au.com.followmetherapy.design.resources.fredoka_700
-import au.com.followmetherapy.design.resources.quicksand_500
-import au.com.followmetherapy.design.resources.quicksand_600
-import au.com.followmetherapy.design.resources.quicksand_700
 import au.com.followmetherapy.design.tokens.FmtBorder
 import au.com.followmetherapy.design.tokens.FmtColors
 import au.com.followmetherapy.design.tokens.FmtFamily
@@ -41,7 +43,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.getValue
 import org.jetbrains.compose.resources.ExperimentalResourceApi
-import org.jetbrains.compose.resources.preloadFont
 
 /**
  * The semantic tokens resolved for the current window width. On screens they
@@ -136,21 +137,29 @@ object FmtTheme {
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun rememberFmtFonts(): FmtFonts? {
-    val f400 by preloadFont(Res.font.fredoka_400, FontWeight.Normal)
-    val f500 by preloadFont(Res.font.fredoka_500, FontWeight.Medium)
-    val f600 by preloadFont(Res.font.fredoka_600, FontWeight.SemiBold)
-    val f700 by preloadFont(Res.font.fredoka_700, FontWeight.Bold)
-    val q500 by preloadFont(Res.font.quicksand_500, FontWeight.Medium)
-    val q600 by preloadFont(Res.font.quicksand_600, FontWeight.SemiBold)
-    val q700 by preloadFont(Res.font.quicksand_700, FontWeight.Bold)
-    val all = listOf(f400, f500, f600, f700, q500, q600, q700)
-    if (all.any { it == null }) return null
-    return remember(all) {
-        FmtFonts(
-            display = FontFamily(f400!!, f500!!, f600!!, f700!!),
-            body = FontFamily(q500!!, q600!!, q700!!),
-        )
+    // Loaded here rather than with preloadFont: a font that fails to download
+    // (a dropped connection) is retried with a growing wait, instead of
+    // stopping the app before it draws anything.
+    var fonts by remember { mutableStateOf<FmtFonts?>(null) }
+    LaunchedEffect(Unit) {
+        var wait = 500L
+        while (fonts == null) {
+            try {
+                fonts = coroutineScope {
+                    fun load(name: String, weight: FontWeight) = async { Font("fmt-$name", Res.readBytes("font/$name.ttf"), weight) }
+                    val d = listOf(load("fredoka_400", FontWeight.Normal), load("fredoka_500", FontWeight.Medium), load("fredoka_600", FontWeight.SemiBold), load("fredoka_700", FontWeight.Bold))
+                    val b = listOf(load("quicksand_500", FontWeight.Medium), load("quicksand_600", FontWeight.SemiBold), load("quicksand_700", FontWeight.Bold))
+                    FmtFonts(display = FontFamily(d.awaitAll()), body = FontFamily(b.awaitAll()))
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                delay(wait)
+                wait = minOf(wait * 2, 8000L)
+            }
+        }
     }
+    return fonts
 }
 
 private fun style(token: FmtTypeToken, fonts: FmtFonts, widthDp: Float, color: androidx.compose.ui.graphics.Color = FmtColors.ink): TextStyle {

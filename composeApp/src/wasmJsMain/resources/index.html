@@ -24,6 +24,10 @@
        Timings are the motion tokens dur-slow (400ms) and ease-out. */
     #splash { position: fixed; inset: 0; z-index: 1; display: grid; place-items: center; background: /* token:bar-fill */ #efe9ff; transition: opacity 400ms cubic-bezier(0.22, 1, 0.36, 1); }
     #splash img { width: 160px; height: 160px; animation: fmt-breathe 2.4s ease-in-out infinite; }
+    #splash > div { display: grid; justify-items: center; gap: 16px; }
+    #splash p { margin: 0; font: 600 17px/1.4 system-ui, -apple-system, sans-serif; color: /* token:ink */ #2b2540; text-align: center; }
+    #splash button { min-height: 44px; padding: 8px 28px; border: 2px solid /* token:button-purple-line */ #502eed; border-radius: 999px; background: /* token:button-outline-fill */ #ffffff; color: /* token:button-purple-outline-ink */ #502eed; font: 600 17px system-ui, -apple-system, sans-serif; }
+    #splash [hidden] { display: none; }
     #splash.is-done { opacity: 0; pointer-events: none; }
     @keyframes fmt-breathe { 50% { transform: scale(1.04); } }
     @media (prefers-reduced-motion: reduce) { #splash img { animation: none; } #splash { transition-duration: 1ms; } }
@@ -58,7 +62,11 @@
   <script type="application/javascript" src="composeApp.js?v=__BUILD__"></script>
 </head>
 <body>
-  <div id="splash" aria-hidden="true"><img src="icons/icon-512.png" alt="" /></div>
+  <div id="splash"><div>
+    <img src="icons/icon-512.png" alt="" />
+    <p id="splash-slow" hidden>Still loading. A slow connection can take a little longer.</p>
+    <button id="splash-retry" type="button" hidden onclick="location.reload()">Try again</button>
+  </div></div>
   <div id="app"></div>
   <script>
     window.fmtReady = function () {
@@ -67,8 +75,18 @@
       s.classList.add("is-done");
       setTimeout(function () { s.remove(); }, 600);
     };
-    // Never stay on the splash if something goes wrong.
-    setTimeout(window.fmtReady, 15000);
+    // Never a blank page: if loading is slow or fails, say so and offer to try again
+    // (the splash stays until the app has drawn its first screen).
+    function fmtStuck(msg) {
+      if (!document.getElementById("splash") || document.getElementById("splash").classList.contains("is-done")) return;
+      var p = document.getElementById("splash-slow");
+      if (msg) p.textContent = msg;
+      p.hidden = false;
+      document.getElementById("splash-retry").hidden = false;
+    }
+    setTimeout(function () { fmtStuck(); }, 12000);
+    window.addEventListener("error", function () { fmtStuck("Something went wrong while opening. Try again?"); });
+    window.addEventListener("unhandledrejection", function () { fmtStuck("Something went wrong while opening. Try again?"); });
   </script>
 </body>
 </html>

@@ -47,7 +47,7 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
     private val bounceNode = BounceNode()
 
     /** The furthest a pull can stretch (it gets harder as it goes). */
-    private val reach: Float get() = with(density) { FmtSpace.s30.toPx() }
+    private val reach: Float get() = with(density) { FmtSpace.s30.toPx() * 2.5f }
 
     override val isInProgress: Boolean get() = offset != 0f
     override val node: DelegatableNode get() = bounceNode
@@ -66,8 +66,8 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
         val consumed = performScroll(Offset(delta.x, y))
         val left = y - consumed.y
         if (abs(left) > 0.5f && source == NestedScrollSource.UserInput) {
-            // Rubber band: half the finger's movement, less the further it's stretched.
-            offset += left * 0.5f * (1f - min(1f, abs(offset) / reach))
+            // Rubber band: most of the finger's movement at first, less the further it's stretched.
+            offset += left * 0.7f * (1f - min(1f, abs(offset) / reach))
         }
         // A mouse wheel never lets go, so spring back once it stops.
         if (!pressed && offset != 0f) springBackSoon()
@@ -77,14 +77,14 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
     override suspend fun applyToFling(velocity: Velocity, performFling: suspend (Velocity) -> Velocity) {
         settle?.cancel()
         if (offset != 0f) {
-            // Let go while stretched: spring back.
-            animate(offset, 0f, animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow)) { v, _ -> offset = v }
+            // Let go while stretched: spring back, with a little give past the edge.
+            animate(offset, 0f, animationSpec = SPRING_BACK) { v, _ -> offset = v }
             return
         }
         val left = performFling(velocity)
         if (abs(left.y) > 1f) {
             // A fling that reached the edge: a small, soft bounce carrying some of its speed.
-            animate(0f, 0f, initialVelocity = left.y * 0.12f, animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)) { v, _ -> offset = v }
+            animate(0f, 0f, initialVelocity = left.y * 0.25f, animationSpec = BOUNCE) { v, _ -> offset = v }
         }
     }
 
@@ -92,7 +92,7 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
         if (!bounceNode.isAttached) { offset = 0f; return }
         settle = bounceNode.coroutineScope.launch {
             delay(SETTLE_MS)
-            animate(offset, 0f, animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow)) { v, _ -> offset = v }
+            animate(offset, 0f, animationSpec = SPRING_BACK) { v, _ -> offset = v }
         }
     }
 
@@ -110,6 +110,8 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
 
     private companion object {
         const val SETTLE_MS = 120L
+        val SPRING_BACK = spring<Float>(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow)
+        val BOUNCE = spring<Float>(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow)
     }
 }
 
