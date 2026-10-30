@@ -34,43 +34,22 @@
     @media (prefers-reduced-motion: reduce) { #splash img { animation: none; } #splash { transition-duration: 1ms; } }
   </style>
   <script>
-    // Opens from the phone's copy, at once (see sw.js). A newer build downloads
-    // in the background while this one runs, and takes over on the next launch,
-    // before the app starts. version.json (never cached) says which is newest.
+    // Opens from the phone's copy, at once (see sw.js: one worker keeps whole
+    // builds). The page tells it the newest build (version.json, never cached);
+    // it downloads in the background and is used from the next launch.
     window.FMT_BUILD = "__BUILD__";
     window.FMT_ENTRY = "planner";
-    // The app starts once we know no newer build is waiting (or after 1.5s at most).
-    var fmtStart = (function () {
-      var started = false;
-      return function () {
-        if (started) return; started = true;
-        var js = document.createElement("script");
-        js.src = "composeApp.js?v=" + window.FMT_BUILD;
-        document.head.appendChild(js);
-      };
-    })();
     (function () {
-      if (window.FMT_BUILD.indexOf("__") === 0 || !("serviceWorker" in navigator)) return fmtStart(); // local dev, or no workers
+      var js = document.createElement("script");
+      js.src = "composeApp.js?v=" + window.FMT_BUILD;
+      document.head.appendChild(js);
+      if (window.FMT_BUILD.indexOf("__") === 0 || !("serviceWorker" in navigator)) return; // local dev, or no workers
       var sw = navigator.serviceWorker;
-      setTimeout(fmtStart, 1500);
-      sw.getRegistration().then(function (reg) {
-        // A build downloaded last time is ready: switch to it, then start.
-        if (reg && reg.waiting && sw.controller) {
-          sw.addEventListener("controllerchange", function () { location.reload(); });
-          reg.waiting.postMessage("fmt-take-over");
-          return;
-        }
-        fmtStart();
-        // The first visit, or a phone still on an older kind of worker (that
-        // served this page from the network): keep this build on the phone.
-        var mine = reg && reg.active && reg.active.scriptURL.indexOf("v=" + window.FMT_BUILD) >= 0;
-        if (!reg || (!mine && !reg.installing && !reg.waiting)) sw.register("sw.js?v=" + window.FMT_BUILD).catch(function () {});
-        // A newer build? Download it in the background for next time.
-        fetch("version.json?t=" + Date.now(), { cache: "no-store" })
-          .then(function (r) { return r.json(); })
-          .then(function (v) { if (v.build && v.build !== window.FMT_BUILD) sw.register("sw.js?v=" + v.build).catch(function () {}); })
-          .catch(function () {});
-      }).catch(fmtStart);
+      sw.register("sw.js").then(function () { return sw.ready; }).then(function (reg) {
+        return fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (v) {
+          if (v.build && reg.active) reg.active.postMessage({ type: "fmt-newest", build: v.build });
+        });
+      }).catch(function () {});
     })();
     // Chrome and Edge offer a one-tap install; keep the offer for the app's Install now button.
     window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.fmtInstallPrompt = e; });

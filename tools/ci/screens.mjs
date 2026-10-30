@@ -128,35 +128,24 @@ for (let round = 0; round < 4; round++) {
   const built = JSON.parse(realVersion).build;
   await writeFile(join(dist, 'index.html'), realIndex.replaceAll(built, 'next'));
   await writeFile(join(dist, 'version.json'), JSON.stringify({ build: 'next' }));
+  await writeFile(join(dist, 'files.json'), JSON.stringify({ ...files, build: 'next' }));
   try {
+  const state = () => page.evaluate(() => fetch('__fmt/state').then(r => r.json()).catch(() => null));
+  // This launch is still the old build; it tells the worker about the new one, which downloads it.
   t = Date.now(); await page.reload(); await ready(); update.launchWhileNewBuildDownloadsMs = Date.now() - t;
-  await page.waitForFunction(() => navigator.serviceWorker.getRegistration().then(r => !!(r && r.waiting)), null, { timeout: 60000, polling: 250 }).catch(() => {});
-  update.waitingAfter = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { active: r.active && r.active.scriptURL.split('?v=')[1], waiting: r.waiting && r.waiting.scriptURL.split('?v=')[1] }; });
-  // The next launch switches to it (before the app starts, or just after when the
-  // worker is slow to answer): wait for the page to be the new build.
-  // Trace the switch (test only): messages posted to workers, state changes, controller changes.
-  await page.addInitScript(() => {
-    const log = JSON.parse(sessionStorage.getItem('t.log') || '[]');
-    const put = m => { log.push(Math.round(performance.now()) + ' ' + (window.FMT_BUILD || '?') + ' ' + m); sessionStorage.setItem('t.log', JSON.stringify(log.slice(-40))); };
-    const post = ServiceWorker.prototype.postMessage;
-    ServiceWorker.prototype.postMessage = function (m) { put('post ' + m + ' to ' + this.scriptURL.split('v=')[1] + ' (' + this.state + ')'); this.addEventListener('statechange', () => put('worker ' + this.scriptURL.split('v=')[1] + ' ' + this.state)); return post.apply(this, arguments); };
-    navigator.serviceWorker.addEventListener('controllerchange', () => put('controllerchange'));
-    const gr = navigator.serviceWorker.getRegistration.bind(navigator.serviceWorker);
-    navigator.serviceWorker.getRegistration = (...a) => gr(...a).then(r => { put('reg active=' + (r && r.active && r.active.scriptURL.split('v=')[1]) + ' waiting=' + (r && r.waiting && r.waiting.scriptURL.split('v=')[1]) + ' ctl=' + !!navigator.serviceWorker.controller); return r; });
-    addEventListener('load', () => put('load'));
-  });
-  t = Date.now(); await page.reload();
-  await page.waitForFunction(() => window.FMT_BUILD === 'next' && !!navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL.includes('v=next'), null, { timeout: 20000 }).catch(() => {});
-  await ready(); update.launchTakingOverMs = Date.now() - t;
-  update.after = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { page: window.FMT_BUILD, waiting: !!r.waiting, installing: !!r.installing, controller: navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL.split('?v=')[1], caches: await caches.keys() }; });
+  await page.waitForFunction(() => fetch('__fmt/state').then(r => r.json()).then(s => s.pending === 'next').catch(() => false), null, { timeout: 60000, polling: 500 }).catch(() => {});
+  update.waitingAfter = await state();
+  // The next launch is the new build.
+  t = Date.now(); await page.reload(); await ready(); update.launchTakingOverMs = Date.now() - t;
+  update.after = await page.evaluate(() => fetch('__fmt/state').then(r => r.json()).then(s => ({ page: window.FMT_BUILD, current: s.current, pending: s.pending, previous: s.previous })).catch(e => ({ page: window.FMT_BUILD, error: String(e) })));
   update.files = files.files.length;
-  update.trace = await page.evaluate(() => JSON.parse(sessionStorage.getItem('t.log') || '[]')).catch(() => null);
 
   } finally {
   await writeFile(join(dist, 'version.json'), realVersion);
+  await writeFile(join(dist, 'files.json'), JSON.stringify(files));
   await writeFile(join(dist, 'index.html'), realIndex);
   }
-  report.updateRounds.push({ controller: update.after?.controller, page: update.after?.page, ms: update.launchTakingOverMs, trace: update.after?.page === 'next' ? undefined : update.trace });
+  report.updateRounds.push({ page: update.after?.page, current: update.after?.current, waiting: update.waitingAfter?.pending, ms: update.launchTakingOverMs });
   if (round === 0) report.update = update;
   await ctx.close();
 }
@@ -268,8 +257,8 @@ for (const [k, v] of Object.entries(report)) {
 check(report.pwa?.serviceWorker && report.pwa?.controlled, 'the service worker keeps the app on the phone');
 check(report.pwa?.offlineCanvas, 'the app opens with no internet');
 check(report.update?.cachedLaunchSlow3gMs != null && report.update.cachedLaunchSlow3gMs < 2500, `it opens from the phone's copy within 2.5s on slow 3G (${report.update?.cachedLaunchSlow3gMs}ms)`);
-check(report.update?.waitingAfter?.waiting === 'next', 'a new build downloads in the background');
-check(report.updateRounds.length === 4 && report.updateRounds.every(r => r.controller === 'next' && r.page === 'next'), `a new build takes over on the next launch, every time (${report.updateRounds.map(r => r.page === 'next' ? 'ok' : 'stuck').join(', ')})`);
+check(report.updateRounds.every(r => r.waiting === 'next'), 'a new build downloads in the background');
+check(report.updateRounds.length === 4 && report.updateRounds.every(r => r.current === 'next' && r.page === 'next'), `a new build takes over on the next launch, every time (${report.updateRounds.map(r => r.page === 'next' ? 'ok' : 'stuck').join(', ')})`);
 check(report.migration?.idea === 'Hug my dog' && report.migration?.oldKeysLeft === 0, 'older saved data moves into the record');
 check(report.fontRetry?.splashGone && report.fontRetry?.canvas, 'the app opens when a font download fails once');
 check(report.plan?.saved && !String(report.plan?.addressAfterOpening).includes('plan='), "a plan link adds the plan and leaves the address");
