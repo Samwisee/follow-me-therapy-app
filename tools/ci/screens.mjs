@@ -130,7 +130,11 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   t = Date.now(); await page.reload(); await ready(); update.launchWhileNewBuildDownloadsMs = Date.now() - t;
   await page.waitForFunction(() => navigator.serviceWorker.getRegistration().then(r => !!(r && r.waiting)), null, { timeout: 60000, polling: 250 }).catch(() => {});
   update.waitingAfter = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { active: r.active && r.active.scriptURL.split('?v=')[1], waiting: r.waiting && r.waiting.scriptURL.split('?v=')[1] }; });
-  t = Date.now(); await page.reload(); await ready(); await page.waitForTimeout(1500); update.launchTakingOverMs = Date.now() - t;
+  // The next launch switches to it (before the app starts, or just after when the
+  // worker is slow to answer): wait for the page to be the new build.
+  t = Date.now(); await page.reload();
+  await page.waitForFunction(() => window.FMT_BUILD === 'next' && !!navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL.includes('v=next'), null, { timeout: 20000 }).catch(() => {});
+  await ready(); update.launchTakingOverMs = Date.now() - t;
   update.after = await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); return { page: window.FMT_BUILD, waiting: !!r.waiting, installing: !!r.installing, controller: navigator.serviceWorker.controller && navigator.serviceWorker.controller.scriptURL.split('?v=')[1], caches: await caches.keys() }; });
   update.files = files.files.length;
 
