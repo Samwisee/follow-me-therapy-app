@@ -324,9 +324,14 @@ class FmtAction(
     val onClick: () -> Unit,
 ) {
     internal fun calling(f: () -> Unit) = FmtAction(label, kind, chevron, enabled, f)
-    override fun equals(other: Any?) = other is FmtAction && other.label == label && other.kind == kind && other.chevron == chevron && other.enabled == enabled
-    override fun hashCode() = ((label.hashCode() * 31 + kind.hashCode()) * 31 + chevron.hashCode()) * 31 + enabled.hashCode()
+    /**
+     * Same words, kind, chevron and enabled. Equality stays identity on
+     * purpose: if two steps' "Done" buttons were equal, the bar would skip
+     * redrawing and keep the earlier step's action.
+     */
+    internal fun looksLike(other: FmtAction?) = other != null && other.label == label && other.kind == kind && other.chevron == chevron && other.enabled == enabled
 }
+private fun FmtAction?.sameLook(other: FmtAction?) = if (this == null) other == null else looksLike(other)
 
 /** The two places in the action bar: Back (or another way out) at the start, the next step at the end. */
 data class FmtActions(val start: FmtAction? = null, val end: FmtAction? = null)
@@ -434,7 +439,9 @@ fun FmtFlowScaffold(
         latest[0] = start; latest[1] = end
         SideEffect {
             val spec = FmtActions(start?.calling { latest[0]?.onClick?.invoke() }, end?.calling { latest[1]?.onClick?.invoke() })
-            if (slot.host.specs[slot.key] != spec) slot.host.specs[slot.key] = spec
+            // Republish only when a button looks different; its action is read from `latest`.
+            val cur = slot.host.specs[slot.key]
+            if (cur == null || !cur.start.sameLook(start) || !cur.end.sameLook(end)) slot.host.specs[slot.key] = spec
         }
         DisposableEffect(slot.host, slot.key) { onDispose { slot.host.specs.remove(slot.key) } }
     }
