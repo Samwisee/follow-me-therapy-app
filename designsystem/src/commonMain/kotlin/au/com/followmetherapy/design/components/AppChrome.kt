@@ -427,14 +427,16 @@ fun FmtFlowScaffold(
     var ownHeight by remember { mutableStateOf(0.dp) }
     val hasActions = start != null || end != null
     if (slot != null) {
-        // Publish to the shared bar. Clicks call this screen's latest actions.
-        val latest = remember(slot) { arrayOfNulls<FmtAction>(2) }
+        // Publish to the shared bar. Clicks call this screen's latest actions:
+        // one holder per screen (its key), so a published button never keeps
+        // an earlier step's action, even when the words are the same (Done → Done).
+        val latest = remember(slot.host, slot.key) { arrayOfNulls<FmtAction>(2) }
         latest[0] = start; latest[1] = end
         SideEffect {
             val spec = FmtActions(start?.calling { latest[0]?.onClick?.invoke() }, end?.calling { latest[1]?.onClick?.invoke() })
             if (slot.host.specs[slot.key] != spec) slot.host.specs[slot.key] = spec
         }
-        DisposableEffect(slot) { onDispose { slot.host.specs.remove(slot.key) } }
+        DisposableEffect(slot.host, slot.key) { onDispose { slot.host.specs.remove(slot.key) } }
     }
     val actionsHeight = if (!hasActions) 0.dp else if (slot != null) slot.host.height else ownHeight
     Column(Modifier.fillMaxSize().background(FmtColors.paper)) {

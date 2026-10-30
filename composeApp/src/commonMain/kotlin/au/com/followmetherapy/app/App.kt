@@ -132,7 +132,8 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                     transitionSpec = { transitionFor(initialState, targetState) },
                     contentKey = { if (it.area.tab != null) "tabs" else "${it.area}/${it.step}" },
                 ) { r ->
-                    CompositionLocalProvider(LocalFmtActionSlot provides FmtActionSlot(actions, r)) {
+                    val slot = remember(r) { FmtActionSlot(actions, r) }
+                    CompositionLocalProvider(LocalFmtActionSlot provides slot) {
                     if (r.area.tab != null) {
                         TabShell(nav, r.area.tab) { t ->
                             when (t) {
