@@ -37,6 +37,19 @@ private fun jsReadClipboard(onText: (String) -> Unit): Unit = js("""{
   if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(t => onText(t || '')).catch(() => onText(''));
   else onText('');
 }""")
+// The Planner's lock (vault.js; absent on the family app's page).
+private fun jsOpenUrl(url: String): Unit = js("{ window.open(url, '_blank', 'noopener'); }")
+private fun jsVaultStatus(): String = js("window.fmtVault ? window.fmtVault.status() : 'absent'")
+private fun jsVaultSetup(code: String, seed: String, onResult: (String) -> Unit): Unit = js("""{
+  let s = {}; try { s = JSON.parse(seed); } catch (e) {}
+  window.fmtVault.setup(code, s).then(onResult, () => onResult('error'));
+}""")
+private fun jsVaultUnlock(onResult: (String) -> Unit): Unit = js("{ window.fmtVault.unlock().then(onResult, () => onResult('error')); }")
+private fun jsVaultGet(key: String): String? = js("window.fmtVault ? window.fmtVault.get(key) : null")
+private fun jsVaultPut(key: String, value: String?): Unit = js("{ if (window.fmtVault) window.fmtVault.put(key, value); }")
+private fun jsVaultKeys(prefix: String): String = js("window.fmtVault ? window.fmtVault.keys(prefix).join('\u001d') : ''")
+private fun jsVaultReset(): Unit = js("{ if (window.fmtVault) window.fmtVault.reset(); }")
+private fun jsVaultOnLock(onLock: () -> Unit): Unit = js("{ if (window.fmtVault) window.fmtVault.onLock(onLock); }")
 /** The plan link always points at the family app (index), even when made in the planner (planner.html). */
 private fun jsAppUrl(): String = js("location.origin + location.pathname.replace(/planner\\.html$/, '')")
 /** Rows of 1s and 0s, comma-separated (vendor/qrcode.js, MIT, Kazuhiko Arase); empty if it isn't loaded. */
@@ -108,6 +121,15 @@ private object WebPlatform : Platform {
     override fun ready() = jsReady()
     override fun otherIosBrowser() = jsOtherIosBrowser()
     override fun openInSafari() = jsOpenInSafari()
+    override fun openUrl(url: String) = jsOpenUrl(url)
+    override fun vaultStatus() = jsVaultStatus()
+    override fun vaultSetup(code: String, seedJson: String, onResult: (String) -> Unit) = jsVaultSetup(code, seedJson, onResult)
+    override fun vaultUnlock(onResult: (String) -> Unit) = jsVaultUnlock(onResult)
+    override fun vaultGet(key: String) = jsVaultGet(key)
+    override fun vaultPut(key: String, value: String?) = jsVaultPut(key, value)
+    override fun vaultKeys(prefix: String) = jsVaultKeys(prefix).split('\u001d').filter { it.isNotEmpty() }
+    override fun vaultReset() = jsVaultReset()
+    override fun onVaultLock(onLock: () -> Unit) = jsVaultOnLock(onLock)
 }
 
 @OptIn(ExperimentalComposeUiApi::class)

@@ -61,6 +61,7 @@ import au.com.followmetherapy.design.tokens.FmtSpace
 const val PLANNER_LIST = 0
 const val PLANNER_EDIT = 1
 const val PLANNER_SEND = 2
+const val PLANNER_REQUEST = 3
 
 /** Simone's services a plan can belong to (as on the website). */
 val SERVICES = listOf("5 Steps Forward", "Steady Steps", "Early Start Denver Model")
@@ -84,7 +85,7 @@ data class Family(val id: String, val name: String, val plan: Plan, val sent: St
             val plan = (m["p"] as? String)?.let { Plan.parse(it) } ?: return null
             return Family(id, m["n"] as? String ?: "", plan, m["s"] as? String, m["g"] as? String, m["go"] as? String)
         }
-        private fun q(s: String) = buildString {
+        internal fun q(s: String) = buildString {
             append('"')
             for (c in s) when (c) {
                 '"' -> append("\\\""); '\\' -> append("\\\\"); '\n' -> append("\\n"); '\r' -> append("\\r"); '\t' -> append("\\t")
@@ -118,6 +119,7 @@ fun PlannerScreen(store: AppStore, nav: Nav, platform: Platform, step: Int, inbo
     when (step) {
         PLANNER_EDIT -> PlannerEdit(store, nav, platform, session)
         PLANNER_SEND -> PlannerSend(store, nav, platform, inbox, session)
+        PLANNER_REQUEST -> RequestScreen(platform, nav)
         else -> PlannerList(store, nav, session)
     }
 }
@@ -144,7 +146,8 @@ private fun PlannerList(store: AppStore, nav: Nav, session: PlannerSession) {
             FmtListRow(f.name.ifBlank { "No name" }, (f.plan.service?.let { "$it · " } ?: "") + sent, FmtIcons.calendar, Tone.Purple,
                 onClick = { session.family = f; nav.go(Route(Area.Planner, PLANNER_EDIT)) })
         }
-        FmtInfoNote("families' plans stay on this phone. Use a first name or initials, never a full name.", leadIn = "Privacy:", tone = Tone.Teal, icon = FmtIcons.shieldTick)
+        FmtInfoNote("families' plans stay on this phone, locked with Face ID. Use a first name or initials, never a full name.", leadIn = "Privacy:", tone = Tone.Teal, icon = FmtIcons.shieldTick)
+        FmtListRow("Request a change", "Something's wrong, or an idea for the Planner", FmtIcons.heart, Tone.Pink, onClick = { nav.go(Route(Area.Planner, PLANNER_REQUEST)) })
     }
 }
 

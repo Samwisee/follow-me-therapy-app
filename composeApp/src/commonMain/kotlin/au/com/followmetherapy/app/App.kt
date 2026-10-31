@@ -156,7 +156,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                             Area.Install -> InstallScreen(platform, nav, store, welcome = r.step == WELCOME)
                             Area.GrownUps -> GrownUpsScreen(store, nav, platform)
                             Area.PlanImport -> PlanImportScreen(store, nav, platform, inbox)
-                            Area.Planner -> PlannerScreen(store, nav, platform, r.step, inbox, session)
+                            Area.Planner -> PlannerLock(store, platform) { PlannerScreen(store, nav, platform, r.step, inbox, session) }
                             else -> Unit
                         }
                     }
@@ -185,6 +185,7 @@ private fun barFor(r: Route, store: AppStore, nav: Nav, planner: Boolean): Bar {
         Area.Planner -> when (r.step) {
             PLANNER_EDIT -> Bar("Plan", { nav.go(Route(Area.Planner)) })
             PLANNER_SEND -> Bar("Send the plan", { nav.go(Route(Area.Planner, PLANNER_EDIT)) })
+            PLANNER_REQUEST -> Bar("Request a change", { nav.go(Route(Area.Planner)) })
             else -> if (planner) Bar("Planner", brand = true) else Bar("Planner", home)
         }
         Area.Morning -> {

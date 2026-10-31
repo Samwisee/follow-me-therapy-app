@@ -64,8 +64,23 @@ interface Platform {
     fun otherIosBrowser(): Boolean = false
     /** Opens this page in Safari (iOS 17 and later). */
     fun openInSafari() {}
+    /** Opens [url] (a new tab, or the app that handles it). */
+    fun openUrl(url: String) {}
     /** The app has drawn its first screen: the page's splash can go. */
     fun ready() {}
+
+    // ── The Planner's lock (vault.js, loaded only by planner.html) ──
+    /** "absent" (not the Planner page), "unsupported", "new", "locked" or "open". */
+    fun vaultStatus(): String = "absent"
+    /** Checks the setup code, makes the passkey (Face ID) and starts the vault with [seedJson]. */
+    fun vaultSetup(code: String, seedJson: String, onResult: (String) -> Unit) { onResult("unsupported") }
+    fun vaultUnlock(onResult: (String) -> Unit) { onResult("error") }
+    fun vaultGet(key: String): String? = null
+    fun vaultPut(key: String, value: String?) {}
+    fun vaultKeys(prefix: String): List<String> = emptyList()
+    fun vaultReset() {}
+    /** Called when the vault locks itself (five minutes in the background). */
+    fun onVaultLock(onLock: () -> Unit) {}
 }
 
 enum class Device { IPhone, Android, Computer }
@@ -236,18 +251,24 @@ class AppStore(private val p: Platform) {
         if (weekProud.isNotBlank()) appendLine("Proud of: $weekProud")
     }.trimEnd()
 
-    // ── Simone's planner: her families and templates, on her phone only ──
+    // ── Simone's planner: her families and templates, on her phone only, in the
+    //    Planner's encrypted vault (see vault.js); open only after Face ID. ──
     private val FAMILY = "planner.family."
-    fun families(): List<Family> = record.entries
-        .filter { it.key.startsWith(FAMILY) && it.value.value != null }
-        .mapNotNull { Family.parse(it.key.removePrefix(FAMILY), it.value.value!!) }
+    fun families(): List<Family> = p.vaultKeys(FAMILY)
+        .mapNotNull { k -> p.vaultGet(k)?.let { Family.parse(k.removePrefix(FAMILY), it) } }
         .sortedBy { it.name.lowercase() }
-    fun saveFamily(f: Family) = put(FAMILY + f.id, f.toJson())
-    fun deleteFamily(id: String) = put(FAMILY + id, null)
+    fun saveFamily(f: Family) = p.vaultPut(FAMILY + f.id, f.toJson())
+    fun deleteFamily(id: String) = p.vaultPut(FAMILY + id, null)
     fun newFamilyId(): String = p.now().toString(36)
     /** Her template for a service (or her own starting point without one): hers if she saved one, else the built-in. */
-    fun template(service: String?): Plan = get("planner.template.${service ?: "none"}")?.let { Plan.parse(it) } ?: Templates.builtIn(service)
-    fun saveTemplate(service: String?, plan: Plan) = put("planner.template.${service ?: "none"}", plan.copy(note = null, made = "").toJson())
+    fun template(service: String?): Plan = p.vaultGet("planner.template.${service ?: "none"}")?.let { Plan.parse(it) } ?: Templates.builtIn(service)
+    fun saveTemplate(service: String?, plan: Plan) = p.vaultPut("planner.template.${service ?: "none"}", plan.copy(note = null, made = "").toJson())
+
+    /** Planner entries saved before the lock (in the open record), to move into the vault at setup. */
+    fun plannerSeedJson(): String = record.entries.filter { it.key.startsWith("planner.") && it.value.value != null }
+        .entries.joinToString(",", "{", "}") { (k, v) -> Family.q(k) + ":" + Family.q(v.value!!) }
+    /** Once they're in the vault, take them out of the open record. */
+    fun clearOpenPlanner() = record.entries.keys.filter { it.startsWith("planner.") }.forEach { put(it, null) }
 
     // ── Install ──
     /** Chose to use the app in the browser instead of adding it to the Home Screen. */

@@ -226,6 +226,47 @@ for (let round = 0; round < 4; round++) {
   report.morningWalkErrors = errors;
   await ctx.close();
 }
+// The Planner's lock: set up with the setup code and Face ID (a virtual
+// authenticator with PRF), families kept encrypted, locked after a reload,
+// opened again with Face ID. The real code isn't in the repo: the test serves
+// vault.js with its own code for the run.
+{
+  const vaultPath = join(dist, 'vault.js');
+  const realVault = await readFile(vaultPath, 'utf8');
+  const { pbkdf2Sync, randomBytes } = await import('node:crypto');
+  const testCode = 'TEST-CODE-ABCD-2345', salt = randomBytes(16);
+  const hash = pbkdf2Sync(testCode, salt, 310000, 32, 'sha256').toString('base64');
+  await writeFile(vaultPath, realVault.replace(/const CODE = \{[^}]*\};/, `const CODE = { salt: "${salt.toString('base64')}", hash: "${hash}", iterations: 310000 };`));
+  try {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+    const page = await ctx.newPage();
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send('WebAuthn.enable');
+    await cdp.send('WebAuthn.addVirtualAuthenticator', { options: { protocol: 'ctap2', ctap2Version: 'ctap2_1', transport: 'internal', hasResidentKey: true, hasUserVerification: true, isUserVerified: true, hasPrf: true, automaticPresenceSimulation: true } });
+    await page.goto('http://localhost:8099/planner.html'); await opened(page);
+    await page.screenshot({ path: join(out, 'phone-planner-setup.png') });
+    const lock = { first: await page.evaluate(() => window.fmtVault.status()) };
+    lock.badCode = await page.evaluate(() => window.fmtVault.setup('WRONG-CODE-0000-0000', {}));
+    lock.setup = await page.evaluate((c) => window.fmtVault.setup(c, { 'planner.family.t1': '{"n":"Zebra Test"}' }), testCode);
+    await page.waitForTimeout(300);
+    lock.plaintextStored = await page.evaluate(() => JSON.stringify(localStorage).includes('Zebra Test'));
+    await page.reload(); await opened(page);
+    lock.afterReload = await page.evaluate(() => window.fmtVault.status());
+    await page.screenshot({ path: join(out, 'phone-planner-locked.png') });
+    await page.mouse.click(390 - 90, 844 - 40); // Open with Face ID
+    await page.waitForFunction(() => window.fmtVault.status() === 'open', null, { timeout: 10000 }).catch(() => {});
+    lock.afterUnlock = await page.evaluate(() => window.fmtVault.status());
+    lock.family = await page.evaluate(() => window.fmtVault.get('planner.family.t1'));
+    await page.waitForTimeout(800);
+    await page.screenshot({ path: join(out, 'phone-planner-unlocked.png') });
+    report.plannerLock = lock;
+    await ctx.close();
+  } catch (e) {
+    report.plannerLock = { error: String(e) };
+  } finally {
+    await writeFile(vaultPath, realVault);
+  }
+}
 // Simone's planner opens from its own page (planner.html): its Home Screen
 // name and start, the families list, and a new plan (the action bar's end).
 {
@@ -266,6 +307,10 @@ const walk = (report.morningWalk || []).map(w => w.hash);
 const done = (report.morningWalk || []).map(w => (w.record || []).join('')).pop() || '';
 check(walk.includes('#morning/7') && walk.includes('#morning/8') && done.includes('"v":"0,1,2,3,4,5"'), `the morning routine taps through every step (${walk.join(' ')})`);
 check(report.planner?.manifest?.name === 'Follow Me Planner' && report.planner?.qrModules > 0, "Simone's planner installs on its own and makes QR codes");
+const L = report.plannerLock || {};
+check(L.first === 'new' && L.badCode === 'bad-code' && L.setup === 'ok', `the Planner sets up only with the setup code and Face ID (${L.first}, ${L.badCode}, ${L.setup})`);
+check(L.plaintextStored === false, "the Planner's families are stored encrypted");
+check(L.afterReload === 'locked' && L.afterUnlock === 'open' && L.family === '{"n":"Zebra Test"}', `the Planner is locked when opened and opens with Face ID (${L.afterReload}, ${L.afterUnlock})`);
 for (const [k, t] of Object.entries(report.touch || {})) {
   check(t.medianMs <= 17.5 && t.p90Ms <= 34, `scrolling ${k} keeps 60fps on a slow phone (median ${t.medianMs}ms, p90 ${t.p90Ms}ms)`);
 }
