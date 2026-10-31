@@ -19,7 +19,9 @@
 //   onLock(fn)          called when it locks itself
 (function () {
   const CODE = { salt: "GR+oSdPkVuZa1FjTDmwu0A==", hash: "zOMQ9a4wqMOBWnqrD4cDMOmW/SmXGZxwAQtiDk09u4E=", iterations: 310000 };
-  const STORE = "fmt.planner.vault"; // { v, cred, salt, iv, data } (base64), all safe to keep in the open
+  // { v, cred, salt, iv, data } (base64), all safe to keep in the open. Not "fmt." (that prefix is
+  // the old one-key-per-entry storage, which the app moves into its record and clears).
+  const STORE = "fmt-planner-vault";
   const LOCK_AFTER_MS = 5 * 60 * 1000;
   const enc = new TextEncoder(), dec = new TextDecoder();
   const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
