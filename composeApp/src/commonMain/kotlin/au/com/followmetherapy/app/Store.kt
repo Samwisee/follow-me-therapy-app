@@ -130,6 +130,19 @@ class AppStore(private val p: Platform) {
         p.saveRecord(record.toJson(at))
     }
 
+    /**
+     * The first time a finished row is seen (back on Today or Activities after
+     * finishing), its star bursts; after that it just shows. [key] names the
+     * row and its period: "routine:<date>", "calm", "practice:<week>".
+     */
+    fun firstSeenDone(key: String, done: Boolean): Boolean {
+        if (!done) return false
+        val seen = get("seen.done")?.split(",")?.filter { it.isNotEmpty() }?.toSet() ?: emptySet()
+        if (key in seen) return false
+        put("seen.done", (seen + key).toList().takeLast(60).joinToString(","))
+        return true
+    }
+
     // ── Morning routine ──
     val routineSteps = listOf("Toilet and wash hands", "Get dressed", "Eat breakfast", "Brush teeth", "Shoes on", "Bag on, out the door")
     val routineDone = mutableStateListOf<Int>()

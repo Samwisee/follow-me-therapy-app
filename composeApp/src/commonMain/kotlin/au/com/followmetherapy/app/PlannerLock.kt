@@ -39,7 +39,8 @@ fun PlannerLock(store: AppStore, platform: Platform, content: @Composable () -> 
         "locked" -> PlannerUnlock(platform) { status = it }
         "unsupported" -> FmtFlowScaffold {
             FmtHead("My families", swash = "families", tag = "Planner")
-            FmtGroup { FmtText("The Planner opens with Face ID or Touch ID. This phone or browser can't do that: open it in Safari on an iPhone with iOS 18 or later (or from its Home Screen icon).", FmtTheme.type.lead) }
+            FmtGroup { FmtText("The Planner opens with Face ID, Touch ID or Windows Hello, and this browser can't do that here.", FmtTheme.type.lead)
+                FmtText("It works in Safari on an iPhone or iPad with iOS 18 or later, in Safari or Chrome on a Mac with Touch ID, and in Chrome or Edge on Windows with Windows Hello.", FmtTheme.type.body) }
         }
         else -> FmtFlowScaffold {
             FmtHead("My families", swash = "families", tag = "Planner")
@@ -53,7 +54,7 @@ private fun PlannerSetup(store: AppStore, platform: Platform, onStatus: (String)
     var code by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
-    FmtFlowScaffold(end = FmtAction(if (busy) "Setting up…" else "Set up with Face ID", chevron = true, enabled = !busy && code.isNotBlank()) {
+    FmtFlowScaffold(end = FmtAction(if (busy) "Setting up…" else if (platform.device() == Device.IPhone) "Set up with Face ID" else "Set up", chevron = true, enabled = !busy && code.isNotBlank()) {
         busy = true; message = null
         platform.vaultSetup(code, store.plannerSeedJson()) { r ->
             busy = false
@@ -68,12 +69,12 @@ private fun PlannerSetup(store: AppStore, platform: Platform, onStatus: (String)
     }) {
         FmtHead("Set up the Planner", swash = "Planner", tag = "Planner")
         FmtGroup {
-            FmtText("The Planner is just for Sam and me. Set it up once on this phone with the setup code, then it opens with Face ID.", FmtTheme.type.lead)
+            FmtText("The Planner is just for Sam and me. Set it up once on each phone or computer with the setup code, then it opens with Face ID, Touch ID or Windows Hello.", FmtTheme.type.lead)
             WriteField(code, { code = it }, placeholder = "Setup code", kid = false)
             message?.let { FmtText(it, FmtTheme.type.body, Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
         }
         FmtInfoNote(
-            "families' plans are kept on this phone, locked so only Face ID on this phone can open them.",
+            "families' plans are kept on this device, locked so only Face ID or Touch ID on this device can open them. Each phone or computer keeps its own.",
             leadIn = "Privacy:", tone = Tone.Teal, icon = FmtIcons.shieldTick,
         )
     }
@@ -84,7 +85,7 @@ private fun PlannerUnlock(platform: Platform, onStatus: (String) -> Unit) {
     var busy by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
     var confirmReset by remember { mutableStateOf(false) }
-    FmtFlowScaffold(end = FmtAction(if (busy) "Opening…" else "Open with Face ID", chevron = true, enabled = !busy) {
+    FmtFlowScaffold(end = FmtAction(if (busy) "Opening…" else if (platform.device() == Device.IPhone) "Open with Face ID" else "Unlock", chevron = true, enabled = !busy) {
         busy = true; message = null
         platform.vaultUnlock { r ->
             busy = false
@@ -97,7 +98,7 @@ private fun PlannerUnlock(platform: Platform, onStatus: (String) -> Unit) {
     }) {
         FmtHead("My families", swash = "families", tag = "Planner")
         FmtGroup {
-            FmtText("Locked. Open it with Face ID.", FmtTheme.type.lead)
+            FmtText(if (platform.device() == Device.IPhone) "Locked. Open it with Face ID." else "Locked. Unlock it with Touch ID or Windows Hello.", FmtTheme.type.lead)
             message?.let { FmtText(it, FmtTheme.type.body, Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
         }
         FmtGroup("Can't open it?") {

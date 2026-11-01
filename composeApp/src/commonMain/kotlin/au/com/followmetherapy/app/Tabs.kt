@@ -92,6 +92,7 @@ fun TodayTab(store: AppStore, nav: Nav) {
             progress = done / total.toFloat(),
             progressLabel = "$done of $total steps done",
             done = store.routineComplete,
+            celebrate = remember(store.routineComplete) { store.firstSeenDone("routine:${store.today}", store.routineComplete) },
         )
     }
 
@@ -160,6 +161,7 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
                 "Self-care · " + if (store.routineComplete) "all done today" else "$done of $total steps today",
                 FmtIcons.sunrise, Tone.Purple, onClick = { nav.go(Route(Area.Morning)) },
                 progress = done / total.toFloat(), progressLabel = "$done of $total steps done today", done = store.routineComplete,
+                celebrate = remember(store.routineComplete) { store.firstSeenDone("routine:${store.today}", store.routineComplete) },
             )
         }
         Reveal(Kind.Feelings in shown, first = firstRow == Kind.Feelings) {
@@ -169,6 +171,7 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
                 FmtIcons.breathe, Tone.Teal,
                 onClick = { nav.go(if (store.calmSaved) Route(Area.Calm, CALM_PLAN_STEP) else Route(Area.Calm)) },
                 progress = store.calmProgress, progressLabel = if (store.calmSaved) "Plan ready" else "Making the plan", done = store.calmSaved,
+                celebrate = remember(store.calmSaved) { store.firstSeenDone("calm", store.calmSaved) },
             )
         }
         Reveal(Kind.HomePractice in shown, first = firstRow == Kind.HomePractice) {
@@ -180,6 +183,7 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
                 onClick = { nav.go(Route(if (store.weekSetUp) Area.Week else Area.WeekSetup)) },
                 progress = store.practiceProgress, progressLabel = "${store.starsThisWeek} of $target stars this week",
                 done = target > 0 && store.starsThisWeek >= target,
+                celebrate = remember(store.starsThisWeek, target) { store.firstSeenDone("practice:${store.weekStart}", target > 0 && store.starsThisWeek >= target) },
             )
         }
         // Each practice activity, explained (how to do it, why it helps).
@@ -270,6 +274,9 @@ private fun ColumnScope.GrownUpsContent(store: AppStore, nav: Nav, platform: Pla
         }
     }
     FmtListRow("The design system", "Colours, type and parts this app is built from", FmtIcons.blocks, Tone.Purple, onClick = { nav.go(Route(Area.DesignSystem)) })
+    // For Simone (and Sam): her Planner, on a phone or a computer. It opens only after setup and Face ID / Touch ID.
+    FmtListRow("For Simone: the Planner", "Families' plans, templates and requests. Opens with Face ID or Touch ID.", FmtIcons.calendar, Tone.Purple,
+        onClick = { platform.openUrl(platform.appUrl() + "planner.html") })
     // The sign-off, on the same text edge as everything above.
     FmtGroup {
         Row(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalAlignment = Alignment.CenterVertically) {

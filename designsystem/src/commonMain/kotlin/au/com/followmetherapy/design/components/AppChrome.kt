@@ -565,13 +565,14 @@ fun FmtListRow(
     /** Progress through what the row opens (0–1), shown inside the row under its words. */
     progress: Float? = null,
     progressLabel: String? = null,
-    /** Done: a teal tick in place of the chevron (and "done" to screen readers). */
+    /** Done: a gold star in place of the chevron (and "done" to screen readers). */
     done: Boolean = false,
+    /** The first time this row is seen done (back after finishing): its star bursts. */
+    celebrate: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val m = FmtTheme.metrics
     val t = FmtCardTokens
-    val tick by animateFloatAsState(if (done) 1f else 0f, tween(FmtMotion.durSlow, easing = FmtMotion.easeSpring))
     val shape = RoundedCornerShape(m.containerRadius)
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusVisibleAsState()
@@ -597,11 +598,8 @@ fun FmtListRow(
             if (progress != null) FmtProgressBar(progress, Modifier.padding(top = FmtSpace.s2), progressLabel ?: "Progress")
         }
         trailing?.invoke()
-        if (done && trailing == null) {
-            Box(Modifier.size(FmtSize.iconLg).scale(tick).background(t.doneFill, CircleShape), contentAlignment = Alignment.Center) {
-                FmtIcon(FmtIcons.tick, t.doneInk, FmtSize.iconSm)
-            }
-        } else if (onClick != null && trailing == null) FmtIcon(FmtIcons.chevron, t.more, FmtSize.iconSm)
+        if (done && trailing == null) FmtStarMark(StarState.Done, burst = if (celebrate) 1 else 0)
+        else if (onClick != null && trailing == null) FmtIcon(FmtIcons.chevron, t.more, FmtSize.iconSm)
     }
 }
 

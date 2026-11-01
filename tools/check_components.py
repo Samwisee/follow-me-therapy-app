@@ -90,7 +90,7 @@ PAIRS = [  # (component, foreground part or colour, background part or colour, m
     ("bar", "tab-icon-selected", "fill", ICON),
     ("step", "ink", "fill", TEXT), ("step", "done-ink", "done-fill", ICON),
     ("celebrate", "star-line", "fill", ICON), ("breathe", "dot", "fill", ICON),
-    ("card", "done-ink", "done-fill", ICON), ("calendar", "done-line", "#paper", ICON), ("calendar", "done-line", "today", ICON), ("calendar", "planned", "#paper", ICON), ("calendar", "planned", "today", ICON),
+    ("calendar", "done-line", "#paper", ICON), ("calendar", "done-line", "today", ICON), ("calendar", "planned", "#paper", ICON), ("calendar", "planned", "today", ICON),
     ("calendar", "partial-line", "#paper", ICON), ("calendar", "none", "#paper", ICON), ("calendar", "ink", "today", TEXT), ("calendar", "day-ink", "today", TEXT),
 ]
 # Tones each component is used in (components.json "tones"); others aren't checked.

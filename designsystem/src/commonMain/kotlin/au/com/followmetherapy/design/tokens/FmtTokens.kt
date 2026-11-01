@@ -475,9 +475,6 @@ object FmtCardTokens {
     fun line(tone: FmtTone): Color = FmtTones.color(tone, FmtToneRole.Solid)
     /** The 'Learn more ›' line. */
     val more: Color = FmtColors.purple
-    /** The tick badge on a row whose activity is done (done is teal everywhere). */
-    val doneFill: Color = FmtColors.teal
-    val doneInk: Color = FmtColors.paper
 }
 
 /** A choice tile (tap to choose on screens, circle on paper). */
