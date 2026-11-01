@@ -276,7 +276,7 @@ private fun ColumnScope.GrownUpsContent(store: AppStore, nav: Nav, platform: Pla
     FmtListRow("The design system", "Colours, type and parts this app is built from", FmtIcons.blocks, Tone.Purple, onClick = { nav.go(Route(Area.DesignSystem)) })
     // For Simone (and Sam): her Planner, on a phone or a computer. It opens only after setup and Face ID / Touch ID.
     FmtListRow("For Simone: the Planner", "Families' plans, templates and requests. Opens with Face ID or Touch ID.", FmtIcons.calendar, Tone.Purple,
-        onClick = { platform.openUrl(platform.appUrl() + "planner.html") })
+        onClick = { platform.openPlanner() })
     // The sign-off, on the same text edge as everything above.
     FmtGroup {
         Row(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalAlignment = Alignment.CenterVertically) {

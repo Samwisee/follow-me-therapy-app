@@ -66,6 +66,8 @@ interface Platform {
     fun openInSafari() {}
     /** Opens [url] (a new tab, or the app that handles it). */
     fun openUrl(url: String) {}
+    /** Goes to the Planner's own page (planner.html), in this window. */
+    fun openPlanner() {}
     /** The app has drawn its first screen: the page's splash can go. */
     fun ready() {}
 

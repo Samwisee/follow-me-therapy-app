@@ -38,6 +38,7 @@ private fun jsReadClipboard(onText: (String) -> Unit): Unit = js("""{
   else onText('');
 }""")
 // The Planner's lock (vault.js; absent on the family app's page).
+private fun jsOpenPlanner(): Unit = js("{ location.replace(location.origin + location.pathname.replace(/[^/]*$/, '') + 'planner.html'); }")
 private fun jsOpenUrl(url: String): Unit = js("{ window.open(url, '_blank', 'noopener'); }")
 private fun jsVaultStatus(): String = js("window.fmtVault ? window.fmtVault.status() : 'absent'")
 private fun jsVaultSetup(code: String, seed: String, onResult: (String) -> Unit): Unit = js("""{
@@ -122,6 +123,7 @@ private object WebPlatform : Platform {
     override fun otherIosBrowser() = jsOtherIosBrowser()
     override fun openInSafari() = jsOpenInSafari()
     override fun openUrl(url: String) = jsOpenUrl(url)
+    override fun openPlanner() = jsOpenPlanner()
     override fun vaultStatus() = jsVaultStatus()
     override fun vaultSetup(code: String, seedJson: String, onResult: (String) -> Unit) = jsVaultSetup(code, seedJson, onResult)
     override fun vaultUnlock(onResult: (String) -> Unit) = jsVaultUnlock(onResult)
@@ -138,6 +140,8 @@ fun main() {
     // replaced rather than pushed, so the browser's Back button leaves the app.
     // The Planner icon opens Simone's planner; the family app opens where its address says.
     val start = window.location.hash.removePrefix("#").ifEmpty { if (jsPlannerEntry()) "planner" else "" }
+    // The Planner lives on its own page (with its lock): the family app's #planner goes there.
+    if (!jsPlannerEntry() && start.substringBefore('/') == "planner") { jsOpenPlanner(); return }
     jsReloadOnPlanLink()
     ComposeViewport("app") {
         App(platform = WebPlatform, startAt = start, onNavigate = { slug ->

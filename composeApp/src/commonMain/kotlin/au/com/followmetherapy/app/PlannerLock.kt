@@ -44,7 +44,10 @@ fun PlannerLock(store: AppStore, platform: Platform, content: @Composable () -> 
         }
         else -> FmtFlowScaffold {
             FmtHead("My families", swash = "families", tag = "Planner")
-            FmtGroup { FmtText("The Planner opens from its own icon: Follow Me Planner.", FmtTheme.type.lead) }
+            FmtGroup {
+                FmtText("The Planner has its own page, with its lock.", FmtTheme.type.lead)
+                Row { FmtButton("Open the Planner", { platform.openPlanner() }, trailingChevron = true) }
+            }
         }
     }
 }
