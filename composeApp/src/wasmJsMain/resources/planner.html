@@ -40,6 +40,11 @@
     window.FMT_BUILD = "__BUILD__";
     window.FMT_ENTRY = "planner";
     (function () {
+      // The Planner has its own page (with its lock): #planner here goes there before anything loads.
+      if (window.FMT_ENTRY !== "planner" && /^#planner(\/|$)/.test(location.hash)) {
+        location.replace(location.pathname.replace(/[^/]*$/, "") + "planner.html");
+        return;
+      }
       var js = document.createElement("script");
       js.src = "composeApp.js?v=" + window.FMT_BUILD;
       document.head.appendChild(js);
