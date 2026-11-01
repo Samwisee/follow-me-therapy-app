@@ -40,7 +40,7 @@ fun requestUrl(bug: Boolean, text: String, build: String): String {
         }
     }
     val title = text.lineSequence().firstOrNull { it.isNotBlank() }?.trim()?.take(70) ?: ""
-    return "$REQUESTS_REPO/issues/new?template=${if (bug) "bug.yml" else "idea.yml"}&title=${enc(title)}&details=${enc(text)}&build=${enc(build)}"
+    return "$REQUESTS_REPO/issues/new?template=${if (bug) "bug.yml" else "idea.yml"}&title=${enc(title)}&details=${enc(text)}&where=${enc("The Planner")}&build=${enc(build)}"
 }
 
 /** Something's wrong, or an idea: written here, sent to the private requests repo (or anywhere, by the share sheet). */
