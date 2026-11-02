@@ -70,6 +70,8 @@
     window.fmtReady = function () {
       var s = document.getElementById("splash");
       if (!s) return;
+      // When the first screen is up: the device lab times pages to this.
+      if (performance.mark && !performance.getEntriesByName("ready").length) performance.mark("ready");
       s.classList.add("is-done");
       setTimeout(function () { s.remove(); }, 600);
     };
