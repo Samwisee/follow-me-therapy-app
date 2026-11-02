@@ -1,5 +1,6 @@
 package au.com.followmetherapy.app
 
+import au.com.followmetherapy.design.tokens.FmtCategories
 import androidx.compose.runtime.Composable
 import au.com.followmetherapy.design.components.FmtAction
 import au.com.followmetherapy.design.components.FmtFlowScaffold
@@ -17,7 +18,17 @@ import au.com.followmetherapy.design.theme.FmtTheme
  * in Simone's voice: a few steps for grown-ups and a line on why it helps.
  * Drafts for Simone to check and change.
  */
-data class Task(val name: String, val steps: List<String>, val why: String)
+data class Task(val name: String, val steps: List<String>, val why: String) {
+    /** Its category, as on its worksheet; the category picks its colour (FmtCategories). */
+    val category: String get() = TASK_CATEGORY[name] ?: "Home practice"
+}
+
+private val TASK_CATEGORY = mapOf(
+    "Cutting practice" to "Fine motor", "Threading beads" to "Fine motor", "Playdough squeeze" to "Fine motor",
+    "Ball skills" to "Moving", "Animal walks" to "Moving", "Obstacle course" to "Moving",
+    "Getting dressed" to "Self-care", "Shoelaces" to "Self-care", "Using a spoon and fork" to "Self-care",
+    "Handwriting practice" to "Writing",
+)
 
 val TASKS = listOf(
     Task("Cutting practice", listOf(
@@ -89,9 +100,9 @@ fun taskIndex(name: String): Int? = TASKS.indexOfFirst { it.name.equals(name.tri
 fun TaskScreen(nav: Nav, step: Int) {
     val t = TASKS.getOrNull(step) ?: TASKS.first()
     FmtFlowScaffold(end = FmtAction("Tap a star", chevron = true) { nav.go(Route(Area.Week)) }) {
-        FmtHead(t.name, swash = null, tag = "Home practice", tone = Tone.Sun)
+        FmtHead(t.name, swash = null, tag = t.category, tone = FmtCategories.tone(t.category))
         FmtGroup("What to do") { FmtTickList(t.steps) }
         FmtGroup("Why it helps") { FmtText(t.why, FmtTheme.type.body) }
-        FmtInfoNote("a few minutes most days beats a long go once a week. Stop while it's still fun.", leadIn = "For grown-ups:", tone = Tone.Sun)
+        FmtInfoNote("a few minutes most days beats a long go once a week. Stop while it's still fun.", leadIn = "For grown-ups:", tone = FmtCategories.tone(t.category))
     }
 }

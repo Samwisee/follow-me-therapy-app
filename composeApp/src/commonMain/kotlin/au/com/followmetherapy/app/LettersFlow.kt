@@ -1,5 +1,6 @@
 package au.com.followmetherapy.app
 
+import au.com.followmetherapy.design.tokens.FmtCategories
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -49,26 +50,26 @@ fun LettersFlow(store: AppStore, nav: Nav, step: Int) {
     val name = letterAt(step)
     if (name == null) {
         FmtFlowScaffold {
-            FmtHead("Letters and shapes", swash = "Letters", tag = "Writing", tone = Tone.Sun)
+            FmtHead("Letters and shapes", swash = "Letters", tag = "Writing", tone = FmtCategories.tone("Writing"))
             FmtGroup { FmtKidText("Pick one, then trace it with your finger.") }
             FmtGroup("Ready to write") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
-                    SHAPES.forEachIndexed { i, s -> FmtFilterChip(SHAPE_WORDS[s] ?: s, store.letterTraced(s), { go(i + 1) }, tone = Tone.Sun) }
+                    SHAPES.forEachIndexed { i, s -> FmtFilterChip(SHAPE_WORDS[s] ?: s, store.letterTraced(s), { go(i + 1) }, tone = FmtCategories.tone("Writing")) }
                 }
             }
             FmtGroup("Small letters") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
-                    LOWER.forEachIndexed { i, s -> FmtFilterChip(s, store.letterTraced(s), { go(11 + i) }, tone = Tone.Sun, label = "Letter $s") }
+                    LOWER.forEachIndexed { i, s -> FmtFilterChip(s, store.letterTraced(s), { go(11 + i) }, tone = FmtCategories.tone("Writing"), label = "Letter $s") }
                 }
             }
             FmtGroup("Capital letters") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
-                    CAPS.forEachIndexed { i, s -> FmtFilterChip(s, store.letterTraced(s), { go(41 + i) }, tone = Tone.Sun, label = "Capital $s") }
+                    CAPS.forEachIndexed { i, s -> FmtFilterChip(s, store.letterTraced(s), { go(41 + i) }, tone = FmtCategories.tone("Writing"), label = "Capital $s") }
                 }
             }
             FmtInfoNote(
                 "the letters are the shapes Victorian schools teach. Show your child where the gold dot is, and let them go slowly: following the line matters more than speed. The same letters are on my printed sheets.",
-                leadIn = "For grown-ups:", tone = Tone.Sun,
+                leadIn = "For grown-ups:", tone = FmtCategories.tone("Writing"),
             )
         }
         return

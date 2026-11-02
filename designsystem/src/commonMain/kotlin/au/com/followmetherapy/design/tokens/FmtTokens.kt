@@ -92,10 +92,28 @@ object FmtColors {
     val pinkDeep = Color(0xFF912049)
     /** Pink pop-up tint. */
     val pinkPale = Color(0xFFFDE7EF)
+    /** Fine motor: icons and accents (4:1 on green-tint, 4.6:1 on paper). Was an unused 'Available' badge green (#19b37a). */
+    val green = Color(0xFF2E8540)
+    /** Fine motor: text and icons on green-tint (7.8:1). */
+    val greenInk = Color(0xFF145526)
+    /** Fine motor: tag fill and solid buttons with white text (7:1). */
+    val greenDeep = Color(0xFF1A6630)
+    /** Fine motor: pale ground of chips, tiles, notes and headers. */
+    val greenTint = Color(0xFFE6F4E4)
+    /** Fine motor: border of chips, tiles and panels. */
+    val greenLine = Color(0xFFA6D6A0)
+    /** Home practice: icons and accents (4.2:1 on blue-tint, 4.8:1 on paper). */
+    val blue = Color(0xFF2A6FD6)
+    /** Home practice: text and icons on blue-tint (7.8:1). */
+    val blueInk = Color(0xFF1A4593)
+    /** Home practice: tag fill and solid buttons with white text (7.7:1). */
+    val blueDeep = Color(0xFF1D4FA8)
+    /** Home practice: pale ground of chips, tiles, notes and headers. */
+    val blueTint = Color(0xFFE6EFFC)
+    /** Home practice: border of chips, tiles and panels. */
+    val blueLine = Color(0xFFA3C2F0)
     /** An old accent on the home page; candidate to remove. */
     val coral = Color(0xFFFF6F61)
-    /** 'Available' badge. */
-    val green = Color(0xFF19B37A)
     /** Illustration plant green. */
     val greenTeal = Color(0xFF1F9E89)
 }
@@ -344,8 +362,14 @@ object FmtShadow {
     val button = FmtShadowToken(8.0f, 18.0f, FmtColors.purple.copy(alpha = 0.3f))
 }
 
-/** The four tones. Fixed meanings: purple = who it's for, teal = telehealth, sun = in person, pink = reports. */
-enum class FmtTone { Purple, Teal, Sun, Pink }
+/** The tones. On the website purple = who it's for, teal = telehealth, sun = in person, pink = reports; activities take their category's (FmtCategories). */
+enum class FmtTone { Purple, Teal, Sun, Pink, Green, Blue }
+
+/** Each activity category's tone, as on the worksheets (design/components.json › categories). */
+object FmtCategories {
+    val all: List<Pair<String, FmtTone>> = listOf("Self-care" to FmtTone.Purple, "Feelings" to FmtTone.Teal, "Writing" to FmtTone.Sun, "Fine motor" to FmtTone.Green, "Moving" to FmtTone.Pink, "Home practice" to FmtTone.Blue)
+    fun tone(category: String): FmtTone = all.firstOrNull { it.first == category }?.second ?: FmtTone.Purple
+}
 
 /** The role a colour plays in a tone. Components pick a role, never a colour. */
 enum class FmtToneRole { Tint, Ink, Line, Solid, Strong, StrongHover, Ground, Icon, OnSolid }
@@ -395,6 +419,28 @@ object FmtTones {
             FmtToneRole.StrongHover -> FmtColors.pinkDeep
             FmtToneRole.Ground -> FmtColors.pinkTint
             FmtToneRole.Icon -> FmtColors.pink
+            FmtToneRole.OnSolid -> FmtColors.paper
+        }
+        FmtTone.Green -> when (role) {
+            FmtToneRole.Tint -> FmtColors.greenTint
+            FmtToneRole.Ink -> FmtColors.greenInk
+            FmtToneRole.Line -> FmtColors.greenLine
+            FmtToneRole.Solid -> FmtColors.greenDeep
+            FmtToneRole.Strong -> FmtColors.greenDeep
+            FmtToneRole.StrongHover -> FmtColors.greenInk
+            FmtToneRole.Ground -> FmtColors.greenTint
+            FmtToneRole.Icon -> FmtColors.green
+            FmtToneRole.OnSolid -> FmtColors.paper
+        }
+        FmtTone.Blue -> when (role) {
+            FmtToneRole.Tint -> FmtColors.blueTint
+            FmtToneRole.Ink -> FmtColors.blueInk
+            FmtToneRole.Line -> FmtColors.blueLine
+            FmtToneRole.Solid -> FmtColors.blueDeep
+            FmtToneRole.Strong -> FmtColors.blueDeep
+            FmtToneRole.StrongHover -> FmtColors.blueInk
+            FmtToneRole.Ground -> FmtColors.blueTint
+            FmtToneRole.Icon -> FmtColors.blue
             FmtToneRole.OnSolid -> FmtColors.paper
         }
     }

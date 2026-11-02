@@ -13,7 +13,9 @@
     "purple",
     "teal",
     "sun",
-    "pink"
+    "pink",
+    "green",
+    "blue"
    ],
    "rules": [
     "Fill tint, words ink, outline line; on hover a link chip's outline turns solid.",
@@ -37,7 +39,9 @@
     "purple",
     "teal",
     "sun",
-    "pink"
+    "pink",
+    "green",
+    "blue"
    ],
    "rules": [
     "Off: paper with the tone's line and ink. On: the tone's tint, a solid outline and a tick, so it never relies on colour alone.",
@@ -59,7 +63,9 @@
     "purple",
     "teal",
     "sun",
-    "pink"
+    "pink",
+    "green",
+    "blue"
    ],
    "rules": [
     "In the tone of what it filters (Self-care purple, Feelings teal, Home practice sun).",
@@ -82,7 +88,9 @@
     "purple",
     "teal",
     "sun",
-    "pink"
+    "pink",
+    "green",
+    "blue"
    ],
    "rules": [
     "Solid fill, words in on-solid (paper; ink on sun)."
@@ -103,7 +111,9 @@
     "purple",
     "teal",
     "sun",
-    "pink"
+    "pink",
+    "green",
+    "blue"
    ],
    "rules": [
     "Tint fill, icon colour, outlined in line.",
@@ -124,7 +134,10 @@
    "tones": [
     "purple",
     "teal",
-    "sun"
+    "sun",
+    "pink",
+    "green",
+    "blue"
    ],
    "rules": [
     "Ground fill, line outline, paper tile with the tone's icon.",
@@ -147,7 +160,9 @@
     "purple",
     "teal",
     "sun",
-    "pink"
+    "pink",
+    "green",
+    "blue"
    ],
    "rules": [
     "Ground fill, line outline, corner nests (radius-tile + card-pad + outline).",
@@ -169,7 +184,9 @@
     "purple",
     "teal",
     "sun",
-    "pink"
+    "pink",
+    "green",
+    "blue"
    ],
    "rules": [
     "Ground fill, line outline, corner nested (radius-tile + card-pad + outline).",
@@ -192,7 +209,9 @@
     "purple",
     "teal",
     "sun",
-    "pink"
+    "pink",
+    "green",
+    "blue"
    ],
    "rules": [
     "Tappable containers are outlined in the tone's solid colour; static ones in its line colour.",
@@ -351,7 +370,9 @@
     "purple",
     "teal",
     "sun",
-    "pink"
+    "pink",
+    "green",
+    "blue"
    ],
    "rules": [
     "Days Monday to Sunday with their dates; today's column on lilac. Each row's stars sit between dashed rules, the activity's name above, as on the practice week (Tracker), but compact: icon-sized stars, each still a 44px target.",
@@ -537,5 +558,14 @@
     "none": "Print only; the app uses FmtFlowScaffold."
    }
   }
+ },
+ "categories": {
+  "$description": "Each activity category's tone, the same on worksheets (header, tag, note), the Design System and the app (filter chip, rows, screens). Drafts for Simone's categories.",
+  "Self-care": "purple",
+  "Feelings": "teal",
+  "Writing": "sun",
+  "Fine motor": "green",
+  "Moving": "pink",
+  "Home practice": "blue"
  }
 }

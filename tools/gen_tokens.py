@@ -241,8 +241,16 @@ def resolve_path(path):
     for k in path.split("."):
         node = node[k]
     return node["$value"]
-w("/** The four tones. Fixed meanings: purple = who it's for, teal = telehealth, sun = in person, pink = reports. */")
+w("/** The tones. On the website purple = who it's for, teal = telehealth, sun = in person, pink = reports; activities take their category's (FmtCategories). */")
 w("enum class FmtTone { " + ", ".join(pascal(t) for t in TONES) + " }")
+w("")
+# Each activity category's tone (design/components.json › categories), the same on worksheets and the Design System.
+CATS = {k: v for k, v in json.loads((ROOT / "design/components.json").read_text()).get("categories", {}).items() if not k.startswith("$")}
+w("/** Each activity category's tone, as on the worksheets (design/components.json › categories). */")
+w("object FmtCategories {")
+w("    val all: List<Pair<String, FmtTone>> = listOf(" + ", ".join(f'"{k}" to FmtTone.{pascal(v)}' for k, v in CATS.items()) + ")")
+w("    fun tone(category: String): FmtTone = all.firstOrNull { it.first == category }?.second ?: FmtTone.Purple")
+w("}")
 w("")
 w("/** The role a colour plays in a tone. Components pick a role, never a colour. */")
 w("enum class FmtToneRole { " + ", ".join(pascal(r) for r in ROLES) + " }")

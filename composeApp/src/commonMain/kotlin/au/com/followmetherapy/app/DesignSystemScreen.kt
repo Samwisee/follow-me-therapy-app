@@ -87,7 +87,7 @@ fun DesignSystemScreen(nav: Nav) {
                 FmtChip("Community sessions", Tone.Sun, FmtIcons.pin)
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
-                FmtTag("Self-care"); FmtTag("Feelings", Tone.Teal); FmtTag("Fine motor", Tone.Sun); FmtTag("Assessments", Tone.Pink)
+                FmtTag("Self-care"); FmtTag("Feelings", Tone.Teal); FmtTag("Writing", Tone.Sun); FmtTag("Fine motor", Tone.Green); FmtTag("Moving", Tone.Pink); FmtTag("Home practice", Tone.Blue)
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(m.gridGap)) {
                 FmtIconTile(FmtIcons.stairs, Tone.Teal)

@@ -1,5 +1,6 @@
 package au.com.followmetherapy.app
 
+import au.com.followmetherapy.design.tokens.FmtCategories
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -86,7 +87,7 @@ fun TodayTab(store: AppStore, nav: Nav) {
             FmtListRow(
                 title = "My morning routine",
                 subtitle = if (store.routineComplete) "All done today. Great job!" else if (done == 0) routineTime + "Six steps, one at a time" else "$done of $total steps done",
-                icon = FmtIcons.sunrise, tone = Tone.Purple,
+                icon = FmtIcons.sunrise, tone = Kind.SelfCare.tone,
                 onClick = {
                     val next = store.routineSteps.indices.firstOrNull { it !in store.routineDone }
                     nav.go(Route(Area.Morning, if (next == null || done == 0) 0 else next + 1))
@@ -101,14 +102,14 @@ fun TodayTab(store: AppStore, nav: Nav) {
         // Calm-down plan: use it, or make it.
         if (!showCalm) Unit
         else if (store.calmSaved) {
-            FmtListRow("Use my calm-down plan", "For when feelings get big", FmtIcons.breathe, Tone.Teal, onClick = { nav.go(Route(Area.CalmNow)) })
+            FmtListRow("Use my calm-down plan", "For when feelings get big", FmtIcons.breathe, Kind.Feelings.tone, onClick = { nav.go(Route(Area.CalmNow)) })
         } else {
-            FmtListRow("Make my calm-down plan", "Choose what helps, in four short steps", FmtIcons.breathe, Tone.Teal, onClick = { nav.go(Route(Area.Calm)) },
+            FmtListRow("Make my calm-down plan", "Choose what helps, in four short steps", FmtIcons.breathe, Kind.Feelings.tone, onClick = { nav.go(Route(Area.Calm)) },
                 progress = store.calmProgress, progressLabel = "Making the plan")
         }
 
         if (!(store.weekSetUp && practiceToday.isNotEmpty()) && plan == null) {
-            FmtListRow("Set up my practice week", "Add the activities we chose together", FmtIcons.calendar, Tone.Sun, onClick = { nav.go(Route(Area.WeekSetup)) })
+            FmtListRow("Set up my practice week", "Add the activities we chose together", FmtIcons.calendar, Kind.HomePractice.tone, onClick = { nav.go(Route(Area.WeekSetup)) })
         }
     }
 
@@ -118,12 +119,12 @@ fun TodayTab(store: AppStore, nav: Nav) {
             practiceToday.forEach { (r, name) ->
                 val on = (r to store.weekday) in store.weekDone
                 FmtListRow(
-                    title = name, subtitle = if (on) "Done today" else "Tap the star when it's done", tone = Tone.Sun,
+                    title = name, subtitle = if (on) "Done today" else "Tap the star when it's done", tone = Kind.HomePractice.tone,
                     trailing = { StarButton(on, "$name, ${days[store.weekday]}") { store.togglePractice(r, store.weekday) } },
                 )
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                FmtChip("${store.starsThisWeek} stars this week", Tone.Sun, FmtIcons.star)
+                FmtChip("${store.starsThisWeek} stars this week", Kind.HomePractice.tone, FmtIcons.star)
                 FmtButton("My week", { nav.go(Route(Area.Week)) }, kind = ButtonKind.Outline, trailingChevron = true)
             }
         }
@@ -139,7 +140,11 @@ fun StarButton(on: Boolean, label: String, toggle: () -> Unit) = FmtStarToggle(o
 
 
 /** The kinds of activity, as on the worksheets' tags: the Activities tab filters by them. */
-private enum class Kind(val label: String, val tone: Tone) { SelfCare("Self-care", Tone.Purple), Feelings("Feelings", Tone.Teal), Writing("Writing", Tone.Sun), FineMotor("Fine motor", Tone.Sun), Moving("Moving", Tone.Pink), HomePractice("Home practice", Tone.Sun) }
+private enum class Kind(val label: String) {
+    SelfCare("Self-care"), Feelings("Feelings"), Writing("Writing"), FineMotor("Fine motor"), Moving("Moving"), HomePractice("Home practice");
+    /** Its colour: the category's, as on the worksheets (FmtCategories). */
+    val tone: Tone get() = FmtCategories.tone(label)
+}
 
 /**
  * Activities: everything there is to do, filtered by kind (more kinds arrive
@@ -164,13 +169,13 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
             FmtListRow(
                 "My morning routine",
                 "Self-care · " + if (store.routineComplete) "all done today" else "$done of $total steps today",
-                FmtIcons.sunrise, Tone.Purple, onClick = { nav.go(Route(Area.Morning)) },
+                FmtIcons.sunrise, Kind.SelfCare.tone, onClick = { nav.go(Route(Area.Morning)) },
                 progress = done / total.toFloat(), progressLabel = "$done of $total steps done today", done = store.routineComplete,
                 celebrate = remember(store.routineComplete) { store.firstSeenDone("routine:${store.today}", store.routineComplete) },
             )
         }
         Reveal(Kind.SelfCare in shown, first = false) {
-            FmtListRow("Getting dressed", "Self-care · " + stepsWords(store, 0), FmtIcons.shirt, Tone.Purple, onClick = { nav.go(stepsRoute(0)) },
+            FmtListRow("Getting dressed", "Self-care · " + stepsWords(store, 0), FmtIcons.shirt, Kind.SelfCare.tone, onClick = { nav.go(stepsRoute(0)) },
                 progress = stepsProgress(store, 0), progressLabel = stepsWords(store, 0), done = stepsProgress(store, 0) >= 1f,
                 celebrate = remember(stepsProgress(store, 0) >= 1f) { store.firstSeenDone("steps.dressing:${store.today}", stepsProgress(store, 0) >= 1f) })
         }
@@ -180,26 +185,26 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
             FmtListRow(
                 "My calm-down plan",
                 if (store.calmSaved) "Feelings · your plan is ready" else "Feelings · choose what helps when feelings get big",
-                FmtIcons.breathe, Tone.Teal,
+                FmtIcons.breathe, Kind.Feelings.tone,
                 onClick = { nav.go(if (store.calmSaved) Route(Area.Calm, CALM_PLAN_STEP) else Route(Area.Calm)) },
                 progress = store.calmProgress, progressLabel = if (store.calmSaved) "Plan ready" else "Making the plan", done = store.calmSaved,
                 celebrate = remember(store.calmSaved) { store.firstSeenDone("calm", store.calmSaved) },
             )
         }
         Reveal(Kind.Writing in shown, first = firstRow == Kind.Writing) {
-            FmtListRow("Letters and shapes", "Writing · trace them with your finger", FmtIcons.pencil, Tone.Sun, onClick = { nav.go(Route(Area.Letters)) })
+            FmtListRow("Letters and shapes", "Writing · trace them with your finger", FmtIcons.pencil, Kind.Writing.tone, onClick = { nav.go(Route(Area.Letters)) })
         }
         HowToRow(nav, "Cutting practice", Kind.FineMotor, FmtIcons.scissors, Kind.FineMotor in shown, first = firstRow == Kind.FineMotor)
         HowToRow(nav, "Threading beads", Kind.FineMotor, FmtIcons.beads, Kind.FineMotor in shown)
         HowToRow(nav, "Playdough squeeze", Kind.FineMotor, FmtIcons.dough, Kind.FineMotor in shown)
         Reveal(Kind.Moving in shown, first = firstRow == Kind.Moving) {
-            FmtListRow("My obstacle course", "Moving · " + stepsWords(store, 1), FmtIcons.hurdle, Tone.Pink, onClick = { nav.go(stepsRoute(1)) },
+            FmtListRow("My obstacle course", "Moving · " + stepsWords(store, 1), FmtIcons.hurdle, Kind.Moving.tone, onClick = { nav.go(stepsRoute(1)) },
                 progress = stepsProgress(store, 1), progressLabel = stepsWords(store, 1), done = stepsProgress(store, 1) >= 1f,
                 celebrate = remember(stepsProgress(store, 1) >= 1f) { store.firstSeenDone("steps.obstacle:${store.today}", stepsProgress(store, 1) >= 1f) })
         }
         Reveal(Kind.Moving in shown, first = false) {
             FmtListRow("Catch and throw", "Moving · " + if (store.ballStars == 0) "a star each day you practise" else "${store.ballStars} stars this week",
-                FmtIcons.ball, Tone.Pink, onClick = { nav.go(Route(Area.Ball)) })
+                FmtIcons.ball, Kind.Moving.tone, onClick = { nav.go(Route(Area.Ball)) })
         }
         HowToRow(nav, "Animal walks", Kind.Moving, FmtIcons.paw, Kind.Moving in shown)
         Reveal(Kind.HomePractice in shown, first = firstRow == Kind.HomePractice) {
@@ -207,7 +212,7 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
             FmtListRow(
                 "My practice week",
                 "Home practice · " + if (store.weekSetUp) "${store.starsThisWeek} of $target stars this week" else "a star for each day you practise",
-                FmtIcons.calendar, Tone.Sun,
+                FmtIcons.calendar, Kind.HomePractice.tone,
                 onClick = { nav.go(Route(if (store.weekSetUp) Area.Week else Area.WeekSetup)) },
                 progress = store.practiceProgress, progressLabel = "${store.starsThisWeek} of $target stars this week",
                 done = target > 0 && store.starsThisWeek >= target,
@@ -217,7 +222,7 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
         // Each practice activity, explained (how to do it, why it helps).
         store.activities.mapNotNull { (_, name) -> taskIndex(name)?.let { it to name } }.forEach { (t, name) ->
             Reveal(Kind.HomePractice in shown, first = false) {
-                FmtListRow(name, "Home practice · how to do it", FmtIcons.star, Tone.Sun, onClick = { nav.go(Route(Area.Task, t)) })
+                FmtListRow(name, "Home practice · how to do it", FmtIcons.star, Kind.HomePractice.tone, onClick = { nav.go(Route(Area.Task, t)) })
             }
         }
     }

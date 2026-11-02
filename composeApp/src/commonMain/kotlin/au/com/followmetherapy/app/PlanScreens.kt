@@ -1,5 +1,6 @@
 package au.com.followmetherapy.app
 
+import au.com.followmetherapy.design.tokens.FmtCategories
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -94,7 +95,7 @@ private fun PlanCalendar(store: AppStore, nav: Nav) {
     val rows = buildList {
         if (plan == null || plan.routine != null) {
             val planned = plan?.routine?.days
-            add(CalendarRow("Morning routine" + (plan?.routine?.time?.let { " · " + Plan.showTime(it) } ?: ""), Tone.Purple, dates.mapIndexed { i, d ->
+            add(CalendarRow("Morning routine" + (plan?.routine?.time?.let { " · " + Plan.showTime(it) } ?: ""), FmtCategories.tone("Self-care"), dates.mapIndexed { i, d ->
                 val n = store.routineStepsOn(d)
                 when {
                     n >= store.routineSteps.size -> CalendarDay.Done
@@ -105,7 +106,7 @@ private fun PlanCalendar(store: AppStore, nav: Nav) {
             }, onOpen = { nav.go(Route(Area.Morning)) }))
         }
         if (plan?.calm == true || store.calmSaved) {
-            add(CalendarRow("Calm-down plan · when needed", Tone.Teal, dates.map { if (store.calmUsedOn(it) > 0) CalendarDay.Done else CalendarDay.None },
+            add(CalendarRow("Calm-down plan · when needed", FmtCategories.tone("Feelings"), dates.map { if (store.calmUsedOn(it) > 0) CalendarDay.Done else CalendarDay.None },
                 onOpen = { nav.go(if (store.calmSaved) Route(Area.CalmNow) else Route(Area.Calm)) }))
         }
         store.weekNames.forEachIndexed { r, name ->
@@ -113,7 +114,7 @@ private fun PlanCalendar(store: AppStore, nav: Nav) {
                 val planned = plan?.practice?.getOrNull(r)?.days
                 // This week's practice stars tap like the practice week's (and burst).
                 val time = plan?.practice?.getOrNull(r)?.time?.let { " · " + Plan.showTime(it) } ?: ""
-                add(CalendarRow(name + time, Tone.Sun, (0..6).map { d ->
+                add(CalendarRow(name + time, FmtCategories.tone("Home practice"), (0..6).map { d ->
                     when {
                         store.practisedOn(monday, r, d) -> CalendarDay.Done
                         planned != null && d in planned -> CalendarDay.Planned
@@ -149,14 +150,14 @@ private fun PlanCalendar(store: AppStore, nav: Nav) {
 private fun PlanRows(p: Plan, store: AppStore, nav: Nav?) {
     FmtGroup(inset = false) {
         p.routine?.let {
-            FmtListRow("My morning routine", Plan.showWhen(it), FmtIcons.sunrise, Tone.Purple, onClick = nav?.let { n -> { n.go(Route(Area.Morning)) } })
+            FmtListRow("My morning routine", Plan.showWhen(it), FmtIcons.sunrise, FmtCategories.tone("Self-care"), onClick = nav?.let { n -> { n.go(Route(Area.Morning)) } })
         }
         if (p.calm) {
-            FmtListRow(if (store.calmSaved) "Use my calm-down plan" else "Make my calm-down plan", "When feelings get big", FmtIcons.breathe, Tone.Teal,
+            FmtListRow(if (store.calmSaved) "Use my calm-down plan" else "Make my calm-down plan", "When feelings get big", FmtIcons.breathe, FmtCategories.tone("Feelings"),
                 onClick = nav?.let { n -> { n.go(Route(if (store.calmSaved) Area.CalmNow else Area.Calm)) } })
         }
         p.practice.forEach {
-            FmtListRow(it.name, "Practice · " + Plan.showWhen(it), FmtIcons.star, Tone.Sun, onClick = nav?.let { n -> { n.go(Route(Area.Week)) } })
+            FmtListRow(it.name, "Practice · " + Plan.showWhen(it), FmtIcons.star, FmtCategories.tone("Home practice"), onClick = nav?.let { n -> { n.go(Route(Area.Week)) } })
         }
     }
 }

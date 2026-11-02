@@ -177,6 +177,8 @@ fun FmtSectionTitle(title: String, accent: Tone = Tone.Purple, subtitle: String?
         Tone.Teal -> FmtColors.teal
         Tone.Sun -> FmtColors.sun
         Tone.Pink -> FmtColors.pink
+        Tone.Green -> FmtColors.green
+        Tone.Blue -> FmtColors.blue
         Tone.Purple -> FmtColors.purple
     }
     Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(FmtSpace.s4)) {

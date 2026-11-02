@@ -1,5 +1,6 @@
 package au.com.followmetherapy.app
 
+import au.com.followmetherapy.design.tokens.FmtCategories
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,7 +46,7 @@ fun MorningFlow(store: AppStore, nav: Nav, step: Int) {
         0 -> FmtFlowScaffold(
             end = FmtAction("Start", chevron = true) { go(1) },
         ) {
-            FmtHead("My morning routine", swash = "morning", tag = "Self-care", tone = Tone.Purple)
+            FmtHead("My morning routine", swash = "morning", tag = "Self-care", tone = FmtCategories.tone("Self-care"))
             FmtGroup {
                 FmtKidText("Let's get ready, one step at a time.")
                 FmtStepList(steps, store.routineDone.toSet(), onToggle = { store.toggleRoutineStep(it, it !in store.routineDone) })
@@ -105,9 +106,9 @@ fun CalmFlow(store: AppStore, nav: Nav, step: Int) {
         0 -> FmtFlowScaffold(
             end = FmtAction("Start", ButtonKind.Teal, chevron = true) { go(1) },
         ) {
-            FmtHead("My calm-down plan", swash = "calm-down", tag = "Feelings", tone = Tone.Teal)
+            FmtHead("My calm-down plan", swash = "calm-down", tag = "Feelings", tone = FmtCategories.tone("Feelings"))
             FmtKidText("Let's make a plan for when your feelings get big. It takes four short steps.")
-            FmtInfoNote("make the plan together when your child is already calm, so it's easy to reach for when feelings run high.", leadIn = "For grown-ups:", tone = Tone.Teal)
+            FmtInfoNote("make the plan together when your child is already calm, so it's easy to reach for when feelings run high.", leadIn = "For grown-ups:", tone = FmtCategories.tone("Feelings"))
         }
         1 -> FmtFlowScaffold(
             start = FmtAction("Back", ButtonKind.Outline) { go(0) },
@@ -115,7 +116,7 @@ fun CalmFlow(store: AppStore, nav: Nav, step: Int) {
         ) {
             FmtGroup("When my feelings get big, I can…", inset = false) {
                 FmtKidText("Tap the ones that help you.")
-                FmtChoices(CALM_CHOICES, store.calmChosen.toSet(), onToggle = store::toggleCalm, tone = Tone.Teal)
+                FmtChoices(CALM_CHOICES, store.calmChosen.toSet(), onToggle = store::toggleCalm, tone = FmtCategories.tone("Feelings"))
             }
         }
         2 -> FmtFlowScaffold(
@@ -140,13 +141,13 @@ fun CalmFlow(store: AppStore, nav: Nav, step: Int) {
             start = FmtAction("Change", ButtonKind.Outline) { go(1) },
             end = FmtAction("Use my plan now", ButtonKind.Teal, chevron = true) { nav.go(Route(Area.CalmNow)) },
         ) {
-            FmtHead("My calm-down plan", swash = "calm-down", tag = "Feelings", tone = Tone.Teal)
+            FmtHead("My calm-down plan", swash = "calm-down", tag = "Feelings", tone = FmtCategories.tone("Feelings"))
             if (store.calmBody.isNotBlank()) {
                 FmtGroup("I know my feelings are getting big when") { FmtKidText(store.calmBody) }
             }
             FmtGroup("Then I can") {
-                store.calmChosen.sorted().forEach { i -> FmtListRow(CALM_CHOICES[i].label, icon = CALM_CHOICES[i].icon, tone = Tone.Teal) }
-                if (store.calmIdea.isNotBlank()) FmtListRow(store.calmIdea, icon = FmtIcons.heart, tone = Tone.Teal)
+                store.calmChosen.sorted().forEach { i -> FmtListRow(CALM_CHOICES[i].label, icon = CALM_CHOICES[i].icon, tone = FmtCategories.tone("Feelings")) }
+                if (store.calmIdea.isNotBlank()) FmtListRow(store.calmIdea, icon = FmtIcons.heart, tone = FmtCategories.tone("Feelings"))
             }
         }
     }
@@ -181,7 +182,7 @@ fun CalmNowFlow(store: AppStore, nav: Nav, step: Int) {
             FmtText("Take 5 slow breaths. Follow the circle.", FmtTheme.type.kid, align = TextAlign.Center)
         } else {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(FmtTheme.metrics.stack)) {
-                c.icon?.let { FmtIconTile(it, Tone.Teal) }
+                c.icon?.let { FmtIconTile(it, FmtCategories.tone("Feelings")) }
                 FmtText(c.label, FmtTheme.type.title, align = TextAlign.Center)
             }
         }
@@ -195,13 +196,13 @@ fun WeekSetupFlow(store: AppStore, nav: Nav) {
     FmtFlowScaffold(
         end = FmtAction("Save", chevron = true, enabled = store.activities.isNotEmpty()) { store.finishWeekSetup(); nav.go(Route(Area.Week)) },
     ) {
-        FmtHead("My practice week", swash = "week", tag = "Home practice", tone = Tone.Sun)
+        FmtHead("My practice week", swash = "week", tag = "Home practice", tone = FmtCategories.tone("Home practice"))
         FmtGroup("What are we practising?") {
             store.weekNames.forEachIndexed { i, name ->
                 WriteField(name, { store.renameActivity(i, it) }, placeholder = "Activity ${i + 1}", kid = false)
             }
         }
-        FmtInfoNote("write in the activities we chose together in our session. One or two is plenty to start with.", leadIn = "For grown-ups:", tone = Tone.Sun)
+        FmtInfoNote("write in the activities we chose together in our session. One or two is plenty to start with.", leadIn = "For grown-ups:", tone = FmtCategories.tone("Home practice"))
     }
 }
 
@@ -212,12 +213,12 @@ fun WeekFlow(store: AppStore, nav: Nav) {
         start = FmtAction("Change activities", ButtonKind.Outline) { nav.go(Route(Area.WeekSetup)) },
         end = FmtAction("Done") { nav.home() },
     ) {
-        FmtHead("My practice week", swash = "week", tag = "Home practice", tone = Tone.Sun)
+        FmtHead("My practice week", swash = "week", tag = "Home practice", tone = FmtCategories.tone("Home practice"))
         FmtGroup {
             FmtKidText("Tap a star each day you practise.")
             FmtTracker(store.weekNames, onRename = store::renameActivity, done = store.weekDone.toSet(), onToggle = store::togglePractice)
         }
         FmtGroup("This week I'm proud of…") { WriteField(store.weekProud, store::setProud, placeholder = "I'm proud that I…", minLines = 2) }
-        FmtInfoNote("short and often beats long and rare. Bring this to our next session and we'll look at it together.", leadIn = "For grown-ups:", tone = Tone.Sun)
+        FmtInfoNote("short and often beats long and rare. Bring this to our next session and we'll look at it together.", leadIn = "For grown-ups:", tone = FmtCategories.tone("Home practice"))
     }
 }

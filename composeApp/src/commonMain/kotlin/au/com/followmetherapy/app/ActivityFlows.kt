@@ -1,5 +1,6 @@
 package au.com.followmetherapy.app
 
+import au.com.followmetherapy.design.tokens.FmtCategories
 import androidx.compose.runtime.Composable
 import au.com.followmetherapy.design.components.ButtonKind
 import au.com.followmetherapy.design.components.CalendarDay
@@ -28,14 +29,14 @@ class StepsActivity(
 
 val STEP_ACTIVITIES = listOf(
     StepsActivity(
-        "dressing", "Getting dressed", "dressed", "Self-care", Tone.Purple,
+        "dressing", "Getting dressed", "dressed", "Self-care", FmtCategories.tone("Self-care"),
         "Let's get dressed, one thing at a time.",
         listOf("Undies", "Pants or shorts", "Top", "Jumper", "Socks", "Shoes"),
         "lay the clothes out in this order and sit down to do it. Help with most of a step and let your child finish it on their own.",
         "You got dressed!",
     ),
     StepsActivity(
-        "obstacle", "My obstacle course", "obstacle", "Moving", Tone.Pink,
+        "obstacle", "My obstacle course", "obstacle", "Moving", FmtCategories.tone("Moving"),
         "Say the steps out loud, then go!",
         listOf("Climb over the cushions", "Crawl under the blanket tunnel", "Walk along the line", "Jump to the end!"),
         "build it from what's at home: cushions, a blanket over two chairs and a line of tape. Clear the space first, and let your child say the steps before they start.",
@@ -87,12 +88,12 @@ val BALL_SKILLS = listOf("Roll and catch", "Throw and catch", "Bounce and catch"
 @Composable
 fun BallFlow(store: AppStore, nav: Nav) {
     FmtFlowScaffold(end = FmtAction("Done") { nav.tab(2) }) {
-        FmtHead("Catch and throw", swash = "throw", tag = "Moving", tone = Tone.Pink)
+        FmtHead("Catch and throw", swash = "throw", tag = "Moving", tone = FmtCategories.tone("Moving"))
         FmtGroup {
             FmtKidText("Tap a star each day you practise.")
             FmtWeekCalendar(
                 BALL_SKILLS.mapIndexed { r, name ->
-                    CalendarRow(name, Tone.Pink, (0..6).map { d -> if (store.ballDone(r, d)) CalendarDay.Done else CalendarDay.Planned },
+                    CalendarRow(name, FmtCategories.tone("Moving"), (0..6).map { d -> if (store.ballDone(r, d)) CalendarDay.Done else CalendarDay.Planned },
                         onToggle = { d -> store.toggleBall(r, d) })
                 },
                 (0..6).map { Dates.add(store.weekStart, it).substringAfterLast('-').trimStart('0') },
@@ -104,7 +105,7 @@ fun BallFlow(store: AppStore, nav: Nav) {
         }
         FmtInfoNote(
             "start with a big, soft ball, close together, then a smaller ball and further apart as it gets easier. Count catches together and try to beat the score.",
-            leadIn = "For grown-ups:", tone = Tone.Pink, icon = FmtIcons.ball,
+            leadIn = "For grown-ups:", tone = FmtCategories.tone("Moving"), icon = FmtIcons.ball,
         )
     }
 }
