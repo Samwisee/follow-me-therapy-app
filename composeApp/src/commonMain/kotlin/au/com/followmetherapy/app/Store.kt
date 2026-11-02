@@ -145,6 +145,11 @@ class AppStore(private val p: Platform) {
         return true
     }
 
+    /** Letters and shapes traced (any day), for the ticks on the picker. */
+    private val traced = mutableStateListOf<String>().apply { addAll(get("letters.traced")?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()) }
+    fun letterTraced(name: String) = name in traced
+    fun markLetterTraced(name: String) { if (name !in traced) { traced.add(name); put("letters.traced", traced.joinToString(",")) } }
+
     // ── Morning routine ──
     val routineSteps = listOf("Toilet and wash hands", "Get dressed", "Eat breakfast", "Brush teeth", "Shoes on", "Bag on, out the door")
     val routineDone = mutableStateListOf<Int>()

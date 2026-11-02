@@ -5,7 +5,7 @@
 # Then checks the app against it. CI runs this on every build, and the
 # "Design sync" workflow runs it hourly and commits what changed.
 set -euo pipefail
-FILES="design/tokens.json design/components.json design/icons.json tools/check_components.py"
+FILES="design/tokens.json design/components.json design/icons.json design/letters.json tools/check_components.py"
 # The app icons are the website's full-bleed Home Screen icons (img/app-icon-*.png);
 # the loading screen shows the website's stacked logo (mark and name).
 ICONS="180 192 512"
@@ -23,5 +23,6 @@ else
 fi
 python3 tools/gen_tokens.py
 python3 tools/gen_icons.py
+python3 tools/gen_letters.py
 python3 tools/check_components.py
 python3 tools/check_literals.py

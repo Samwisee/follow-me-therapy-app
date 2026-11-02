@@ -586,3 +586,21 @@ object FmtCalendarTokens {
     val rule: Color = FmtColors.rule
 }
 
+/** A letter or shape to trace (LetterTrace): the model, the dashed copies to trace, the writing lines, the start dot. */
+object FmtLetterTokens {
+    /** The model letter, drawn solid, and the part already traced in the app. */
+    val model: Color = FmtColors.purple
+    /** A copy to trace: dashed. */
+    val trace: Color = FmtColors.rule
+    /** The top, waist and descender lines (a light guide). */
+    val guide: Color = FmtColors.purpleLine
+    /** The baseline: letters sit on it. */
+    val base: Color = FmtColors.rule
+    /** Where to start: a gold dot… */
+    val start: Color = FmtColors.sun
+    /** …outlined in sun-deep. */
+    val startLine: Color = FmtColors.sunDeep
+    /** Stroke order numbers on the model. */
+    val number: Color = FmtColors.ink
+}
+

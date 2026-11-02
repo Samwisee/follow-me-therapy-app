@@ -134,7 +134,7 @@ fun StarButton(on: Boolean, label: String, toggle: () -> Unit) = FmtStarToggle(o
 
 
 /** The kinds of activity, as on the worksheets' tags: the Activities tab filters by them. */
-private enum class Kind(val label: String, val tone: Tone) { SelfCare("Self-care", Tone.Purple), Feelings("Feelings", Tone.Teal), HomePractice("Home practice", Tone.Sun) }
+private enum class Kind(val label: String, val tone: Tone) { SelfCare("Self-care", Tone.Purple), Feelings("Feelings", Tone.Teal), Writing("Writing", Tone.Sun), HomePractice("Home practice", Tone.Sun) }
 
 /**
  * Activities: everything there is to do, filtered by kind (more kinds arrive
@@ -173,6 +173,9 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
                 progress = store.calmProgress, progressLabel = if (store.calmSaved) "Plan ready" else "Making the plan", done = store.calmSaved,
                 celebrate = remember(store.calmSaved) { store.firstSeenDone("calm", store.calmSaved) },
             )
+        }
+        Reveal(Kind.Writing in shown, first = firstRow == Kind.Writing) {
+            FmtListRow("Letters and shapes", "Writing · trace them with your finger", FmtIcons.pencil, Tone.Sun, onClick = { nav.go(Route(Area.Letters)) })
         }
         Reveal(Kind.HomePractice in shown, first = firstRow == Kind.HomePractice) {
             val target = store.practiceTarget

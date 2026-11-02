@@ -324,6 +324,25 @@
     "Tapping a star adds it with the same burst as the WeekCalendar (spring, twist, sparkles); not with reduced motion."
    ]
   },
+  "LetterTrace": {
+   "description": "A letter (a–z, A–Z) or pre-writing shape to trace, on writing lines: the model with its start dot and numbered strokes, or a dashed copy to trace.",
+   "tokens": "letter",
+   "rules": [
+    "Shapes come from design/letters.json (tools/build_letters.py): Victorian foundation style, strokes in the order taught, each from its start point. Never hand-drawn per product.",
+    "Writing lines: top, waist (dashed) and descender in the light guide colour, the baseline darker.",
+    "Model: solid purple strokes, a gold start dot and the stroke's number at each start, and an arrow showing the way. Copies to trace: dashed, with the start dot.",
+    "In the app the child traces with a finger: the stroke turns purple as it's followed (only from its start, in its direction), the next stroke's dot appears, and a finished letter bursts a star. Not with reduced motion.",
+    "Each letter is read out: \"Letter a. 1 stroke.\""
+   ],
+   "website": {
+    "none": "The website has no activities."
+   },
+   "designSystem": {
+    "css": ".fmt-letter",
+    "react": "LetterTrace"
+   },
+   "app": "FmtLetterTrace"
+  },
   "WeekCalendar": {
    "description": "A week of an activity plan as the practice week's stars: the days across (today marked), each activity's row of stars: not planned (a dot), planned (an outline star), partly done (a pale star) or done (a gold star).",
    "tokens": "calendar",

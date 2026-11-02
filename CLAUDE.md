@@ -4,7 +4,7 @@ Kotlin Multiplatform + Compose Multiplatform app for Simone's practice (see
 README.md). Sam maintains it; the website lives in Samwisee/follow-me-therapy.
 
 - The design comes from the website repo (design/tokens.json, components.json,
-  icons.json). Never edit `FmtTokens.kt`, `FmtIcons.kt` or the copies in design/:
+  icons.json, letters.json). Never edit `FmtTokens.kt`, `FmtIcons.kt`, `FmtLetters.kt` or the copies in design/:
   change them in the website repo, then `tools/sync_design.sh ../follow-me-therapy`
   (CI and the hourly Design sync workflow do this too).
 - Shared components (design/components.json) take their colours from their

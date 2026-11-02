@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKIP = {"FmtTokens.kt", "FmtIcons.kt"}
+SKIP = {"FmtTokens.kt", "FmtIcons.kt", "FmtLetters.kt"}
 COLOUR = re.compile(r"\bColor\(0x[0-9A-Fa-f]+\)|\bColor\.(Black|White|Red|Green|Blue|Gray|Grey|Yellow|Cyan|Magenta|DarkGray|LightGray)\b")
 SIZE = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?f?)\.(dp|sp)\b")
 
