@@ -92,6 +92,9 @@ self.addEventListener("fetch", (e) => {
     return;
   }
   if (/\/(version\.json|files\.json|sw\.js)$/.test(url.pathname)) return;
+  // The worksheet PDFs (opened to print) aren't kept: straight to the network,
+  // never the app's page in their place.
+  if (url.pathname.includes("/worksheets/")) return;
   e.respondWith((async () => {
     const s = r.mode === "navigate" ? await launch() : await readState();
     // Pages: the page this build stored (any #hash or ?v= is the same page).

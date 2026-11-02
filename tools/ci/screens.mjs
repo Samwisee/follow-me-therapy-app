@@ -57,6 +57,24 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
     await page.close();
   }
 }
+// Printing: under the service worker, a worksheet opens as its PDF (not the app's page).
+{
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  await page.goto('http://localhost:8099/');
+  await opened(page);
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller, null, { timeout: 60000 }).catch(() => {});
+  // Opened as a page (a navigation, like the print button's new tab): in a frame, so it isn't a download.
+  const notApp = await page.evaluate(() => new Promise(done => {
+    const f = document.createElement('iframe');
+    f.onload = () => { let d = null; try { d = f.contentDocument; } catch (e) {} done(!(d && d.getElementById('splash'))); };
+    f.src = 'worksheets/Main.pdf';
+    document.body.appendChild(f);
+    setTimeout(() => done(null), 15000);
+  }));
+  report.print = { controlled: await page.evaluate(() => !!navigator.serviceWorker.controller), notApp };
+  await ctx.close();
+}
 // A first visit fetches each .wasm once: the preload in index.html (added at
 // build time, so the download starts with the page) is the fetch the app uses.
 {
@@ -317,6 +335,7 @@ const KNOWN = /wasmExports. is deprecated/; // a Kotlin/Wasm notice, not an erro
   const missing = [...new Set(used)].filter(n => !listed.includes(n) && !/^(Letters|Capitals)$/.test(n));
   report.worksheets = { listed: listed.length, missing };
 }
+check(report.print && report.print.controlled && report.print.notApp === true, `a worksheet opens as its PDF, not the app (${JSON.stringify(report.print)})`);
 check(report.worksheets && report.worksheets.listed >= 27 && !report.worksheets.missing.length, `every worksheet the app prints is in the build (${JSON.stringify(report.worksheets)})`);
 check(report.firstVisit && report.firstVisit.preloads > 0 && Object.keys(report.firstVisit.wasm).length > 0 && Object.values(report.firstVisit.wasm).every(n => n === 1) && !report.firstVisit.notes.length,
   `a first visit fetches each .wasm once, from its preload (${JSON.stringify(report.firstVisit)})`);
