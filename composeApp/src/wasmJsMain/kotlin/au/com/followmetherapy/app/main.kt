@@ -46,6 +46,7 @@ private fun jsPickTime(current: String, onPicked: (String) -> Unit): Unit = js("
   i.addEventListener('blur', () => setTimeout(() => i.remove(), 400));
   try { i.showPicker(); } catch (e) { i.focus(); i.click(); }
 }""")
+private fun jsGoTo(url: String): Unit = js("{ window.location.href = url; }")
 private fun jsReadClipboard(onText: (String) -> Unit): Unit = js("""{
   if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(t => onText(t || '')).catch(() => onText(''));
   else onText('');
@@ -122,6 +123,7 @@ private object WebPlatform : Platform {
     override fun copyText(text: String, onResult: (Boolean) -> Unit) = jsCopyText(text, onResult)
     override fun readClipboard(onText: (String?) -> Unit) = jsReadClipboard { onText(it.ifEmpty { null }) }
     override fun pickTime(current: String, onPicked: (String) -> Unit) = jsPickTime(current, onPicked)
+    override fun goTo(url: String) = jsGoTo(url)
     override fun appUrl() = jsAppUrl()
     override fun qrCode(text: String): List<BooleanArray>? = jsQr(text).takeIf { it.isNotEmpty() }?.split(',')?.map { r -> BooleanArray(r.length) { r[it] == '1' } }
     override fun plannerEntry() = jsPlannerEntry()

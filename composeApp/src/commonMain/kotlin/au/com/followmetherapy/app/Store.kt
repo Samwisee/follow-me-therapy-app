@@ -42,6 +42,8 @@ interface Platform {
     fun readClipboard(onText: (String?) -> Unit) { onText(null) }
     /** Opens the device's own clock at [current] ("07:30"); [onPicked] gets the time chosen, 24-hour. */
     fun pickTime(current: String, onPicked: (String) -> Unit) {}
+    /** Goes to [url] in this window (the app's own pages, like printing). */
+    fun goTo(url: String) {}
     /** A QR code of [text] (rows of dark modules), or null if it can't be made here. */
     fun qrCode(text: String): List<BooleanArray>? = null
     /** Opened from the Planner icon (Simone's planner), not the family app. */
@@ -111,8 +113,8 @@ private fun ints(s: String?): List<Int> = s?.split(",")?.mapNotNull { it.toIntOr
  * practice, kept in one [Record] and written to the device on every change.
  */
 class AppStore(private val p: Platform) {
-    /** The print page with these worksheets (resources/worksheets/print.html), in a new tab: one print job. */
-    fun printWorksheets(sheets: List<String>) { if (sheets.isNotEmpty()) p.openUrl("worksheets/print.html?s=" + sheets.joinToString(",")) }
+    /** The print page with these worksheets (resources/worksheets/print.html), in this window: one print job. */
+    fun printWorksheets(sheets: List<String>) { if (sheets.isNotEmpty()) p.goTo("worksheets/print.html?s=" + sheets.joinToString(",")) }
 
     val today: String = p.today()
     val weekday: Int = p.weekday()
