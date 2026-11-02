@@ -1,0 +1,655 @@
+{
+ "phone-today": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-plan": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.8,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-activities": {
+  "scrollFrames": 65,
+  "medianMs": 33.3,
+  "p90Ms": 50,
+  "maxMs": 50,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-grown-ups": {
+  "scrollFrames": 86,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 33,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-morning": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-morning-2": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-calm-1": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-calm-now": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 91,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-week-setup": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-design-system": {
+  "scrollFrames": 84,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 33,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-install": {
+  "scrollFrames": 83,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 50,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-install-1": {
+  "scrollFrames": 84,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 50,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-planner": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-letters": {
+  "scrollFrames": 84,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 50,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-letters-11": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 91,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-letters-42": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 91,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-letters-6": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-steps": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-steps-2": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-steps-20": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-steps-23": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "phone-catch-and-throw": {
+  "scrollFrames": 85,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 67,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-today": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-plan": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-activities": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-grown-ups": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-morning": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-morning-2": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-calm-1": {
+  "scrollFrames": 83,
+  "medianMs": 16.7,
+  "p90Ms": 16.8,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-calm-now": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-week-setup": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-design-system": {
+  "scrollFrames": 91,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-install": {
+  "scrollFrames": 87,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-install-1": {
+  "scrollFrames": 85,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-planner": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-letters": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 50,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-letters-11": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-letters-42": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-letters-6": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-steps": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-steps-2": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-steps-20": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-steps-23": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 17,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "laptop-catch-and-throw": {
+  "scrollFrames": 82,
+  "medianMs": 16.7,
+  "p90Ms": 16.7,
+  "maxMs": 67,
+  "idleFrames": 90,
+  "errors": [
+   "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+  ]
+ },
+ "firstVisit": {
+  "ms": 1019,
+  "wasm": {
+   "/658820f72b4617efb380.wasm": 1,
+   "/eb5770813f391d375281.wasm": 1
+  },
+  "preloads": 2,
+  "notes": []
+ },
+ "pwa": {
+  "serviceWorker": true,
+  "controlled": true,
+  "manifest": {
+   "name": "Follow Me Therapy",
+   "display": "standalone",
+   "icons": 3,
+   "theme": "#efe9ff"
+  },
+  "offlineCanvas": true
+ },
+ "touch": {
+  "today": {
+   "frames": 283,
+   "medianMs": 16.7,
+   "p90Ms": 16.7,
+   "p99Ms": 66.6,
+   "over20": 7,
+   "over34": 7
+  },
+  "activities": {
+   "frames": 286,
+   "medianMs": 16.7,
+   "p90Ms": 16.7,
+   "p99Ms": 50,
+   "over20": 6,
+   "over34": 6
+  },
+  "week": {
+   "frames": 285,
+   "medianMs": 16.7,
+   "p90Ms": 16.7,
+   "p99Ms": 50,
+   "over20": 6,
+   "over34": 6
+  }
+ },
+ "updateRounds": [
+  {
+   "page": "next",
+   "current": "next",
+   "waiting": "next",
+   "ms": 926
+  },
+  {
+   "page": "next",
+   "current": "next",
+   "waiting": "next",
+   "ms": 909
+  },
+  {
+   "page": "next",
+   "current": "next",
+   "waiting": "next",
+   "ms": 909
+  },
+  {
+   "page": "next",
+   "current": "next",
+   "waiting": "next",
+   "ms": 925
+  }
+ ],
+ "update": {
+  "cachedLaunchSlow3gMs": 865,
+  "launchWhileNewBuildDownloadsMs": 880,
+  "waitingAfter": {
+   "current": "3d98691",
+   "pending": "next",
+   "previous": null
+  },
+  "launchTakingOverMs": 926,
+  "after": {
+   "page": "next",
+   "current": "next",
+   "pending": null,
+   "previous": "3d98691"
+  },
+  "files": 22
+ },
+ "migration": {
+  "schema": 1,
+  "idea": "Hug my dog",
+  "chosen": "0,2",
+  "oldKeysLeft": 0
+ },
+ "fontRetry": {
+  "splashGone": true,
+  "canvas": true,
+  "failedRequests": 2
+ },
+ "plan": {
+  "addressAfterOpening": "#plan-import",
+  "saved": "{\"v\":1,\"s\":\"5 Steps Forward\",\"n\":\"This week we are working on getting dressed on his own.\",\"r\":{\"n\":\"Morning routine\",\"d\":[0,1,2,3,4,5,6],\"t\":\"07:30\"},\"c\":1,\"p\":[{\"n\":\"Cutting practice\",\"d\":[0,1,2,3,4,5,6],\"t\":\"16:00\"},{\"n\":\"Ball skills\",\"d\":[1,3],\"t\":\"16:30\"}],\"m\":\"2026-10-30\"}"
+ },
+ "morningWalk": [
+  {
+   "tap": "open",
+   "hash": "#morning"
+  },
+  {
+   "tap": "end",
+   "hash": "#morning/1",
+   "record": null
+  },
+  {
+   "tap": "end",
+   "hash": "#morning/2",
+   "record": [
+    "routine.done.2026-11-02\":{\"v\":\"0\",\"at\":1793594698517"
+   ]
+  },
+  {
+   "tap": "end",
+   "hash": "#morning/3",
+   "record": [
+    "routine.done.2026-11-02\":{\"v\":\"0,1\",\"at\":1793594699744"
+   ]
+  },
+  {
+   "tap": "start",
+   "hash": "#morning/2",
+   "record": [
+    "routine.done.2026-11-02\":{\"v\":\"0,1\",\"at\":1793594699744"
+   ]
+  },
+  {
+   "tap": "end",
+   "hash": "#morning/3",
+   "record": [
+    "routine.done.2026-11-02\":{\"v\":\"0,1\",\"at\":1793594699744"
+   ]
+  },
+  {
+   "tap": "end",
+   "hash": "#morning/4",
+   "record": [
+    "routine.done.2026-11-02\":{\"v\":\"0,1,2\",\"at\":1793594703417"
+   ]
+  },
+  {
+   "tap": "end",
+   "hash": "#morning/5",
+   "record": [
+    "routine.done.2026-11-02\":{\"v\":\"0,1,2,3\",\"at\":1793594704643"
+   ]
+  },
+  {
+   "tap": "end",
+   "hash": "#morning/6",
+   "record": [
+    "routine.done.2026-11-02\":{\"v\":\"0,1,2,3,4\",\"at\":1793594705866"
+   ]
+  },
+  {
+   "tap": "end",
+   "hash": "#morning/7",
+   "record": [
+    "routine.done.2026-11-02\":{\"v\":\"0,1,2,3,4,5\",\"at\":1793594707093"
+   ]
+  },
+  {
+   "tap": "end",
+   "hash": "#morning/8",
+   "record": [
+    "routine.done.2026-11-02\":{\"v\":\"0,1,2,3,4,5\",\"at\":1793594707093"
+   ]
+  },
+  {
+   "tap": "end",
+   "hash": "",
+   "record": [
+    "routine.done.2026-11-02\":{\"v\":\"0,1,2,3,4,5\",\"at\":1793594707093"
+   ]
+  },
+  {
+   "tap": "end",
+   "hash": "#activities",
+   "record": [
+    "routine.done.2026-11-02\":{\"v\":\"0,1,2,3,4,5\",\"at\":1793594707093"
+   ]
+  }
+ ],
+ "morningWalkErrors": [
+  "Accessing `memory` via `wasmExports` is deprecated. Use `kotlin.wasm.unsafe.wasmMemory` or update dependencies. Read more: https://kotl.in/vr3szr"
+ ],
+ "plannerLock": {
+  "first": "new",
+  "badCode": "bad-code",
+  "setup": "ok",
+  "plaintextStored": false,
+  "afterReload": "locked",
+  "afterUnlock": "open",
+  "family": "{\"n\":\"Zebra Test\"}"
+ },
+ "planner": {
+  "manifest": {
+   "name": "Follow Me Planner",
+   "start": "./planner.html"
+  },
+  "qrModules": 69,
+  "hash": ""
+ },
+ "failures": []
+}
