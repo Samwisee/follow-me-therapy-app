@@ -7,7 +7,8 @@
 set -euo pipefail
 FILES="design/tokens.json design/components.json design/icons.json design/letters.json tools/check_components.py"
 # The app icons are the website's full-bleed Home Screen icons (img/app-icon-*.png);
-# the loading screen shows the website's stacked logo (mark and name).
+# the loading screen shows the website's stacked logo (mark and name); the tab icon is the
+# website's round favicon.
 ICONS="180 192 512"
 RES=composeApp/src/wasmJsMain/resources/icons
 mkdir -p "$RES"
@@ -15,11 +16,13 @@ if [ $# -ge 1 ]; then
   for f in $FILES; do cp "$1/$f" "$f"; done
   for s in $ICONS; do cp "$1/img/app-icon-$s.png" "$RES/icon-$s.png"; done
   cp "$1/img/brand/follow-me-therapy-lockup-stacked.svg" "$RES/lockup-stacked.svg"
+  cp "$1/img/favicon.svg" "$RES/favicon.svg"
 else
   BASE="https://raw.githubusercontent.com/Samwisee/follow-me-therapy/${DESIGN_REF:-preview}"
   for f in $FILES; do curl -fsSL "$BASE/$f" -o "$f"; done
   for s in $ICONS; do curl -fsSL "$BASE/img/app-icon-$s.png" -o "$RES/icon-$s.png"; done
   curl -fsSL "$BASE/img/brand/follow-me-therapy-lockup-stacked.svg" -o "$RES/lockup-stacked.svg"
+  curl -fsSL "$BASE/img/favicon.svg" -o "$RES/favicon.svg"
 fi
 python3 tools/gen_tokens.py
 python3 tools/gen_icons.py

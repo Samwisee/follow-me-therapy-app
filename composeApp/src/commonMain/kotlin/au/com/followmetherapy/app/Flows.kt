@@ -47,12 +47,12 @@ fun MorningFlow(store: AppStore, nav: Nav, step: Int) {
             end = FmtAction("Start", chevron = true) { go(1) },
         ) {
             FmtHead("My morning routine", swash = "morning", tag = "Self-care", tone = FmtCategories.tone("Self-care"))
+            PrintWorksheet(store, "Main", optional = true)
             FmtGroup {
                 FmtKidText("Let's get ready, one step at a time.")
                 FmtStepList(steps, store.routineDone.toSet(), onToggle = { store.toggleRoutineStep(it, it !in store.routineDone) })
             }
             FmtInfoNote("point to the next step instead of saying it, and let your child do the tapping.", leadIn = "For grown-ups:")
-            PrintWorksheet(store, "Main")
         }
         in 1..total -> {
             val i = step - 1
@@ -108,9 +108,9 @@ fun CalmFlow(store: AppStore, nav: Nav, step: Int) {
             end = FmtAction("Start", ButtonKind.Teal, chevron = true) { go(1) },
         ) {
             FmtHead("My calm-down plan", swash = "calm-down", tag = "Feelings", tone = FmtCategories.tone("Feelings"))
+            PrintWorksheet(store, "Calm-plan", optional = true)
             FmtKidText("Let's make a plan for when your feelings get big. It takes four short steps.")
             FmtInfoNote("make the plan together when your child is already calm, so it's easy to reach for when feelings run high.", leadIn = "For grown-ups:", tone = FmtCategories.tone("Feelings"))
-            PrintWorksheet(store, "Calm-plan")
         }
         1 -> FmtFlowScaffold(
             start = FmtAction("Back", ButtonKind.Outline) { go(0) },
@@ -199,13 +199,13 @@ fun WeekSetupFlow(store: AppStore, nav: Nav) {
         end = FmtAction("Save", chevron = true, enabled = store.activities.isNotEmpty()) { store.finishWeekSetup(); nav.go(Route(Area.Week)) },
     ) {
         FmtHead("My practice week", swash = "week", tag = "Home practice", tone = FmtCategories.tone("Home practice"))
+        PrintWorksheet(store, "Practice-week", optional = true)
         FmtGroup("What are we practising?") {
             store.weekNames.forEachIndexed { i, name ->
                 WriteField(name, { store.renameActivity(i, it) }, placeholder = "Activity ${i + 1}", kid = false)
             }
         }
         FmtInfoNote("write in the activities we chose together in our session. One or two is plenty to start with.", leadIn = "For grown-ups:", tone = FmtCategories.tone("Home practice"))
-        PrintWorksheet(store, "Practice-week")
     }
 }
 
@@ -217,12 +217,12 @@ fun WeekFlow(store: AppStore, nav: Nav) {
         end = FmtAction("Done") { nav.home() },
     ) {
         FmtHead("My practice week", swash = "week", tag = "Home practice", tone = FmtCategories.tone("Home practice"))
+        PrintWorksheet(store, "Practice-week", optional = true)
         FmtGroup {
             FmtKidText("Tap a star each day you practise.")
             FmtTracker(store.weekNames, onRename = store::renameActivity, done = store.weekDone.toSet(), onToggle = store::togglePractice)
         }
         FmtGroup("This week I'm proud of…") { WriteField(store.weekProud, store::setProud, placeholder = "I'm proud that I…", minLines = 2) }
         FmtInfoNote("short and often beats long and rare. Bring this to our next session and we'll look at it together.", leadIn = "For grown-ups:", tone = FmtCategories.tone("Home practice"))
-        PrintWorksheet(store, "Practice-week")
     }
 }

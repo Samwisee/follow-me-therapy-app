@@ -51,6 +51,7 @@ fun LettersFlow(store: AppStore, nav: Nav, step: Int) {
     if (name == null) {
         FmtFlowScaffold {
             FmtHead("Letters and shapes", swash = "Letters", tag = "Writing", tone = FmtCategories.tone("Writing"))
+            PrintLetterSheets(store)
             FmtGroup { FmtKidText("Pick one, then trace it with your finger.") }
             FmtGroup("Ready to write") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
@@ -71,7 +72,6 @@ fun LettersFlow(store: AppStore, nav: Nav, step: Int) {
                 "the letters are the shapes Victorian schools teach. Show your child where the gold dot is, and let them go slowly: following the line matters more than speed. The same letters are on my printed sheets.",
                 leadIn = "For grown-ups:", tone = FmtCategories.tone("Writing"),
             )
-            PrintLetterSheets(store)
         }
         return
     }

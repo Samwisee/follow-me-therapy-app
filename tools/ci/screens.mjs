@@ -350,11 +350,13 @@ const KNOWN = /wasmExports. is deprecated/; // a Kotlin/Wasm notice, not an erro
     + await rf(new URL('../../composeApp/src/commonMain/kotlin/au/com/followmetherapy/app/ActivityFlows.kt', import.meta.url), 'utf8');
   const used = [...src.matchAll(/"([A-Z][A-Za-z-]+)"/g)].map(m => m[1]).filter(n => /-|^Main$/.test(n) && !/^(Self|Fine|Home)/.test(n));
   const missing = [...new Set(used)].filter(n => !listed.includes(n) && !/^(Letters|Capitals)$/.test(n));
-  report.worksheets = { listed: listed.length, missing };
+  // And every sheet is offered somewhere (the Planner lists them all); letter sheets are built from their ranges.
+  const unlisted = listed.filter(n => !/^(Letters|Capitals)-/.test(n) && !src.includes('"' + n + '"'));
+  report.worksheets = { listed: listed.length, missing, unlisted };
 }
 check(report.oops && !report.oops.before && report.oops.shown && report.oops.hasError && report.oops.mailto && !report.oops.leaksPlan, `an error shows Something went wrong, with an email that says what happened and nothing private (${JSON.stringify(report.oops)})`);
 check(report.print && report.print.controlled && report.print.notApp === true, `the print page opens with its worksheets, not the app (${JSON.stringify(report.print)})`);
-check(report.worksheets && report.worksheets.listed >= 27 && !report.worksheets.missing.length, `every worksheet the app prints is in the build (${JSON.stringify(report.worksheets)})`);
+check(report.worksheets && report.worksheets.listed >= 27 && !report.worksheets.missing.length && !report.worksheets.unlisted.length, `every worksheet the app prints is in the build (${JSON.stringify(report.worksheets)})`);
 check(report.firstVisit && report.firstVisit.preloads > 0 && Object.keys(report.firstVisit.wasm).length > 0 && Object.values(report.firstVisit.wasm).every(n => n === 1) && !report.firstVisit.notes.length,
   `a first visit fetches each .wasm once, from its preload (${JSON.stringify(report.firstVisit)})`);
 for (const [k, v] of Object.entries(report)) {

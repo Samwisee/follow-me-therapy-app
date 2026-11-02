@@ -152,6 +152,8 @@ private fun PlannerList(store: AppStore, nav: Nav, session: PlannerSession) {
             FmtInfoNote("families' plans stay on this phone, locked with Face ID. Use a first name or initials, never a full name.", leadIn = "Privacy:", tone = Tone.Teal, icon = FmtIcons.shieldTick)
             FmtListRow("Request a change", "Something's wrong, or an idea for the Planner", FmtIcons.heart, Tone.Pink, onClick = { nav.go(Route(Area.Planner, PLANNER_REQUEST)) })
         }
+        // Worksheets for a session: choose any, print them in one go.
+        PrintSheets(store, ALL_SHEETS, title = "Print worksheets")
     }
 }
 

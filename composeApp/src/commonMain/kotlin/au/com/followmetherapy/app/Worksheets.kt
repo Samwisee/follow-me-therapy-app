@@ -1,5 +1,10 @@
 package au.com.followmetherapy.app
 
+import au.com.followmetherapy.design.tokens.FmtCategories
+import androidx.compose.ui.text.font.FontWeight
+import au.com.followmetherapy.design.components.FmtText
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import au.com.followmetherapy.design.components.FmtToggleChip
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateListOf
@@ -30,44 +35,73 @@ val TASK_WORKSHEET = mapOf(
 /** The letter sheets, four letters each, as on the canvas. */
 private val LETTER_SHEETS = listOf("a-d", "e-h", "i-l", "m-p", "q-t", "u-x", "y-z")
 
-/** Opens the print page (worksheets/print.html) with one worksheet, ready to print. */
+/**
+ * Opens the print page (worksheets/print.html) with one worksheet. Near the
+ * top of an activity; [optional] when the app does the same thing, so the
+ * paper copy is a choice, not a step.
+ */
 @Composable
-fun PrintWorksheet(store: AppStore, sheet: String, label: String = "Print the worksheet") {
-    Row { FmtButton(label, { store.printWorksheets(listOf(sheet)) }, kind = ButtonKind.Outline, trailingChevron = true) }
+fun PrintWorksheet(store: AppStore, sheet: String, optional: Boolean = false, label: String = "Print the worksheet") {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtTheme.metrics.groupGap)) {
+        FmtButton(label, { store.printWorksheets(listOf(sheet)) }, kind = ButtonKind.Outline, trailingChevron = true)
+        if (optional) FmtText("Optional: you can do it here in the app.", FmtTheme.type.small, Modifier.weight(1f, fill = false))
+    }
 }
+
+/** One worksheet to choose: its chip's words, its sheet, its category (for the chip's colour). */
+data class Sheet(val label: String, val sheet: String, val category: String = "Writing")
 
 /**
  * Several worksheets to print together: a chip each to choose (All chooses
- * every one), then Print, which opens them as one print job.
+ * every one), in groups if given, each chip in its category's colour, then
+ * Print, which opens them all as one print job.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun PrintSheets(store: AppStore, sheets: List<Pair<String, String>>, title: String = "Print worksheets") {
+fun PrintSheets(store: AppStore, groups: List<Pair<String?, List<Sheet>>>, title: String = "Print worksheets") {
+    val every = groups.flatMap { it.second }
     val chosen = remember { mutableStateListOf<String>() }
-    val all = chosen.size == sheets.size
+    val all = chosen.size == every.size
+    val gap = FmtTheme.metrics.groupGap
     FmtGroup(title) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtTheme.metrics.groupGap), verticalArrangement = Arrangement.spacedBy(FmtTheme.metrics.groupGap)) {
-            FmtToggleChip("All", all, { on -> chosen.clear(); if (on) chosen.addAll(sheets.map { it.second }) })
-            sheets.forEach { (label, sheet) ->
-                FmtToggleChip(label, sheet in chosen, { on -> if (on) chosen.add(sheet) else chosen.remove(sheet) })
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(gap), verticalArrangement = Arrangement.spacedBy(gap)) {
+            FmtToggleChip("All", all, { on -> chosen.clear(); if (on) chosen.addAll(every.map { it.sheet }) })
+            if (groups.size == 1) groups[0].second.forEach { SheetChip(it, chosen) }
+        }
+        if (groups.size > 1) groups.forEach { (heading, sheets) ->
+            heading?.let { FmtText(it, FmtTheme.type.small.copy(fontWeight = FontWeight.SemiBold)) }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(gap), verticalArrangement = Arrangement.spacedBy(gap)) {
+                sheets.forEach { SheetChip(it, chosen) }
             }
         }
         Row {
             FmtButton(
                 if (chosen.isEmpty()) "Print" else "Print ${chosen.size} ${if (chosen.size == 1) "sheet" else "sheets"}",
-                { store.printWorksheets(sheets.map { it.second }.filter { it in chosen }) },
+                { store.printWorksheets(every.map { it.sheet }.filter { it in chosen }) },
                 kind = ButtonKind.Primary, trailingChevron = true, enabled = chosen.isNotEmpty(),
             )
         }
     }
 }
 
+@Composable
+private fun SheetChip(s: Sheet, chosen: MutableList<String>) =
+    FmtToggleChip(s.label, s.sheet in chosen, { on -> if (on) chosen.add(s.sheet) else chosen.remove(s.sheet) }, FmtCategories.tone(s.category))
+
+private val WRITING_SHEETS = listOf(Sheet("Shapes", "Ready-to-write")) +
+    LETTER_SHEETS.map { Sheet(it.replace("-", "–"), "Letters-$it") } +
+    LETTER_SHEETS.map { Sheet(it.uppercase().replace("-", "–"), "Capitals-${it.uppercase()}") }
+
+/** Every worksheet, by category, for Simone's Planner. */
+val ALL_SHEETS: List<Pair<String, List<Sheet>>> = listOf(
+    "Self-care" to listOf(Sheet("Morning routine", "Main", "Self-care"), Sheet("Getting dressed", "Getting-dressed", "Self-care"), Sheet("Shoelaces", "Shoelaces", "Self-care"), Sheet("Spoon and fork", "Spoon-and-fork", "Self-care")),
+    "Feelings" to listOf(Sheet("Calm-down plan", "Calm-plan", "Feelings")),
+    "Writing" to WRITING_SHEETS,
+    "Fine motor" to listOf(Sheet("Cutting", "Cutting-practice", "Fine motor"), Sheet("Threading beads", "Threading-beads", "Fine motor"), Sheet("Playdough mat", "Playdough-mat", "Fine motor")),
+    "Moving" to listOf(Sheet("Obstacle course", "Obstacle-course", "Moving"), Sheet("Catch and throw", "Catch-and-throw", "Moving"), Sheet("Animal walks", "Animal-walks", "Moving")),
+    "Home practice" to listOf(Sheet("Practice week", "Practice-week", "Home practice")),
+)
+
 /** Every writing sheet, for the Letters and shapes page. */
 @Composable
-fun PrintLetterSheets(store: AppStore) = PrintSheets(
-    store,
-    listOf("Shapes" to "Ready-to-write") +
-        LETTER_SHEETS.map { it.replace("-", "–") to "Letters-$it" } +
-        LETTER_SHEETS.map { it.uppercase().replace("-", "–") to "Capitals-${it.uppercase()}" },
-    title = "Print a worksheet",
-)
+fun PrintLetterSheets(store: AppStore) = PrintSheets(store, listOf(null to WRITING_SHEETS), title = "Print worksheets")

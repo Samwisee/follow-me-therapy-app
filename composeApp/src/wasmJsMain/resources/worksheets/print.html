@@ -4,12 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Print · Follow Me Therapy</title>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="stylesheet" href="print.css">
 </head>
 <body>
 <div class="bar">
   <a class="fmt-btn is-outline" id="back" href="../">‹ Back</a>
   <p id="status" role="status">Getting your worksheets ready…</p>
+  <p id="tip" hidden>In the print window, untick <b>Print headers and footers</b> so the page doesn't show the web address.</p>
   <button class="fmt-btn" id="print" type="button" disabled>Print</button>
 </div>
 <main class="pages" id="pages"></main>
@@ -46,6 +48,8 @@ document.getElementById("back").onclick = function (e) {
   status.textContent = (n === 1 ? chosen[0].title : n + " worksheets") + ": ready to print on A4.";
   button.disabled = false;
   button.onclick = function () { window.print(); };
+  // Safari on a Mac adds the web address and date unless that's unticked (phones don't).
+  if (/Macintosh/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome|Chromium|Edg|Firefox/.test(navigator.userAgent) && navigator.maxTouchPoints < 2) document.getElementById("tip").hidden = false;
   document.body.dataset.ready = String(n);
   if (performance.mark) performance.mark("ready");
 })();

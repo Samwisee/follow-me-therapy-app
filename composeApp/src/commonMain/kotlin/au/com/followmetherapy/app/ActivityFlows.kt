@@ -58,12 +58,12 @@ fun StepsFlow(store: AppStore, nav: Nav, step: Int) {
     when {
         at == 0 -> FmtFlowScaffold(end = FmtAction("Start", chevron = true) { go(1) }) {
             FmtHead(a.title, swash = a.swash, tag = a.tag, tone = a.tone)
+            PrintWorksheet(store, a.sheet, optional = true)
             FmtGroup {
                 FmtKidText(a.kidIntro)
                 FmtStepList(a.steps, done, onToggle = { store.toggleStep(a.id, it) })
             }
             FmtInfoNote(a.tip, leadIn = "For grown-ups:", tone = a.tone)
-            PrintWorksheet(store, a.sheet)
         }
         at <= n -> {
             val i = at - 1
@@ -90,6 +90,7 @@ val BALL_SKILLS = listOf("Roll and catch", "Throw and catch", "Bounce and catch"
 fun BallFlow(store: AppStore, nav: Nav) {
     FmtFlowScaffold(end = FmtAction("Done") { nav.tab(2) }) {
         FmtHead("Catch and throw", swash = "throw", tag = "Moving", tone = FmtCategories.tone("Moving"))
+        PrintWorksheet(store, "Catch-and-throw", optional = true)
         FmtGroup {
             FmtKidText("Tap a star each day you practise.")
             FmtWeekCalendar(
@@ -108,6 +109,5 @@ fun BallFlow(store: AppStore, nav: Nav) {
             "start with a big, soft ball, close together, then a smaller ball and further apart as it gets easier. Count catches together and try to beat the score.",
             leadIn = "For grown-ups:", tone = FmtCategories.tone("Moving"), icon = FmtIcons.ball,
         )
-        PrintWorksheet(store, "Catch-and-throw")
     }
 }

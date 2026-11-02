@@ -1625,6 +1625,8 @@ button.fmt-star:focus-visible { outline: var(--border-focus) solid var(--focus);
 html, body { margin: 0; background: var(--purple-tint); }
 .bar { position: sticky; top: 0; z-index: var(--z-sticky); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--gutter); background: var(--bar-fill); border-bottom: var(--border-outline) solid var(--bar-line); font-family: var(--font-body); color: var(--ink); }
 .bar p { flex: 1 1 12em; margin: 0; font-size: var(--text-base); }
+.bar #tip { flex-basis: 100%; order: 3; font-size: var(--text-sm); }
+.bar [hidden] { display: none; }
 .pages { display: grid; justify-items: center; gap: var(--space-6); padding: var(--space-6) 0 var(--space-12); }
 html, body { overflow-x: hidden; }
 /* On screen a sheet is shrunk to the page's width (the sheet sits out of the flow, so a

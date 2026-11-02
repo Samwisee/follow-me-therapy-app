@@ -425,6 +425,9 @@
    "app": [
     "FmtMark",
     "FmtLockup"
+   ],
+   "rules": [
+    "The horizontal lockup: Follow Me Therapy and Paediatric Occupational Therapy are one width, and together exactly the mark's height (the name's cap top with the mark's top, the descriptor's baseline with its foot). Built by tools/make_lockups.py; worksheet footers use it."
    ]
   },
   "Wave": {
