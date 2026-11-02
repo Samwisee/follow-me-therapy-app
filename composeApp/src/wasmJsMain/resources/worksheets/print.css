@@ -1671,12 +1671,19 @@ html, body { overflow-x: hidden; }
    794px sheet never widens the page on a phone); printed, it's its full A4 size. */
 .page { position: relative; width: min(794px, calc(100vw - 2 * var(--space-4))); aspect-ratio: 794 / 1123; overflow: hidden; background: var(--paper); box-shadow: var(--shadow-soft); }
 .page > .fmt-sheet { position: absolute; top: 0; left: 0; transform-origin: top left; }
+/* Loading: a spinner until every sheet, font and picture is in. */
+.loading { display: grid; justify-items: center; gap: var(--space-4); padding: var(--space-12) var(--gutter); font-family: var(--font-body); color: var(--ink); }
+.loading i { width: var(--size-target); height: var(--size-target); border: var(--border-focus) solid var(--purple-line); border-top-color: var(--purple); border-radius: 50%; animation: spin var(--dur-slower) linear infinite; }
+.loading[hidden] { display: none; }
+@keyframes spin { to { transform: rotate(1turn); } }
+@media (prefers-reduced-motion: reduce) { .loading i { animation-duration: calc(var(--dur-slower) * 4); } }
 @media print {
-  html, body { background: var(--paper); }
-  .bar { display: none; }
+  html, body { background: var(--paper); overflow: visible; }
+  .bar, .loading { display: none; }
   .pages { display: block; padding: 0; }
-  html, body { overflow: visible; }
-  .page { position: static; width: auto; aspect-ratio: auto; overflow: visible; box-shadow: none; break-after: page; }
-  .page:last-child { break-after: auto; }
-  .page > .fmt-sheet { position: static; transform: none !important; }
+  /* A sheet a page, a little smaller than A4 so it fits inside any printer's or
+     browser's margins (a full-size sheet spills over and leaves a blank page). */
+  .page { position: static; display: flex; justify-content: center; width: auto; aspect-ratio: auto; overflow: hidden; box-shadow: none; break-inside: avoid; }
+  .page + .page { break-before: page; }
+  .page > .fmt-sheet { position: static; transform: none !important; zoom: 0.9; }
 }

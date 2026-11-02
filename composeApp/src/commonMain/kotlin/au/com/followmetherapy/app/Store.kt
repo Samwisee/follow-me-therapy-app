@@ -112,7 +112,7 @@ private fun ints(s: String?): List<Int> = s?.split(",")?.mapNotNull { it.toIntOr
  */
 class AppStore(private val p: Platform) {
     /** The print page with these worksheets (resources/worksheets/print.html), in this window: one print job. */
-    fun printWorksheets(sheets: List<String>) { if (sheets.isNotEmpty()) p.goTo("worksheets/print.html?s=" + sheets.joinToString(",")) }
+    fun printWorksheets(sheets: List<String>) { if (sheets.isNotEmpty()) p.goTo("worksheets/print.html?s=" + sheets.joinToString(",") + "&v=" + p.build()) }
 
     val today: String = p.today()
     val weekday: Int = p.weekday()
