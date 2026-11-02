@@ -111,8 +111,8 @@ private fun ints(s: String?): List<Int> = s?.split(",")?.mapNotNull { it.toIntOr
  * practice, kept in one [Record] and written to the device on every change.
  */
 class AppStore(private val p: Platform) {
-    /** A worksheet's PDF (resources/worksheets), in a new tab to print. */
-    fun openWorksheet(sheet: String) = p.openUrl("worksheets/$sheet.pdf")
+    /** The print page with these worksheets (resources/worksheets/print.html), in a new tab: one print job. */
+    fun printWorksheets(sheets: List<String>) { if (sheets.isNotEmpty()) p.openUrl("worksheets/print.html?s=" + sheets.joinToString(",")) }
 
     val today: String = p.today()
     val weekday: Int = p.weekday()

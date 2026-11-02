@@ -1,110 +1,110 @@
 [
  {
-  "file": "Animal-walks.pdf",
+  "name": "Animal-walks",
   "title": "Animal walks"
  },
  {
-  "file": "Calm-plan.pdf",
+  "name": "Calm-plan",
   "title": "My calm-down plan"
  },
  {
-  "file": "Capitals-A-D.pdf",
+  "name": "Capitals-A-D",
   "title": "Capitals A–D"
  },
  {
-  "file": "Capitals-E-H.pdf",
+  "name": "Capitals-E-H",
   "title": "Capitals E–H"
  },
  {
-  "file": "Capitals-I-L.pdf",
+  "name": "Capitals-I-L",
   "title": "Capitals I–L"
  },
  {
-  "file": "Capitals-M-P.pdf",
+  "name": "Capitals-M-P",
   "title": "Capitals M–P"
  },
  {
-  "file": "Capitals-Q-T.pdf",
+  "name": "Capitals-Q-T",
   "title": "Capitals Q–T"
  },
  {
-  "file": "Capitals-U-X.pdf",
+  "name": "Capitals-U-X",
   "title": "Capitals U–X"
  },
  {
-  "file": "Capitals-Y-Z.pdf",
+  "name": "Capitals-Y-Z",
   "title": "Capitals Y–Z"
  },
  {
-  "file": "Catch-and-throw.pdf",
+  "name": "Catch-and-throw",
   "title": "Catch and throw"
  },
  {
-  "file": "Cutting-practice.pdf",
+  "name": "Cutting-practice",
   "title": "Cutting practice"
  },
  {
-  "file": "Getting-dressed.pdf",
+  "name": "Getting-dressed",
   "title": "Getting dressed"
  },
  {
-  "file": "Letters-a-d.pdf",
+  "name": "Letters-a-d",
   "title": "Letters a–d"
  },
  {
-  "file": "Letters-e-h.pdf",
+  "name": "Letters-e-h",
   "title": "Letters e–h"
  },
  {
-  "file": "Letters-i-l.pdf",
+  "name": "Letters-i-l",
   "title": "Letters i–l"
  },
  {
-  "file": "Letters-m-p.pdf",
+  "name": "Letters-m-p",
   "title": "Letters m–p"
  },
  {
-  "file": "Letters-q-t.pdf",
+  "name": "Letters-q-t",
   "title": "Letters q–t"
  },
  {
-  "file": "Letters-u-x.pdf",
+  "name": "Letters-u-x",
   "title": "Letters u–x"
  },
  {
-  "file": "Letters-y-z.pdf",
+  "name": "Letters-y-z",
   "title": "Letters y–z"
  },
  {
-  "file": "Main.pdf",
+  "name": "Main",
   "title": "My morning routine"
  },
  {
-  "file": "Obstacle-course.pdf",
+  "name": "Obstacle-course",
   "title": "My obstacle course"
  },
  {
-  "file": "Playdough-mat.pdf",
+  "name": "Playdough-mat",
   "title": "Playdough mat"
  },
  {
-  "file": "Practice-week.pdf",
+  "name": "Practice-week",
   "title": "My practice week"
  },
  {
-  "file": "Ready-to-write.pdf",
+  "name": "Ready-to-write",
   "title": "Ready to write"
  },
  {
-  "file": "Shoelaces.pdf",
+  "name": "Shoelaces",
   "title": "Tying shoelaces"
  },
  {
-  "file": "Spoon-and-fork.pdf",
+  "name": "Spoon-and-fork",
   "title": "Spoon and fork"
  },
  {
-  "file": "Threading-beads.pdf",
+  "name": "Threading-beads",
   "title": "Threading beads"
  }
 ]

@@ -79,15 +79,15 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   await page.goto('http://localhost:8099/');
   await opened(page);
   await page.waitForFunction(() => !!navigator.serviceWorker.controller, null, { timeout: 60000 }).catch(() => {});
-  // Opened as a page (a navigation, like the print button's new tab): in a frame, so it isn't a download.
-  const notApp = await page.evaluate(() => new Promise(done => {
-    const f = document.createElement('iframe');
-    f.onload = () => { let d = null; try { d = f.contentDocument; } catch (e) {} done(!(d && d.getElementById('splash'))); };
-    f.src = 'worksheets/Main.pdf';
-    document.body.appendChild(f);
-    setTimeout(() => done(null), 15000);
-  }));
-  report.print = { controlled: await page.evaluate(() => !!navigator.serviceWorker.controller), notApp };
+  // Opened as a page (a navigation, like the print button's new tab), under the worker: the print
+  // page with its sheets, not the app.
+  const pp = await ctx.newPage();
+  await pp.goto('http://localhost:8099/worksheets/print.html?s=Main,Letters-a-d');
+  await pp.waitForSelector('body[data-ready]', { timeout: 20000 }).catch(() => {});
+  const shown = await pp.evaluate(() => ({ ready: document.body.dataset.ready || null, sheets: document.querySelectorAll('.page > .fmt-sheet').length, app: !!document.getElementById('splash') }));
+  await pp.screenshot({ path: join(out, 'phone-print.png') });
+  const notApp = !shown.app && shown.ready === '2' && shown.sheets === 2;
+  report.print = { controlled: await page.evaluate(() => !!navigator.serviceWorker.controller), notApp, ...shown };
   await ctx.close();
 }
 // A first visit fetches each .wasm once: the preload in index.html (added at
@@ -342,7 +342,7 @@ const KNOWN = /wasmExports. is deprecated/; // a Kotlin/Wasm notice, not an erro
 // Printing: every worksheet the app links to is in the build.
 {
   const { readFile: rf } = await import('node:fs/promises');
-  const listed = JSON.parse(await rf(join(dist, 'worksheets/worksheets.json'), 'utf8')).map(w => w.file.replace('.pdf', ''));
+  const listed = JSON.parse(await rf(join(dist, 'worksheets/worksheets.json'), 'utf8')).map(w => w.name);
   const src = await rf(new URL('../../composeApp/src/commonMain/kotlin/au/com/followmetherapy/app/Worksheets.kt', import.meta.url), 'utf8')
     + await rf(new URL('../../composeApp/src/commonMain/kotlin/au/com/followmetherapy/app/Flows.kt', import.meta.url), 'utf8')
     + await rf(new URL('../../composeApp/src/commonMain/kotlin/au/com/followmetherapy/app/ActivityFlows.kt', import.meta.url), 'utf8');
@@ -351,7 +351,7 @@ const KNOWN = /wasmExports. is deprecated/; // a Kotlin/Wasm notice, not an erro
   report.worksheets = { listed: listed.length, missing };
 }
 check(report.oops && !report.oops.before && report.oops.shown && report.oops.hasError && report.oops.mailto && !report.oops.leaksPlan, `an error shows Something went wrong, with an email that says what happened and nothing private (${JSON.stringify(report.oops)})`);
-check(report.print && report.print.controlled && report.print.notApp === true, `a worksheet opens as its PDF, not the app (${JSON.stringify(report.print)})`);
+check(report.print && report.print.controlled && report.print.notApp === true, `the print page opens with its worksheets, not the app (${JSON.stringify(report.print)})`);
 check(report.worksheets && report.worksheets.listed >= 27 && !report.worksheets.missing.length, `every worksheet the app prints is in the build (${JSON.stringify(report.worksheets)})`);
 check(report.firstVisit && report.firstVisit.preloads > 0 && Object.keys(report.firstVisit.wasm).length > 0 && Object.values(report.firstVisit.wasm).every(n => n === 1) && !report.firstVisit.notes.length,
   `a first visit fetches each .wasm once, from its preload (${JSON.stringify(report.firstVisit)})`);
