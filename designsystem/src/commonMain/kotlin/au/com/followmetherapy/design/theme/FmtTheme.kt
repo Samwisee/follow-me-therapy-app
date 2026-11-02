@@ -229,8 +229,9 @@ fun FmtTheme(content: @Composable () -> Unit) {
         val type = remember(metrics, fonts) { fmtTypeScale(metrics, fonts) }
         val density = LocalDensity.current
         val bounce = remember(density) { FmtBounceFactory(density) }
-        // Once, after opening: run the elastic edges off screen so the first real one is smooth.
-        LaunchedEffect(Unit) { delay(WARM_UP_MS); FmtBounceOverscroll(density).warmUp() }
+        // Once, as the app opens (under the opening logo): run the elastic edges off
+        // screen, so the first real one is smooth and nothing stalls later.
+        LaunchedEffect(Unit) { FmtBounceOverscroll(density).warmUp() }
         CompositionLocalProvider(
             LocalFmtMetrics provides metrics,
             LocalFmtType provides type,
@@ -243,4 +244,3 @@ fun FmtTheme(content: @Composable () -> Unit) {
     }
 }
 
-private const val WARM_UP_MS = 1500L

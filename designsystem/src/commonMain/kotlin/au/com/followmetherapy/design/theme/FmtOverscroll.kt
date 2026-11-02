@@ -28,6 +28,7 @@ import au.com.followmetherapy.design.tokens.FmtSpace
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.sign
@@ -95,15 +96,17 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
      * Runs every path once, off screen (this one is never drawn), so the first
      * real pull or fling at an edge doesn't stall: a web build compiles each
      * piece of code the first time it runs, and that pause was the bump at the
-     * first edge. Called once, soon after the app opens (FmtTheme).
+     * first edge. Called once as the app opens, under the opening logo (FmtTheme).
      */
     suspend fun warmUp() {
         pressed = true
         applyToScroll(Offset(0f, WARM_PULL), NestedScrollSource.UserInput) { Offset.Zero }
         applyToScroll(Offset(0f, -WARM_PULL / 2), NestedScrollSource.UserInput) { it }
-        applyToFling(Velocity(0f, WARM_SPEED)) { it }
+        // A few frames of each animation are enough to have run its code.
+        withTimeoutOrNull(WARM_STEP_MS) { applyToFling(Velocity(0f, WARM_SPEED)) { it } }
         pressed = false
-        applyToFling(Velocity(0f, -WARM_SPEED)) { it }
+        offset = 0f
+        withTimeoutOrNull(WARM_STEP_MS) { applyToFling(Velocity(0f, -WARM_SPEED)) { it } }
         offset = 0f
     }
 
@@ -131,6 +134,7 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
         const val SETTLE_MS = 120L
         const val WARM_PULL = 40f
         const val WARM_SPEED = 900f
+        const val WARM_STEP_MS = 120L
         val SPRING_BACK = spring<Float>(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)
         val GLIDE = spring<Float>(dampingRatio = 1f, stiffness = Spring.StiffnessLow)
     }
