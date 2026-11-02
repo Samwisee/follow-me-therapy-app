@@ -32,12 +32,10 @@ document.getElementById("back").onclick = function (e) {
     page.innerHTML = html;
     pages.appendChild(page);
   }
-  // On screen each sheet is shrunk to fit; printed, it's its full A4 size.
+  // On screen each sheet is shrunk to its page's width (set by the CSS); printed, it's full A4.
   function fit() {
-    var scale = Math.min(1, (window.innerWidth - 32) / 794);
     pages.querySelectorAll(".page").forEach(function (p) {
-      p.style.width = 794 * scale + "px"; p.style.height = 1123 * scale + "px";
-      p.firstElementChild.style.transform = "scale(" + scale + ")";
+      p.firstElementChild.style.transform = "scale(" + p.clientWidth / 794 + ")";
     });
   }
   fit();

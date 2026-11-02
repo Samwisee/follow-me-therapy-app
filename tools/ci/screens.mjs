@@ -72,23 +72,24 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   report.oops = { before, shown: o.shown, hasError: o.href.includes('ci%20check'), leaksPlan: /eyJ2|Secret/.test(o.href), mailto: o.href.startsWith('mailto:') };
   await ctx.close();
 }
-// Printing: under the service worker, a worksheet opens as its PDF (not the app's page).
+// Printing: under the service worker, the print page opens with its sheets, fitted to a phone (not the app's page).
 {
-  const ctx = await browser.newContext();
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
   const page = await ctx.newPage();
   await page.goto('http://localhost:8099/');
   await opened(page);
   await page.waitForFunction(() => !!navigator.serviceWorker.controller, null, { timeout: 60000 }).catch(() => {});
-  // Opened as a page (a navigation, like the print button's new tab), under the worker: the print
+  // Opened as a page (a navigation, like the print button), under the worker: the print
   // page with its sheets, not the app.
   const pp = await ctx.newPage();
   await pp.goto('http://localhost:8099/worksheets/print.html?s=Main,Letters-a-d');
   await pp.waitForSelector('body[data-ready]', { timeout: 20000 }).catch(() => {});
   const shown = await pp.evaluate(() => ({ ready: document.body.dataset.ready || null, sheets: document.querySelectorAll('.page > .fmt-sheet').length, app: !!document.getElementById('splash') }));
   await pp.screenshot({ path: join(out, 'phone-print.png') });
+  const fits = await pp.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
   const styled = await pp.evaluate(() => getComputedStyle(document.querySelector('.fmt-sheet')).width === '794px' && !!getComputedStyle(document.body).getPropertyValue('--purple'));
-  const notApp = !shown.app && shown.ready === '2' && shown.sheets === 2 && styled;
-  report.print = { controlled: await page.evaluate(() => !!navigator.serviceWorker.controller), notApp, styled, ...shown };
+  const notApp = !shown.app && shown.ready === '2' && shown.sheets === 2 && styled && fits;
+  report.print = { controlled: await page.evaluate(() => !!navigator.serviceWorker.controller), notApp, styled, fits, ...shown };
   await ctx.close();
 }
 // A first visit fetches each .wasm once: the preload in index.html (added at
