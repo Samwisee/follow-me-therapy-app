@@ -59,6 +59,7 @@ enum class Area(val slug: String, val tab: Int?) {
     Morning("morning", null), Calm("calm", null), CalmNow("calm-now", null),
     WeekSetup("week-setup", null), Week("week", null), DesignSystem("design-system", null), Install("install", null),
     PlanImport("plan-import", null), Planner("planner", null), Task("task", null), Letters("letters", null),
+    Steps("steps", null), Ball("catch-and-throw", null),
 }
 
 data class Route(val area: Area, val step: Int = 0) {
@@ -153,6 +154,8 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                             Area.Week -> WeekFlow(store, nav)
                             Area.Task -> TaskScreen(nav, r.step)
                             Area.Letters -> LettersFlow(store, nav, r.step)
+                            Area.Steps -> StepsFlow(store, nav, r.step)
+                            Area.Ball -> BallFlow(store, nav)
                             Area.DesignSystem -> DesignSystemScreen(nav)
                             Area.Install -> InstallScreen(platform, nav, store, welcome = r.step == WELCOME)
                             Area.GrownUps -> GrownUpsScreen(store, nav, platform)
@@ -207,6 +210,12 @@ private fun barFor(r: Route, store: AppStore, nav: Nav, planner: Boolean): Bar {
         Area.WeekSetup, Area.Week -> Bar("Practice week", home)
         Area.Task -> Bar("How to", { nav.tab(2) })
         Area.Letters -> if (r.step == 0) Bar("Letters and shapes", { nav.tab(2) }) else Bar(letterTitle(r.step), { nav.go(Route(Area.Letters)) })
+        Area.Steps -> {
+            val a = STEP_ACTIVITIES.getOrNull(r.step / 20) ?: STEP_ACTIVITIES.first()
+            val at = r.step % 20
+            if (at in 1..a.steps.size) Bar(a.title, { nav.tab(2) }, at / a.steps.size.toFloat(), "$at of ${a.steps.size}") else Bar(a.title, { nav.tab(2) })
+        }
+        Area.Ball -> Bar("Catch and throw", { nav.tab(2) })
         Area.DesignSystem -> Bar("Design system", { nav.go(Route(Area.GrownUps)) })
         Area.Install -> if (r.step == WELCOME) Bar("Follow Me Therapy", brand = true) else Bar("Add to your Home Screen", { nav.go(Route(Area.GrownUps)) })
     }

@@ -134,7 +134,7 @@ fun StarButton(on: Boolean, label: String, toggle: () -> Unit) = FmtStarToggle(o
 
 
 /** The kinds of activity, as on the worksheets' tags: the Activities tab filters by them. */
-private enum class Kind(val label: String, val tone: Tone) { SelfCare("Self-care", Tone.Purple), Feelings("Feelings", Tone.Teal), Writing("Writing", Tone.Sun), HomePractice("Home practice", Tone.Sun) }
+private enum class Kind(val label: String, val tone: Tone) { SelfCare("Self-care", Tone.Purple), Feelings("Feelings", Tone.Teal), Writing("Writing", Tone.Sun), FineMotor("Fine motor", Tone.Sun), Moving("Moving", Tone.Pink), HomePractice("Home practice", Tone.Sun) }
 
 /**
  * Activities: everything there is to do, filtered by kind (more kinds arrive
@@ -164,6 +164,13 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
                 celebrate = remember(store.routineComplete) { store.firstSeenDone("routine:${store.today}", store.routineComplete) },
             )
         }
+        Reveal(Kind.SelfCare in shown, first = false) {
+            FmtListRow("Getting dressed", "Self-care · " + stepsWords(store, 0), FmtIcons.shirt, Tone.Purple, onClick = { nav.go(stepsRoute(0)) },
+                progress = stepsProgress(store, 0), progressLabel = stepsWords(store, 0), done = stepsProgress(store, 0) >= 1f,
+                celebrate = remember(stepsProgress(store, 0) >= 1f) { store.firstSeenDone("steps.dressing:${store.today}", stepsProgress(store, 0) >= 1f) })
+        }
+        HowToRow(nav, "Shoelaces", Kind.SelfCare, FmtIcons.shoe, Kind.SelfCare in shown)
+        HowToRow(nav, "Using a spoon and fork", Kind.SelfCare, FmtIcons.spoon, Kind.SelfCare in shown)
         Reveal(Kind.Feelings in shown, first = firstRow == Kind.Feelings) {
             FmtListRow(
                 "My calm-down plan",
@@ -177,6 +184,19 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
         Reveal(Kind.Writing in shown, first = firstRow == Kind.Writing) {
             FmtListRow("Letters and shapes", "Writing · trace them with your finger", FmtIcons.pencil, Tone.Sun, onClick = { nav.go(Route(Area.Letters)) })
         }
+        HowToRow(nav, "Cutting practice", Kind.FineMotor, FmtIcons.scissors, Kind.FineMotor in shown, first = firstRow == Kind.FineMotor)
+        HowToRow(nav, "Threading beads", Kind.FineMotor, FmtIcons.beads, Kind.FineMotor in shown)
+        HowToRow(nav, "Playdough squeeze", Kind.FineMotor, FmtIcons.dough, Kind.FineMotor in shown)
+        Reveal(Kind.Moving in shown, first = firstRow == Kind.Moving) {
+            FmtListRow("My obstacle course", "Moving · " + stepsWords(store, 1), FmtIcons.hurdle, Tone.Pink, onClick = { nav.go(stepsRoute(1)) },
+                progress = stepsProgress(store, 1), progressLabel = stepsWords(store, 1), done = stepsProgress(store, 1) >= 1f,
+                celebrate = remember(stepsProgress(store, 1) >= 1f) { store.firstSeenDone("steps.obstacle:${store.today}", stepsProgress(store, 1) >= 1f) })
+        }
+        Reveal(Kind.Moving in shown, first = false) {
+            FmtListRow("Catch and throw", "Moving · " + if (store.ballStars == 0) "a star each day you practise" else "${store.ballStars} stars this week",
+                FmtIcons.ball, Tone.Pink, onClick = { nav.go(Route(Area.Ball)) })
+        }
+        HowToRow(nav, "Animal walks", Kind.Moving, FmtIcons.paw, Kind.Moving in shown)
         Reveal(Kind.HomePractice in shown, first = firstRow == Kind.HomePractice) {
             val target = store.practiceTarget
             FmtListRow(
@@ -199,6 +219,19 @@ fun ActivitiesTab(store: AppStore, nav: Nav) {
 }
 
 /** A part of a list that grows in (and fades) when shown and folds away when hidden, a stack gap above it unless it's [first]. */
+/** An activity whose app version is its how-to page (the worksheet is for paper). */
+@Composable
+private fun HowToRow(nav: Nav, name: String, kind: Kind, icon: androidx.compose.ui.graphics.vector.ImageVector, visible: Boolean, first: Boolean = false) {
+    val t = taskIndex(name) ?: return
+    Reveal(visible, first) { FmtListRow(name, "${kind.label} · how to do it", icon, kind.tone, onClick = { nav.go(Route(Area.Task, t)) }) }
+}
+
+private fun stepsProgress(store: AppStore, i: Int): Float = STEP_ACTIVITIES[i].let { store.stepsDone(it.id).size / it.steps.size.toFloat() }
+private fun stepsWords(store: AppStore, i: Int): String = STEP_ACTIVITIES[i].let {
+    val n = store.stepsDone(it.id).size
+    if (n >= it.steps.size) "all done today" else "$n of ${it.steps.size} steps today"
+}
+
 @Composable
 private fun Reveal(visible: Boolean, first: Boolean, content: @Composable () -> Unit) {
     val gap by animateDpAsState(if (first) 0.dp else FmtTheme.metrics.stack, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))

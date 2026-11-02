@@ -2,6 +2,7 @@ package au.com.followmetherapy.app
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
@@ -149,6 +150,24 @@ class AppStore(private val p: Platform) {
     private val traced = mutableStateListOf<String>().apply { addAll(get("letters.traced")?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()) }
     fun letterTraced(name: String) = name in traced
     fun markLetterTraced(name: String) { if (name !in traced) { traced.add(name); put("letters.traced", traced.joinToString(",")) } }
+
+    // ── Step-by-step activities (getting dressed, the obstacle course): steps done today ──
+    private val stepsToday = mutableStateMapOf<String, Set<Int>>()
+    fun stepsDone(id: String): Set<Int> = stepsToday[id] ?: ints(get("steps.$id.$today")).toSet()
+    fun toggleStep(id: String, i: Int, on: Boolean = i !in stepsDone(id)) {
+        val now = stepsDone(id).let { if (on) it + i else it - i }
+        stepsToday[id] = now
+        put("steps.$id.$today", now.sorted().joinToString(","))
+    }
+
+    // ── Catch and throw: this week's stars and the best score ──
+    private val ballWeek = mutableStateListOf<String>().apply { addAll(get("ball.done.$week")?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()) }
+    fun ballDone(r: Int, d: Int) = "$r:$d" in ballWeek
+    fun toggleBall(r: Int, d: Int) { val k = "$r:$d"; if (k in ballWeek) ballWeek.remove(k) else ballWeek.add(k); put("ball.done.$week", ballWeek.joinToString(",")) }
+    val ballStars: Int get() = ballWeek.size
+    var ballBest by mutableStateOf(get("ball.best") ?: "")
+        private set
+    fun setBallBest(v: String) { ballBest = v; put("ball.best", v) }
 
     // ── Morning routine ──
     val routineSteps = listOf("Toilet and wash hands", "Get dressed", "Eat breakfast", "Brush teeth", "Shoes on", "Bag on, out the door")

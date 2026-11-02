@@ -27,7 +27,7 @@ const opened = async (page, timeout = 30000) => {
   await page.waitForTimeout(500);
 };
 for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop', { width: 1280, height: 800 }]]) {
-  for (const screen of ['', 'plan', 'activities', 'grown-ups', 'morning', 'morning/2', 'calm/1', 'calm-now', 'week-setup', 'design-system', 'install', 'install/1', 'planner', 'letters', 'letters/11', 'letters/42', 'letters/6']) {
+  for (const screen of ['', 'plan', 'activities', 'grown-ups', 'morning', 'morning/2', 'calm/1', 'calm-now', 'week-setup', 'design-system', 'install', 'install/1', 'planner', 'letters', 'letters/11', 'letters/42', 'letters/6', 'steps', 'steps/2', 'steps/20', 'steps/23', 'catch-and-throw']) {
     const page = await browser.newPage({ viewport, deviceScaleFactor: name === 'phone' ? 2 : 1 });
     const errors = [];
     page.on('pageerror', e => errors.push(String(e)));
