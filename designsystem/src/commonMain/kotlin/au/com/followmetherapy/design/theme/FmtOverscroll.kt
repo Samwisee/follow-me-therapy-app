@@ -32,6 +32,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.sign
+import kotlin.math.sqrt
+import kotlin.math.E
 
 /**
  * Elastic edges, like a phone's own apps: pull past the top or bottom and the
@@ -46,6 +48,8 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
     private var offset by mutableFloatStateOf(0f)
     private var pressed = false
     private var settle: Job? = null
+    /** Which way a fling ran into an edge (the sign of what the page couldn't take), 0 if it hasn't. */
+    private var edge = 0f
     private val bounceNode = BounceNode()
 
     /** The furthest a pull can stretch (it gets harder as it goes). */
@@ -67,6 +71,8 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
         }
         val consumed = performScroll(Offset(delta.x, y))
         val left = y - consumed.y
+        // A fling that runs out of page: remember which edge, so only that glides past.
+        if (abs(left) > 0.5f && source != NestedScrollSource.UserInput) edge = sign(left)
         if (abs(left) > 0.5f && source == NestedScrollSource.UserInput) {
             // Rubber band: most of the finger's movement at first, less the further it's stretched.
             offset += left * 0.7f * (1f - min(1f, abs(offset) / reach))
@@ -83,12 +89,19 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
             animate(offset, 0f, initialVelocity = velocity.y, animationSpec = SPRING_BACK) { v, _ -> offset = v }
             return
         }
+        edge = 0f
         val left = performFling(velocity)
-        if (abs(left.y) > 1f) {
-            // A fling that reaches the edge carries on past it at the same speed, slows
-            // and glides back (critically damped: one smooth arc, no bump, no hard stop).
+        // Only a fling that actually reached the top or bottom glides past it. A fling that
+        // slows to a stop on its own still has a little speed left when it ends; gliding
+        // on that moved the whole page a few pixels and back: the bump at every natural stop.
+        if (edge != 0f && sign(left.y) == edge && abs(left.y) > 1f) {
+            // It carries on past the edge at the same speed, slows and glides back
+            // (critically damped: one smooth arc, no bump, no hard stop).
+            // A very fast fling is slowed before it starts, so its arc peaks at the cap rather
+            // than flattening against it (clamping it was a second, harder bump).
             val cap = reach * 0.6f
-            animate(0f, 0f, initialVelocity = left.y, animationSpec = GLIDE) { v, _ -> offset = v.coerceIn(-cap, cap) }
+            val most = cap * sqrt(Spring.StiffnessLow) * E.toFloat()
+            animate(0f, 0f, initialVelocity = left.y.coerceIn(-most, most), animationSpec = GLIDE) { v, _ -> offset = v }
         }
     }
 
@@ -106,7 +119,7 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
         withTimeoutOrNull(WARM_STEP_MS) { applyToFling(Velocity(0f, WARM_SPEED)) { it } }
         pressed = false
         offset = 0f
-        withTimeoutOrNull(WARM_STEP_MS) { applyToFling(Velocity(0f, -WARM_SPEED)) { it } }
+        withTimeoutOrNull(WARM_STEP_MS) { applyToFling(Velocity(0f, -WARM_SPEED)) { edge = sign(it.y); it } }
         offset = 0f
     }
 
