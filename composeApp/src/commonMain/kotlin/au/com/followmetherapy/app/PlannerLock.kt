@@ -72,7 +72,7 @@ private fun PlannerSetup(store: AppStore, platform: Platform, onStatus: (String)
     }) {
         FmtHead("Set up the Planner", swash = "Planner", tag = "Planner")
         FmtGroup {
-            FmtText("The Planner is just for Sam and me. Set it up once on each phone or computer with the setup code, then it opens with Face ID, Touch ID or Windows Hello.", FmtTheme.type.lead)
+            FmtText("The Planner is just for Simone. Set it up once on each phone or computer with the setup code, then it opens with Face ID, Touch ID or Windows Hello.", FmtTheme.type.lead)
             WriteField(code, { code = it }, placeholder = "Setup code", kid = false)
             message?.let { FmtText(it, FmtTheme.type.body, Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
         }
