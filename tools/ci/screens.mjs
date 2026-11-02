@@ -7,7 +7,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 
 const [dist, out] = process.argv.slice(2);
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.cvr': 'application/octet-stream', '.pdf': 'application/pdf' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.cvr': 'application/octet-stream', '.pdf': 'application/pdf', '.css': 'text/css', '.woff2': 'font/woff2' };
 const server = http.createServer(async (req, res) => {
   const raw = decodeURIComponent(req.url.split('?')[0]);
   const path = raw.endsWith('/') ? raw + 'index.html' : raw;
@@ -86,8 +86,9 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
   await pp.waitForSelector('body[data-ready]', { timeout: 20000 }).catch(() => {});
   const shown = await pp.evaluate(() => ({ ready: document.body.dataset.ready || null, sheets: document.querySelectorAll('.page > .fmt-sheet').length, app: !!document.getElementById('splash') }));
   await pp.screenshot({ path: join(out, 'phone-print.png') });
-  const notApp = !shown.app && shown.ready === '2' && shown.sheets === 2;
-  report.print = { controlled: await page.evaluate(() => !!navigator.serviceWorker.controller), notApp, ...shown };
+  const styled = await pp.evaluate(() => getComputedStyle(document.querySelector('.fmt-sheet')).width === '794px' && !!getComputedStyle(document.body).getPropertyValue('--purple'));
+  const notApp = !shown.app && shown.ready === '2' && shown.sheets === 2 && styled;
+  report.print = { controlled: await page.evaluate(() => !!navigator.serviceWorker.controller), notApp, styled, ...shown };
   await ctx.close();
 }
 // A first visit fetches each .wasm once: the preload in index.html (added at
