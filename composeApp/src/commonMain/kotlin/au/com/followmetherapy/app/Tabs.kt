@@ -234,7 +234,7 @@ private fun stepsWords(store: AppStore, i: Int): String = STEP_ACTIVITIES[i].let
 
 @Composable
 private fun Reveal(visible: Boolean, first: Boolean, content: @Composable () -> Unit) {
-    val gap by animateDpAsState(if (first) 0.dp else FmtTheme.metrics.stack, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
+    val gap by animateDpAsState(if (first) 0.dp else FmtTheme.metrics.groupGap, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
     AnimatedVisibility(
         visible,
         enter = expandVertically(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard)) + fadeIn(tween(FmtMotion.durBase, FmtMotion.durFast)),

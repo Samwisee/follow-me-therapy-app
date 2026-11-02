@@ -47,12 +47,21 @@
       js.src = "composeApp.js?v=" + window.FMT_BUILD;
       document.head.appendChild(js);
       if (window.FMT_BUILD.indexOf("__") === 0 || !("serviceWorker" in navigator)) return; // local dev, or no workers
-      var sw = navigator.serviceWorker;
-      sw.register("sw.js").then(function () { return sw.ready; }).then(function (reg) {
-        return fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (v) {
-          if (v.build && reg.active) reg.active.postMessage({ type: "fmt-newest", build: v.build });
-        });
-      }).catch(function () {});
+      var sw = navigator.serviceWorker, started = false;
+      function keep() {
+        if (started) return;
+        started = true;
+        sw.register("sw.js").then(function () { return sw.ready; }).then(function (reg) {
+          return fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (v) {
+            if (v.build && reg.active) reg.active.postMessage({ type: "fmt-newest", build: v.build });
+          });
+        }).catch(function () {});
+      }
+      // Coming back: at once (the phone's copy opens the app). A first visit:
+      // once the first screen is up, so keeping the whole build for next time
+      // doesn't compete with opening it (or after 15 s, whatever happens).
+      if (sw.controller) keep();
+      else { window.fmtAfterReady = keep; setTimeout(keep, 15000); }
     })();
     // Chrome and Edge offer a one-tap install; keep the offer for the app's Install now button.
     window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.fmtInstallPrompt = e; });
@@ -74,6 +83,7 @@
       if (performance.mark && !performance.getEntriesByName("ready").length) performance.mark("ready");
       s.classList.add("is-done");
       setTimeout(function () { s.remove(); }, 600);
+      if (window.fmtAfterReady) setTimeout(window.fmtAfterReady, 1000);
     };
     // Never a blank page: if loading is slow or fails, say so and offer to try again
     // (the splash stays until the app has drawn its first screen).
