@@ -57,6 +57,21 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
     await page.close();
   }
 }
+// Something went wrong: an error after opening shows the note, whose email says what happened
+// but never what's in a plan link. Opened with a plan link to be sure.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  await page.goto('http://localhost:8099/#plan=eyJ2IjoxLCJuIjoiU2VjcmV0In0');
+  await opened(page);
+  const before = await page.evaluate(() => !document.getElementById('oops').hidden);
+  await page.evaluate(() => setTimeout(() => { throw new Error('ci check'); }, 0));
+  await page.waitForTimeout(500);
+  const o = await page.evaluate(() => ({ shown: !document.getElementById('oops').hidden, href: document.getElementById('oops-send').href }));
+  await page.screenshot({ path: join(out, 'phone-oops.png') });
+  report.oops = { before, shown: o.shown, hasError: o.href.includes('ci%20check'), leaksPlan: /eyJ2|Secret/.test(o.href), mailto: o.href.startsWith('mailto:') };
+  await ctx.close();
+}
 // Printing: under the service worker, a worksheet opens as its PDF (not the app's page).
 {
   const ctx = await browser.newContext();
@@ -335,6 +350,7 @@ const KNOWN = /wasmExports. is deprecated/; // a Kotlin/Wasm notice, not an erro
   const missing = [...new Set(used)].filter(n => !listed.includes(n) && !/^(Letters|Capitals)$/.test(n));
   report.worksheets = { listed: listed.length, missing };
 }
+check(report.oops && !report.oops.before && report.oops.shown && report.oops.hasError && report.oops.mailto && !report.oops.leaksPlan, `an error shows Something went wrong, with an email that says what happened and nothing private (${JSON.stringify(report.oops)})`);
 check(report.print && report.print.controlled && report.print.notApp === true, `a worksheet opens as its PDF, not the app (${JSON.stringify(report.print)})`);
 check(report.worksheets && report.worksheets.listed >= 27 && !report.worksheets.missing.length, `every worksheet the app prints is in the build (${JSON.stringify(report.worksheets)})`);
 check(report.firstVisit && report.firstVisit.preloads > 0 && Object.keys(report.firstVisit.wasm).length > 0 && Object.values(report.firstVisit.wasm).every(n => n === 1) && !report.firstVisit.notes.length,

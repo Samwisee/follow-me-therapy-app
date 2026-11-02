@@ -32,6 +32,16 @@
     #splash.is-done { opacity: 0; pointer-events: none; }
     @keyframes fmt-breathe { 50% { transform: scale(1.04); } }
     @media (prefers-reduced-motion: reduce) { #splash img { animation: none; } #splash { transition-duration: 1ms; } }
+    /* Something went wrong (after opening): a note at the foot, over the app, to let us know by email. */
+    #oops { position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 2; max-width: 520px; margin: 0 auto; box-sizing: border-box; display: grid; gap: 12px; padding: 20px; border: 2px solid /* token:note-purple-line */ #d9cffc; border-radius: 22px; background: /* token:note-purple-fill */ #efe9ff; box-shadow: 0 16px 40px rgba(43, 37, 64, 0.18); font: 500 17px/1.5 system-ui, -apple-system, sans-serif; color: /* token:ink */ #2b2540; }
+    #oops[hidden] { display: none; }
+    #oops h2 { margin: 0; font: 700 19px/1.3 system-ui, -apple-system, sans-serif; }
+    #oops p { margin: 0; }
+    #oops div { display: flex; flex-wrap: wrap; gap: 12px; }
+    #oops a, #oops button { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 24px; box-sizing: border-box; border-radius: 999px; font: 600 17px system-ui, -apple-system, sans-serif; text-decoration: none; cursor: pointer; }
+    #oops a { border: 2px solid /* token:button-purple-line */ #502eed; background: /* token:button-purple-fill */ #502eed; color: /* token:button-purple-ink */ #ffffff; }
+    #oops button { border: 2px solid /* token:button-purple-line */ #502eed; background: /* token:button-outline-fill */ #ffffff; color: /* token:button-purple-outline-ink */ #502eed; }
+    #oops :focus-visible { outline: 3px solid /* token:focus */ #2b2540; outline-offset: 3px; }
   </style>
   <script>
     // Opens from the phone's copy, at once (see sw.js: one worker keeps whole
@@ -79,6 +89,11 @@
     <button id="splash-retry" type="button" hidden onclick="location.reload()">Try again</button>
   </div></div>
   <div id="app"></div>
+  <section id="oops" role="alert" aria-labelledby="oops-title" hidden>
+    <h2 id="oops-title">Something went wrong</h2>
+    <p>Let us know and we'll fix it. It opens an email you can read before you send it.</p>
+    <div><a id="oops-send" href="#">Let us know</a><button id="oops-close" type="button">Close</button></div>
+  </section>
   <script>
     window.fmtReady = function () {
       var s = document.getElementById("splash");
@@ -99,6 +114,32 @@
       document.getElementById("splash-retry").hidden = false;
     }
     setTimeout(function () { fmtStuck(); }, 12000);
+    // After opening, an error shows "Something went wrong" (once a visit). "Let us know" opens an email
+    // to the practice with what happened: the error, the screen (never a plan link's contents), the
+    // version and the browser. Nothing is sent unless the person sends it.
+    function fmtOops(what) {
+      var s = document.getElementById("splash"), box = document.getElementById("oops");
+      if ((s && !s.classList.contains("is-done")) || !box || window.fmtOopsShown) return;
+      window.fmtOopsShown = true;
+      var screen = (location.pathname.split("/").pop() || "") + (location.hash.split("=")[0] || "");
+      var body = "Hi, something went wrong in the Follow Me app.\n\nWhat I was doing: \n\n" +
+        "---\nFor fixing it (no personal details):\nScreen: " + screen.slice(0, 40) + "\nVersion: " + window.FMT_BUILD +
+        "\nBrowser: " + navigator.userAgent + "\nError: " + String(what || "unknown").slice(0, 400);
+      document.getElementById("oops-send").href = "mailto:info@followmetherapy.com.au?subject=" +
+        encodeURIComponent("Something went wrong in the app") + "&body=" + encodeURIComponent(body);
+      document.getElementById("oops-close").onclick = function () { box.hidden = true; };
+      box.hidden = false;
+      document.getElementById("oops-send").focus();
+    }
+    window.fmtOops = fmtOops;
+    window.addEventListener("error", function (e) {
+      // Only the app's own errors (not a browser extension's).
+      if (e.filename && e.filename.indexOf(location.origin) !== 0) return;
+      fmtOops((e.message || "error") + (e.filename ? " at " + e.filename.split("/").pop() + ":" + e.lineno : ""));
+    });
+    window.addEventListener("unhandledrejection", function (e) {
+      var r = e.reason; fmtOops("unhandled: " + (r && (r.message || r.name) || r));
+    });
     window.addEventListener("error", function () { fmtStuck("Something went wrong while opening. Try again?"); });
     window.addEventListener("unhandledrejection", function () { fmtStuck("Something went wrong while opening. Try again?"); });
   </script>
