@@ -147,15 +147,17 @@ private fun PlanCalendar(store: AppStore, nav: Nav) {
 /** The plan's activities, each with its days and time, a tap away. */
 @Composable
 private fun PlanRows(p: Plan, store: AppStore, nav: Nav?) {
-    p.routine?.let {
-        FmtListRow("My morning routine", Plan.showWhen(it), FmtIcons.sunrise, Tone.Purple, onClick = nav?.let { n -> { n.go(Route(Area.Morning)) } })
-    }
-    if (p.calm) {
-        FmtListRow(if (store.calmSaved) "Use my calm-down plan" else "Make my calm-down plan", "When feelings get big", FmtIcons.breathe, Tone.Teal,
-            onClick = nav?.let { n -> { n.go(Route(if (store.calmSaved) Area.CalmNow else Area.Calm)) } })
-    }
-    p.practice.forEach {
-        FmtListRow(it.name, "Practice · " + Plan.showWhen(it), FmtIcons.star, Tone.Sun, onClick = nav?.let { n -> { n.go(Route(Area.Week)) } })
+    FmtGroup(inset = false) {
+        p.routine?.let {
+            FmtListRow("My morning routine", Plan.showWhen(it), FmtIcons.sunrise, Tone.Purple, onClick = nav?.let { n -> { n.go(Route(Area.Morning)) } })
+        }
+        if (p.calm) {
+            FmtListRow(if (store.calmSaved) "Use my calm-down plan" else "Make my calm-down plan", "When feelings get big", FmtIcons.breathe, Tone.Teal,
+                onClick = nav?.let { n -> { n.go(Route(if (store.calmSaved) Area.CalmNow else Area.Calm)) } })
+        }
+        p.practice.forEach {
+            FmtListRow(it.name, "Practice · " + Plan.showWhen(it), FmtIcons.star, Tone.Sun, onClick = nav?.let { n -> { n.go(Route(Area.Week)) } })
+        }
     }
 }
 

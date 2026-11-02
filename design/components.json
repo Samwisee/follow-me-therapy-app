@@ -200,7 +200,7 @@
     "Corner nests round what sits in it: the tile, or the button (button/2 + card-pad + outline).",
     "A row for an activity with progress always shows its bar (empty until started) and, when done, a gold star in place of the chevron (the WeekCalendar's done star); it says 'done' to screen readers.",
     "The first time a done row is seen (back on the page after finishing), its star bursts like a star being added. Not with reduced motion.",
-    "A list of rows reads as one group: rows sit group-gap apart (stack is for separate sections)."
+    "Cards one after another read as one group: rows, notes and panels sit group-gap apart (stack is for a title and what it heads, and separate sections)."
    ],
    "website": [
     ".service-item",

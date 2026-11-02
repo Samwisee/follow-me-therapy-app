@@ -80,32 +80,39 @@ fun TodayTab(store: AppStore, nav: Nav) {
     val done = store.routineDone.size
     val total = store.routineSteps.size
     val routineTime = plan?.routine?.time?.let { Plan.showTime(it) + " · " } ?: ""
-    if (showRoutine) {
-        FmtListRow(
-            title = "My morning routine",
-            subtitle = if (store.routineComplete) "All done today. Great job!" else if (done == 0) routineTime + "Six steps, one at a time" else "$done of $total steps done",
-            icon = FmtIcons.sunrise, tone = Tone.Purple,
-            onClick = {
-                val next = store.routineSteps.indices.firstOrNull { it !in store.routineDone }
-                nav.go(Route(Area.Morning, if (next == null || done == 0) 0 else next + 1))
-            },
-            progress = done / total.toFloat(),
-            progressLabel = "$done of $total steps done",
-            done = store.routineComplete,
-            celebrate = remember(store.routineComplete) { store.firstSeenDone("routine:${store.today}", store.routineComplete) },
-        )
+    // One after another, the cards read as one list (group-gap apart).
+    FmtGroup(inset = false) {
+        if (showRoutine) {
+            FmtListRow(
+                title = "My morning routine",
+                subtitle = if (store.routineComplete) "All done today. Great job!" else if (done == 0) routineTime + "Six steps, one at a time" else "$done of $total steps done",
+                icon = FmtIcons.sunrise, tone = Tone.Purple,
+                onClick = {
+                    val next = store.routineSteps.indices.firstOrNull { it !in store.routineDone }
+                    nav.go(Route(Area.Morning, if (next == null || done == 0) 0 else next + 1))
+                },
+                progress = done / total.toFloat(),
+                progressLabel = "$done of $total steps done",
+                done = store.routineComplete,
+                celebrate = remember(store.routineComplete) { store.firstSeenDone("routine:${store.today}", store.routineComplete) },
+            )
+        }
+
+        // Calm-down plan: use it, or make it.
+        if (!showCalm) Unit
+        else if (store.calmSaved) {
+            FmtListRow("Use my calm-down plan", "For when feelings get big", FmtIcons.breathe, Tone.Teal, onClick = { nav.go(Route(Area.CalmNow)) })
+        } else {
+            FmtListRow("Make my calm-down plan", "Choose what helps, in four short steps", FmtIcons.breathe, Tone.Teal, onClick = { nav.go(Route(Area.Calm)) },
+                progress = store.calmProgress, progressLabel = "Making the plan")
+        }
+
+        if (!(store.weekSetUp && practiceToday.isNotEmpty()) && plan == null) {
+            FmtListRow("Set up my practice week", "Add the activities we chose together", FmtIcons.calendar, Tone.Sun, onClick = { nav.go(Route(Area.WeekSetup)) })
+        }
     }
 
-    // Calm-down plan: use it, or make it.
-    if (!showCalm) Unit
-    else if (store.calmSaved) {
-        FmtListRow("Use my calm-down plan", "For when feelings get big", FmtIcons.breathe, Tone.Teal, onClick = { nav.go(Route(Area.CalmNow)) })
-    } else {
-        FmtListRow("Make my calm-down plan", "Choose what helps, in four short steps", FmtIcons.breathe, Tone.Teal, onClick = { nav.go(Route(Area.Calm)) },
-            progress = store.calmProgress, progressLabel = "Making the plan")
-    }
-
-    // Practice: today's stars, or set the week up.
+    // Practice: today's stars.
     if (store.weekSetUp && practiceToday.isNotEmpty()) {
         FmtGroup("Did you practise today?") {
             practiceToday.forEach { (r, name) ->
@@ -120,8 +127,6 @@ fun TodayTab(store: AppStore, nav: Nav) {
                 FmtButton("My week", { nav.go(Route(Area.Week)) }, kind = ButtonKind.Outline, trailingChevron = true)
             }
         }
-    } else if (plan == null) {
-        FmtListRow("Set up my practice week", "Add the activities we chose together", FmtIcons.calendar, Tone.Sun, onClick = { nav.go(Route(Area.WeekSetup)) })
     }
     if (plan != null && !showRoutine && practiceToday.isEmpty()) {
         FmtGroup { FmtText("Nothing else is planned for today. Enjoy it!", FmtTheme.type.body) }
@@ -259,60 +264,63 @@ private fun ColumnScope.GrownUpsContent(store: AppStore, nav: Nav, platform: Pla
     val installed = remember { platform.installed() }
     // Ask the device to keep this app's data even when it's short of space.
     LaunchedEffect(Unit) { platform.keepData { kept = it } }
-    if (!installed) {
-        FmtListRow("Add the app to your Home Screen", "It opens like an app, works without the internet, and keeps your progress safer", FmtIcons.addToHome, Tone.Purple, onClick = { nav.go(Route(Area.Install)) })
-    }
-    FmtInfoNote(
-        "everything you enter stays on this device. Nothing is sent to me or anyone else, and there's no account.",
-        leadIn = "Your privacy:", tone = Tone.Teal, icon = FmtIcons.shieldTick,
-    )
-    FmtPanel("Keep a backup", Tone.Purple) {
-        FmtText(
-            when (kept) {
-                true -> "This device will keep your progress even when it's short of space. Clearing your browser's data still clears it, so keep a backup too."
-                else -> "Your browser can clear your progress when you clear its data, or when the device is short of space." +
-                    (if (installed) "" else " Adding the app to your Home Screen helps.") + " A backup keeps it safe."
-            },
-            FmtTheme.type.small,
-        )
-        FmtText(
-            "A backup is one small file with everything you've saved here (${store.savedCount} ${if (store.savedCount == 1) "thing" else "things"}). Keep it in Files or Downloads, and restore it after clearing your browser or on a new phone.",
-            FmtTheme.type.small,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(FmtTheme.metrics.gridGap)) {
-            FmtButton("Save a backup", { store.saveBackup(); message = null }, kind = ButtonKind.Outline)
-            FmtButton("Restore", {
-                platform.openFile { text ->
-                    message = when (val r = store.restore(text)) {
-                        RestoreResult.NotABackup -> "That file isn't a Follow Me Therapy backup. Nothing was changed."
-                        is RestoreResult.Restored -> if (r.changed == 0) "Nothing new in that backup: this device already has everything in it."
-                            else "Restored ${r.changed} ${if (r.changed == 1) "thing" else "things"} from your backup."
-                    }
-                }
-            }, kind = ButtonKind.Outline)
+    // One after another, the cards read as one group (group-gap apart).
+    FmtGroup(inset = false) {
+        if (!installed) {
+            FmtListRow("Add the app to your Home Screen", "It opens like an app, works without the internet, and keeps your progress safer", FmtIcons.addToHome, Tone.Purple, onClick = { nav.go(Route(Area.Install)) })
         }
-        message?.let { FmtText(it, FmtTheme.type.small, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, color = FmtColors.ink) }
-    }
-    FmtPanel("Start again", Tone.Sun) {
-        FmtText("Clear the routine, the calm-down plan, your plan from me and the stars from this device.", FmtTheme.type.small)
-        Row {
-            FmtButton(if (confirm) "Tap again to clear everything" else "Clear everything on this device", {
-                if (confirm) { store.forgetEverything(); confirm = false; cleared = true } else { confirm = true; cleared = false }
-            }, kind = ButtonKind.Outline)
-        }
-        // Say it's done: clearing can't be seen otherwise.
-        if (cleared) {
-            FmtInfoNote(
-                "everything this app saved on this device is gone. You can start again whenever you like.",
-                leadIn = "Cleared:", tone = Tone.Teal, icon = FmtIcons.tick,
-                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        FmtInfoNote(
+            "everything you enter stays on this device. Nothing is sent to me or anyone else, and there's no account.",
+            leadIn = "Your privacy:", tone = Tone.Teal, icon = FmtIcons.shieldTick,
+        )
+        FmtPanel("Keep a backup", Tone.Purple) {
+            FmtText(
+                when (kept) {
+                    true -> "This device will keep your progress even when it's short of space. Clearing your browser's data still clears it, so keep a backup too."
+                    else -> "Your browser can clear your progress when you clear its data, or when the device is short of space." +
+                        (if (installed) "" else " Adding the app to your Home Screen helps.") + " A backup keeps it safe."
+                },
+                FmtTheme.type.small,
             )
+            FmtText(
+                "A backup is one small file with everything you've saved here (${store.savedCount} ${if (store.savedCount == 1) "thing" else "things"}). Keep it in Files or Downloads, and restore it after clearing your browser or on a new phone.",
+                FmtTheme.type.small,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(FmtTheme.metrics.gridGap)) {
+                FmtButton("Save a backup", { store.saveBackup(); message = null }, kind = ButtonKind.Outline)
+                FmtButton("Restore", {
+                    platform.openFile { text ->
+                        message = when (val r = store.restore(text)) {
+                            RestoreResult.NotABackup -> "That file isn't a Follow Me Therapy backup. Nothing was changed."
+                            is RestoreResult.Restored -> if (r.changed == 0) "Nothing new in that backup: this device already has everything in it."
+                                else "Restored ${r.changed} ${if (r.changed == 1) "thing" else "things"} from your backup."
+                        }
+                    }
+                }, kind = ButtonKind.Outline)
+            }
+            message?.let { FmtText(it, FmtTheme.type.small, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, color = FmtColors.ink) }
         }
+        FmtPanel("Start again", Tone.Sun) {
+            FmtText("Clear the routine, the calm-down plan, your plan from me and the stars from this device.", FmtTheme.type.small)
+            Row {
+                FmtButton(if (confirm) "Tap again to clear everything" else "Clear everything on this device", {
+                    if (confirm) { store.forgetEverything(); confirm = false; cleared = true } else { confirm = true; cleared = false }
+                }, kind = ButtonKind.Outline)
+            }
+            // Say it's done: clearing can't be seen otherwise.
+            if (cleared) {
+                FmtInfoNote(
+                    "everything this app saved on this device is gone. You can start again whenever you like.",
+                    leadIn = "Cleared:", tone = Tone.Teal, icon = FmtIcons.tick,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                )
+            }
+        }
+        FmtListRow("The design system", "Colours, type and parts this app is built from", FmtIcons.blocks, Tone.Purple, onClick = { nav.go(Route(Area.DesignSystem)) })
+        // For Simone (and Sam): her Planner, on a phone or a computer. It opens only after setup and Face ID / Touch ID.
+        FmtListRow("For Simone: the Planner", "Families' plans, templates and requests. Opens with Face ID or Touch ID.", FmtIcons.calendar, Tone.Purple,
+            onClick = { platform.openPlanner() })
     }
-    FmtListRow("The design system", "Colours, type and parts this app is built from", FmtIcons.blocks, Tone.Purple, onClick = { nav.go(Route(Area.DesignSystem)) })
-    // For Simone (and Sam): her Planner, on a phone or a computer. It opens only after setup and Face ID / Touch ID.
-    FmtListRow("For Simone: the Planner", "Families' plans, templates and requests. Opens with Face ID or Touch ID.", FmtIcons.calendar, Tone.Purple,
-        onClick = { platform.openPlanner() })
     // The sign-off, on the same text edge as everything above.
     FmtGroup {
         Row(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalAlignment = Alignment.CenterVertically) {

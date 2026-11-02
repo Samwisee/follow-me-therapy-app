@@ -141,13 +141,16 @@ private fun PlannerList(store: AppStore, nav: Nav, session: PlannerSession) {
                 FmtTheme.type.body,
             )
         }
-        families.forEach { f ->
-            val sent = f.sent?.let { "sent ${Dates.show(it)}" } ?: "not sent yet"
-            FmtListRow(f.name.ifBlank { "No name" }, (f.plan.service?.let { "$it · " } ?: "") + sent, FmtIcons.calendar, Tone.Purple,
-                onClick = { session.family = f; nav.go(Route(Area.Planner, PLANNER_EDIT)) })
+        // The cards, one list (group-gap apart).
+        FmtGroup(inset = false) {
+            families.forEach { f ->
+                val sent = f.sent?.let { "sent ${Dates.show(it)}" } ?: "not sent yet"
+                FmtListRow(f.name.ifBlank { "No name" }, (f.plan.service?.let { "$it · " } ?: "") + sent, FmtIcons.calendar, Tone.Purple,
+                    onClick = { session.family = f; nav.go(Route(Area.Planner, PLANNER_EDIT)) })
+            }
+            FmtInfoNote("families' plans stay on this phone, locked with Face ID. Use a first name or initials, never a full name.", leadIn = "Privacy:", tone = Tone.Teal, icon = FmtIcons.shieldTick)
+            FmtListRow("Request a change", "Something's wrong, or an idea for the Planner", FmtIcons.heart, Tone.Pink, onClick = { nav.go(Route(Area.Planner, PLANNER_REQUEST)) })
         }
-        FmtInfoNote("families' plans stay on this phone, locked with Face ID. Use a first name or initials, never a full name.", leadIn = "Privacy:", tone = Tone.Teal, icon = FmtIcons.shieldTick)
-        FmtListRow("Request a change", "Something's wrong, or an idea for the Planner", FmtIcons.heart, Tone.Pink, onClick = { nav.go(Route(Area.Planner, PLANNER_REQUEST)) })
     }
 }
 
@@ -233,49 +236,51 @@ private fun PlannerEdit(store: AppStore, nav: Nav, platform: Platform, session: 
         FmtGroup("A note for the family") {
             WriteField(note, { note = it }, placeholder = "What we're working on, in a sentence or two", kid = false, minLines = 2)
         }
-        FmtPanel("Morning routine", Tone.Purple) {
-            Row { FmtToggleChip("In the plan", routineOn, { routineOn = it }) }
-            if (routineOn) {
-                DayPicker(routineDays, Tone.Purple)
-                WriteField(routineTime, { routineTime = it }, placeholder = "Reminder time, like 7:30am", kid = false)
-            }
-        }
-        FmtPanel("Calm-down plan", Tone.Teal) {
-            FmtText("For when feelings get big, so it has no days or reminders.", FmtTheme.type.small)
-            Row { FmtToggleChip("In the plan", calm, { calm = it }, Tone.Teal) }
-        }
-        FmtPanel("Practice", Tone.Sun) {
-            FmtText("Pick up to four. Each gets its days and a reminder time.", FmtTheme.type.small)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
-                (ACTIVITY_LIBRARY + practice.map { it.name }.filter { it !in ACTIVITY_LIBRARY }).forEach { a ->
-                    val chosen = practice.any { it.name == a }
-                    FmtToggleChip(a, chosen, { on ->
-                        if (on && practice.size < 4) practice.add(PracticeDraft(a, setOf(0, 2, 4), "4pm"))
-                        if (!on) practice.removeAll { it.name == a }
-                    }, Tone.Sun)
+        FmtGroup(inset = false) {
+            FmtPanel("Morning routine", Tone.Purple) {
+                Row { FmtToggleChip("In the plan", routineOn, { routineOn = it }) }
+                if (routineOn) {
+                    DayPicker(routineDays, Tone.Purple)
+                    WriteField(routineTime, { routineTime = it }, placeholder = "Reminder time, like 7:30am", kid = false)
                 }
             }
-            if (practice.size < 4) {
-                WriteField(other, { other = it }, placeholder = "Something else", kid = false)
-                if (other.isNotBlank()) Row {
-                    FmtButton("Add", { practice.add(PracticeDraft(other.trim(), setOf(0, 2, 4), "4pm")); other = "" }, kind = ButtonKind.Outline)
+            FmtPanel("Calm-down plan", Tone.Teal) {
+                FmtText("For when feelings get big, so it has no days or reminders.", FmtTheme.type.small)
+                Row { FmtToggleChip("In the plan", calm, { calm = it }, Tone.Teal) }
+            }
+            FmtPanel("Practice", Tone.Sun) {
+                FmtText("Pick up to four. Each gets its days and a reminder time.", FmtTheme.type.small)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
+                    (ACTIVITY_LIBRARY + practice.map { it.name }.filter { it !in ACTIVITY_LIBRARY }).forEach { a ->
+                        val chosen = practice.any { it.name == a }
+                        FmtToggleChip(a, chosen, { on ->
+                            if (on && practice.size < 4) practice.add(PracticeDraft(a, setOf(0, 2, 4), "4pm"))
+                            if (!on) practice.removeAll { it.name == a }
+                        }, Tone.Sun)
+                    }
+                }
+                if (practice.size < 4) {
+                    WriteField(other, { other = it }, placeholder = "Something else", kid = false)
+                    if (other.isNotBlank()) Row {
+                        FmtButton("Add", { practice.add(PracticeDraft(other.trim(), setOf(0, 2, 4), "4pm")); other = "" }, kind = ButtonKind.Outline)
+                    }
+                }
+                practice.forEach { d ->
+                    FmtText(d.name, FmtTheme.type.groupTitle)
+                    DayPicker(d.days, Tone.Sun)
+                    WriteField(d.time, { d.time = it }, placeholder = "Reminder time, like 4pm", kid = false)
                 }
             }
-            practice.forEach { d ->
-                FmtText(d.name, FmtTheme.type.groupTitle)
-                DayPicker(d.days, Tone.Sun)
-                WriteField(d.time, { d.time = it }, placeholder = "Reminder time, like 4pm", kid = false)
-            }
-        }
-        FmtPanel("Their progress", Tone.Pink) {
-            FmtText(
-                start.progressOn?.let { "What they sent on ${Dates.show(it)}. Paste a newer one to keep it with their plan." }
-                    ?: "When they tap Send my progress to Simone, paste what they send here, to plan from it next time.",
-                FmtTheme.type.small,
-            )
-            WriteField(progress, { progress = it }, placeholder = "Paste their progress", kid = false, minLines = 3)
-            Row {
-                FmtButton("Paste", { platform.readClipboard { t -> if (!t.isNullOrBlank()) progress = t } }, kind = ButtonKind.Outline)
+            FmtPanel("Their progress", Tone.Pink) {
+                FmtText(
+                    start.progressOn?.let { "What they sent on ${Dates.show(it)}. Paste a newer one to keep it with their plan." }
+                        ?: "When they tap Send my progress to Simone, paste what they send here, to plan from it next time.",
+                    FmtTheme.type.small,
+                )
+                WriteField(progress, { progress = it }, placeholder = "Paste their progress", kid = false, minLines = 3)
+                Row {
+                    FmtButton("Paste", { platform.readClipboard { t -> if (!t.isNullOrBlank()) progress = t } }, kind = ButtonKind.Outline)
+                }
             }
         }
         FmtGroup {
