@@ -97,12 +97,13 @@ fun taskIndex(name: String): Int? = TASKS.indexOfFirst { it.name.equals(name.tri
 
 /** One activity explained: what to do, why it helps, and the practice week to tap a star. */
 @Composable
-fun TaskScreen(nav: Nav, step: Int) {
+fun TaskScreen(store: AppStore, nav: Nav, step: Int) {
     val t = TASKS.getOrNull(step) ?: TASKS.first()
     FmtFlowScaffold(end = FmtAction("Tap a star", chevron = true) { nav.go(Route(Area.Week)) }) {
         FmtHead(t.name, swash = null, tag = t.category, tone = FmtCategories.tone(t.category))
         FmtGroup("What to do") { FmtTickList(t.steps) }
         FmtGroup("Why it helps") { FmtText(t.why, FmtTheme.type.body) }
         FmtInfoNote("a few minutes most days beats a long go once a week. Stop while it's still fun.", leadIn = "For grown-ups:", tone = FmtCategories.tone(t.category))
+        TASK_WORKSHEET[t.name]?.let { PrintWorksheet(store, it) }
     }
 }

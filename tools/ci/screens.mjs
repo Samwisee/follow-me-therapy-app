@@ -7,7 +7,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 
 const [dist, out] = process.argv.slice(2);
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.cvr': 'application/octet-stream' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.cvr': 'application/octet-stream', '.pdf': 'application/pdf' };
 const server = http.createServer(async (req, res) => {
   const raw = decodeURIComponent(req.url.split('?')[0]);
   const path = raw.endsWith('/') ? raw + 'index.html' : raw;
@@ -306,6 +306,18 @@ for (let round = 0; round < 4; round++) {
 const failures = [];
 const check = (ok, what) => { if (!ok) failures.push(what); };
 const KNOWN = /wasmExports. is deprecated/; // a Kotlin/Wasm notice, not an error of ours
+// Printing: every worksheet the app links to is in the build.
+{
+  const { readFile: rf } = await import('node:fs/promises');
+  const listed = JSON.parse(await rf(join(dist, 'worksheets/worksheets.json'), 'utf8')).map(w => w.file.replace('.pdf', ''));
+  const src = await rf(new URL('../../composeApp/src/commonMain/kotlin/au/com/followmetherapy/app/Worksheets.kt', import.meta.url), 'utf8')
+    + await rf(new URL('../../composeApp/src/commonMain/kotlin/au/com/followmetherapy/app/Flows.kt', import.meta.url), 'utf8')
+    + await rf(new URL('../../composeApp/src/commonMain/kotlin/au/com/followmetherapy/app/ActivityFlows.kt', import.meta.url), 'utf8');
+  const used = [...src.matchAll(/"([A-Z][A-Za-z-]+)"/g)].map(m => m[1]).filter(n => /-|^Main$/.test(n) && !/^(Self|Fine|Home)/.test(n));
+  const missing = [...new Set(used)].filter(n => !listed.includes(n) && !/^(Letters|Capitals)$/.test(n));
+  report.worksheets = { listed: listed.length, missing };
+}
+check(report.worksheets && report.worksheets.listed >= 27 && !report.worksheets.missing.length, `every worksheet the app prints is in the build (${JSON.stringify(report.worksheets)})`);
 check(report.firstVisit && report.firstVisit.preloads > 0 && Object.keys(report.firstVisit.wasm).length > 0 && Object.values(report.firstVisit.wasm).every(n => n === 1) && !report.firstVisit.notes.length,
   `a first visit fetches each .wasm once, from its preload (${JSON.stringify(report.firstVisit)})`);
 for (const [k, v] of Object.entries(report)) {

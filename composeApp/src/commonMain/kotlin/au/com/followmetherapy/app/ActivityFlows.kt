@@ -24,7 +24,7 @@ import au.com.followmetherapy.design.icons.FmtIcons
 /** An activity done in steps, the same steps as its printed sheet. Drafts for Simone to check. */
 class StepsActivity(
     val id: String, val title: String, val swash: String, val tag: String, val tone: Tone,
-    val kidIntro: String, val steps: List<String>, val tip: String, val cheer: String,
+    val kidIntro: String, val steps: List<String>, val tip: String, val cheer: String, val sheet: String,
 )
 
 val STEP_ACTIVITIES = listOf(
@@ -33,14 +33,14 @@ val STEP_ACTIVITIES = listOf(
         "Let's get dressed, one thing at a time.",
         listOf("Undies", "Pants or shorts", "Top", "Jumper", "Socks", "Shoes"),
         "lay the clothes out in this order and sit down to do it. Help with most of a step and let your child finish it on their own.",
-        "You got dressed!",
+        "You got dressed!", "Getting-dressed",
     ),
     StepsActivity(
         "obstacle", "My obstacle course", "obstacle", "Moving", FmtCategories.tone("Moving"),
         "Say the steps out loud, then go!",
         listOf("Climb over the cushions", "Crawl under the blanket tunnel", "Walk along the line", "Jump to the end!"),
         "build it from what's at home: cushions, a blanket over two chairs and a line of tape. Clear the space first, and let your child say the steps before they start.",
-        "You did the whole course!",
+        "You did the whole course!", "Obstacle-course",
     ),
 )
 
@@ -63,6 +63,7 @@ fun StepsFlow(store: AppStore, nav: Nav, step: Int) {
                 FmtStepList(a.steps, done, onToggle = { store.toggleStep(a.id, it) })
             }
             FmtInfoNote(a.tip, leadIn = "For grown-ups:", tone = a.tone)
+            PrintWorksheet(store, a.sheet)
         }
         at <= n -> {
             val i = at - 1
@@ -107,5 +108,6 @@ fun BallFlow(store: AppStore, nav: Nav) {
             "start with a big, soft ball, close together, then a smaller ball and further apart as it gets easier. Count catches together and try to beat the score.",
             leadIn = "For grown-ups:", tone = FmtCategories.tone("Moving"), icon = FmtIcons.ball,
         )
+        PrintWorksheet(store, "Catch-and-throw")
     }
 }

@@ -152,7 +152,7 @@ fun App(platform: Platform = MemoryPlatform, startAt: String = "", onNavigate: (
                             Area.CalmNow -> CalmNowFlow(store, nav, r.step)
                             Area.WeekSetup -> WeekSetupFlow(store, nav)
                             Area.Week -> WeekFlow(store, nav)
-                            Area.Task -> TaskScreen(nav, r.step)
+                            Area.Task -> TaskScreen(store, nav, r.step)
                             Area.Letters -> LettersFlow(store, nav, r.step)
                             Area.Steps -> StepsFlow(store, nav, r.step)
                             Area.Ball -> BallFlow(store, nav)

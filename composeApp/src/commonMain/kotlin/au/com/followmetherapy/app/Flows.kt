@@ -52,6 +52,7 @@ fun MorningFlow(store: AppStore, nav: Nav, step: Int) {
                 FmtStepList(steps, store.routineDone.toSet(), onToggle = { store.toggleRoutineStep(it, it !in store.routineDone) })
             }
             FmtInfoNote("point to the next step instead of saying it, and let your child do the tapping.", leadIn = "For grown-ups:")
+            PrintWorksheet(store, "Main")
         }
         in 1..total -> {
             val i = step - 1
@@ -109,6 +110,7 @@ fun CalmFlow(store: AppStore, nav: Nav, step: Int) {
             FmtHead("My calm-down plan", swash = "calm-down", tag = "Feelings", tone = FmtCategories.tone("Feelings"))
             FmtKidText("Let's make a plan for when your feelings get big. It takes four short steps.")
             FmtInfoNote("make the plan together when your child is already calm, so it's easy to reach for when feelings run high.", leadIn = "For grown-ups:", tone = FmtCategories.tone("Feelings"))
+            PrintWorksheet(store, "Calm-plan")
         }
         1 -> FmtFlowScaffold(
             start = FmtAction("Back", ButtonKind.Outline) { go(0) },
@@ -203,6 +205,7 @@ fun WeekSetupFlow(store: AppStore, nav: Nav) {
             }
         }
         FmtInfoNote("write in the activities we chose together in our session. One or two is plenty to start with.", leadIn = "For grown-ups:", tone = FmtCategories.tone("Home practice"))
+        PrintWorksheet(store, "Practice-week")
     }
 }
 
@@ -220,5 +223,6 @@ fun WeekFlow(store: AppStore, nav: Nav) {
         }
         FmtGroup("This week I'm proud of…") { WriteField(store.weekProud, store::setProud, placeholder = "I'm proud that I…", minLines = 2) }
         FmtInfoNote("short and often beats long and rare. Bring this to our next session and we'll look at it together.", leadIn = "For grown-ups:", tone = FmtCategories.tone("Home practice"))
+        PrintWorksheet(store, "Practice-week")
     }
 }

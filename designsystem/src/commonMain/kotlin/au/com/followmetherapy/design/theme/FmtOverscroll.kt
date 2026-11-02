@@ -91,6 +91,22 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
         }
     }
 
+    /**
+     * Runs every path once, off screen (this one is never drawn), so the first
+     * real pull or fling at an edge doesn't stall: a web build compiles each
+     * piece of code the first time it runs, and that pause was the bump at the
+     * first edge. Called once, soon after the app opens (FmtTheme).
+     */
+    suspend fun warmUp() {
+        pressed = true
+        applyToScroll(Offset(0f, WARM_PULL), NestedScrollSource.UserInput) { Offset.Zero }
+        applyToScroll(Offset(0f, -WARM_PULL / 2), NestedScrollSource.UserInput) { it }
+        applyToFling(Velocity(0f, WARM_SPEED)) { it }
+        pressed = false
+        applyToFling(Velocity(0f, -WARM_SPEED)) { it }
+        offset = 0f
+    }
+
     private fun springBackSoon() {
         if (!bounceNode.isAttached) { offset = 0f; return }
         settle = bounceNode.coroutineScope.launch {
@@ -113,6 +129,8 @@ internal class FmtBounceOverscroll(private val density: Density) : OverscrollEff
 
     private companion object {
         const val SETTLE_MS = 120L
+        const val WARM_PULL = 40f
+        const val WARM_SPEED = 900f
         val SPRING_BACK = spring<Float>(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)
         val GLIDE = spring<Float>(dampingRatio = 1f, stiffness = Spring.StiffnessLow)
     }
