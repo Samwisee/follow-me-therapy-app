@@ -1,5 +1,13 @@
 package au.com.followmetherapy.design.components
 
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.Canvas
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -164,6 +172,8 @@ enum class ButtonKind { Primary, Teal, Outline, OutlineTeal, Quiet }
  * A pill button, size-button (52dp) tall. Primary is purple (Start a referral),
  * Teal is Ask a question. Lifts on hover, springs on press, focus ring on focus.
  * Pass [shape] to nest it in a set (radius-tile instead of a pill).
+ * [busy]: after a tap that takes a moment (opening the print page), a small
+ * spinner takes the chevron's place and it can't be tapped again.
  */
 @Composable
 fun FmtButton(
@@ -174,6 +184,7 @@ fun FmtButton(
     shape: Shape = CircleShape,
     trailingChevron: Boolean = false,
     enabled: Boolean = true,
+    busy: Boolean = false,
 ) {
     val source = remember { MutableInteractionSource() }
     val hovered by source.collectIsHoveredAsState()
@@ -213,7 +224,8 @@ fun FmtButton(
             .background(bgA, shape)
             .border(FmtBorder.outline, lineA, shape)
             .hoverable(source)
-            .clickable(interactionSource = source, indication = null, role = Role.Button, enabled = enabled, onClick = onClick)
+            .clickable(interactionSource = source, indication = null, role = Role.Button, enabled = enabled && !busy, onClick = onClick)
+            .semantics { if (busy) stateDescription = "opening" }
             .heightIn(min = FmtSize.button)
             .animateContentSize(tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
             .padding(horizontal = FmtSpace.s6, vertical = FmtSpace.s2),
@@ -225,7 +237,21 @@ fun FmtButton(
             transitionSpec = { fadeIn(tween(FmtMotion.durBase, easing = FmtMotion.easeOut)) togetherWith fadeOut(tween(FmtMotion.durFast)) },
             contentAlignment = Alignment.Center,
         ) { t -> FmtText(t, FmtTheme.type.button, color = fgA, align = TextAlign.Center) }
-        if (trailingChevron) FmtIcon(FmtIcons.chevron, fgA, FmtSize.iconSm)
+        if (busy) FmtSpinner(fgA, FmtSize.iconSm)
+        else if (trailingChevron) FmtIcon(FmtIcons.chevron, fgA, FmtSize.iconSm)
+    }
+}
+
+/** A small turning arc (a button that's busy, a page loading); slower with reduced motion. */
+@Composable
+fun FmtSpinner(color: Color, size: Dp, modifier: Modifier = Modifier) {
+    val reduced = LocalFmtReducedMotion.current
+    val turn = rememberInfiniteTransition()
+    val angle by turn.animateFloat(0f, 360f, infiniteRepeatable(tween(if (reduced) FmtMotion.durSlower * 4 else FmtMotion.durSlower, easing = LinearEasing)))
+    Canvas(modifier.size(size).semantics { contentDescription = "Loading" }) {
+        val w = FmtBorder.outline.toPx()
+        drawArc(color.copy(alpha = 0.25f), 0f, 360f, false, topLeft = Offset(w / 2, w / 2), size = Size(this.size.width - w, this.size.height - w), style = Stroke(w))
+        drawArc(color, angle, 100f, false, topLeft = Offset(w / 2, w / 2), size = Size(this.size.width - w, this.size.height - w), style = Stroke(w, cap = StrokeCap.Round))
     }
 }
 

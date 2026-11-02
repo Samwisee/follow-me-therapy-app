@@ -1,5 +1,9 @@
 package au.com.followmetherapy.app
 
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.MutableState
 import au.com.followmetherapy.design.tokens.FmtCategories
 import androidx.compose.ui.text.font.FontWeight
 import au.com.followmetherapy.design.components.FmtText
@@ -43,7 +47,8 @@ private val LETTER_SHEETS = listOf("a-d", "e-h", "i-l", "m-p", "q-t", "u-x", "y-
 @Composable
 fun PrintWorksheet(store: AppStore, sheet: String, optional: Boolean = false, label: String = "Print the worksheet") {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtTheme.metrics.groupGap)) {
-        FmtButton(label, { store.printWorksheets(listOf(sheet)) }, kind = ButtonKind.Outline, trailingChevron = true)
+        val busy = rememberPrintBusy()
+        FmtButton(if (busy.value) "Opening…" else label, { busy.value = true; store.printWorksheets(listOf(sheet)) }, kind = ButtonKind.Outline, trailingChevron = true, busy = busy.value)
         if (optional) FmtText("Optional: you can do it here in the app.", FmtTheme.type.small, Modifier.weight(1f, fill = false))
     }
 }
@@ -75,10 +80,11 @@ fun PrintSheets(store: AppStore, groups: List<Pair<String?, List<Sheet>>>, title
             }
         }
         Row {
+            val busy = rememberPrintBusy()
             FmtButton(
-                if (chosen.isEmpty()) "Print" else "Print ${chosen.size} ${if (chosen.size == 1) "sheet" else "sheets"}",
-                { store.printWorksheets(every.map { it.sheet }.filter { it in chosen }) },
-                kind = ButtonKind.Primary, trailingChevron = true, enabled = chosen.isNotEmpty(),
+                if (busy.value) "Opening…" else if (chosen.isEmpty()) "Print" else "Print ${chosen.size} ${if (chosen.size == 1) "sheet" else "sheets"}",
+                { busy.value = true; store.printWorksheets(every.map { it.sheet }.filter { it in chosen }) },
+                kind = ButtonKind.Primary, trailingChevron = true, enabled = chosen.isNotEmpty(), busy = busy.value,
             )
         }
     }
@@ -105,3 +111,16 @@ val ALL_SHEETS: List<Pair<String, List<Sheet>>> = listOf(
 /** Every writing sheet, for the Letters and shapes page. */
 @Composable
 fun PrintLetterSheets(store: AppStore) = PrintSheets(store, listOf(null to WRITING_SHEETS), title = "Print worksheets")
+
+/**
+ * A print button's "Opening…" (a spinner, not tappable twice) from the tap until
+ * the print page takes over. If that takes longer, it's ready to tap again.
+ */
+@Composable
+fun rememberPrintBusy(): MutableState<Boolean> {
+    val busy = remember { mutableStateOf(false) }
+    LaunchedEffect(busy.value) { if (busy.value) { delay(PRINT_BUSY_MS); busy.value = false } }
+    return busy
+}
+
+private const val PRINT_BUSY_MS = 10_000L

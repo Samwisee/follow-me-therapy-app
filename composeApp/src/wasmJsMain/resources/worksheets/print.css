@@ -1257,6 +1257,12 @@ a.fmt-card:hover { transform: translateY(calc(-1 * var(--space-2))) rotate(1deg)
 .fmt-btn.is-outline.is-teal { color: var(--button-teal-outline-ink); }
 .fmt-btn.is-outline.is-teal:hover { background: var(--button-teal-outline-fill-hover); color: var(--button-teal-outline-ink-hover); border-color: var(--button-teal-line); }
 .fmt-btn:disabled, .fmt-btn[aria-disabled="true"] { background: var(--button-disabled-fill); color: var(--button-disabled-ink); border-color: var(--button-disabled-line); box-shadow: none; cursor: default; transform: none; }
+/* Busy: a spinner in the chevron's place, not tappable again. */
+.fmt-btn[aria-busy="true"] { pointer-events: none; }
+.fmt-btn[aria-busy="true"] svg { display: none; }
+.fmt-btn[aria-busy="true"]::after { content: ""; width: var(--size-icon-sm); height: var(--size-icon-sm); box-sizing: border-box; border: var(--border-outline) solid currentColor; border-right-color: transparent; border-radius: 50%; animation: fmt-spin var(--dur-slower) var(--ease-in-out) infinite; }
+@keyframes fmt-spin { to { transform: rotate(1turn); } }
+@media (prefers-reduced-motion: reduce) { .fmt-btn[aria-busy="true"]::after { animation-duration: calc(var(--dur-slower) * 4); } }
 .fmt-btn.is-quiet { background: var(--button-quiet-fill); border-color: var(--button-quiet-line); color: var(--button-quiet-ink); box-shadow: none; justify-content: space-between; font-family: var(--font-body); font-weight: 700; font-size: var(--text-base); }
 .fmt-btn svg { width: var(--size-icon-sm); height: var(--size-icon-sm); fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 
