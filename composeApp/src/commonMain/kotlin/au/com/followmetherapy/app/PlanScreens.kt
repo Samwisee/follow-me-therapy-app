@@ -169,7 +169,7 @@ private fun ReminderTime(name: String, item: PlanItem, platform: Platform, onTim
 
 /** The plan's activities, each with its days and time, a tap away. */
 @Composable
-private fun PlanRows(p: Plan, store: AppStore, nav: Nav?) {
+internal fun PlanRows(p: Plan, store: AppStore, nav: Nav?) {
     FmtGroup(inset = false) {
         p.routine?.let {
             FmtListRow("My morning routine", Plan.showWhen(it), FmtIcons.sunrise, FmtCategories.tone("Self-care"), onClick = nav?.let { n -> { n.go(Route(Area.Morning)) } })

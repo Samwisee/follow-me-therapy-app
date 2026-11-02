@@ -63,6 +63,8 @@ const val PLANNER_LIST = 0
 const val PLANNER_EDIT = 1
 const val PLANNER_SEND = 2
 const val PLANNER_REQUEST = 3
+const val PLANNER_VIEW = 4
+const val PLANNER_PRINT = 5
 
 /** Simone's services a plan can belong to (as on the website). */
 val SERVICES = listOf("5 Steps Forward", "Steady Steps", "Early Start Denver Model")
@@ -121,6 +123,11 @@ fun PlannerScreen(store: AppStore, nav: Nav, platform: Platform, step: Int, inbo
         PLANNER_EDIT -> PlannerEdit(store, nav, platform, session)
         PLANNER_SEND -> PlannerSend(store, nav, platform, inbox, session)
         PLANNER_REQUEST -> RequestScreen(platform, nav)
+        PLANNER_VIEW -> PlannerView(store, nav, session)
+        PLANNER_PRINT -> FmtFlowScaffold {
+            FmtHead("Print worksheets", swash = "worksheets", tag = "Planner", tone = Tone.Purple)
+            PrintSheets(store, ALL_SHEETS, title = "Choose any, print them together")
+        }
         else -> PlannerList(store, nav, session)
     }
 }
@@ -147,13 +154,12 @@ private fun PlannerList(store: AppStore, nav: Nav, session: PlannerSession) {
             families.forEach { f ->
                 val sent = f.sent?.let { "sent ${Dates.show(it)}" } ?: "not sent yet"
                 FmtListRow(f.name.ifBlank { "No name" }, (f.plan.service?.let { "$it · " } ?: "") + sent, FmtIcons.calendar, Tone.Purple,
-                    onClick = { session.family = f; nav.go(Route(Area.Planner, PLANNER_EDIT)) })
+                    onClick = { session.family = f; nav.go(Route(Area.Planner, PLANNER_VIEW)) })
             }
             FmtInfoNote("families' plans stay on this phone, locked with Face ID. Use a first name or initials, never a full name.", leadIn = "Privacy:", tone = Tone.Teal, icon = FmtIcons.shieldTick)
+            FmtListRow("Print worksheets", "Choose any and print them together", FmtIcons.clipboard, Tone.Purple, onClick = { nav.go(Route(Area.Planner, PLANNER_PRINT)) })
             FmtListRow("Request a change", "Something's wrong, or an idea for the Planner", FmtIcons.heart, Tone.Pink, onClick = { nav.go(Route(Area.Planner, PLANNER_REQUEST)) })
         }
-        // Worksheets for a session: choose any, print them in one go.
-        PrintSheets(store, ALL_SHEETS, title = "Print worksheets")
     }
 }
 
@@ -299,6 +305,41 @@ private fun PlannerEdit(store: AppStore, nav: Nav, platform: Platform, session: 
             }
             message?.let { FmtText(it, FmtTheme.type.small, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, color = FmtColors.ink) }
         }
+    }
+}
+
+// ── A family's plan, as it is (tap Edit to change it) ──
+
+/** The worksheets that go with a plan: its routine, calm-down plan and practice (and the practice week). */
+internal fun sheetsFor(p: Plan): List<String> = buildList {
+    if (p.routine != null) add("Main")
+    if (p.calm) add("Calm-plan")
+    p.practice.forEach { item -> TASK_WORKSHEET[item.name]?.let { if (it !in this) add(it) } }
+    if (p.practice.isNotEmpty()) add("Practice-week")
+}
+
+@Composable
+private fun PlannerView(store: AppStore, nav: Nav, session: PlannerSession) {
+    val f = session.family ?: run { PlannerList(store, nav, session); return }
+    val p = f.plan
+    val sheets = sheetsFor(p)
+    FmtFlowScaffold(
+        start = FmtAction("Edit", ButtonKind.Outline) { nav.go(Route(Area.Planner, PLANNER_EDIT)) },
+        end = FmtAction(if (f.sent == null) "Send" else "Send again", chevron = true) { nav.go(Route(Area.Planner, PLANNER_SEND)) },
+    ) {
+        FmtHead(f.name.ifBlank { "No name" }, swash = null, tag = p.service ?: "Planner", tone = Tone.Purple,
+            note = p.note?.takeIf { it.isNotBlank() }, noteLeadIn = "Note:")
+        FmtGroup {
+            FmtText(f.sent?.let { "Sent ${Dates.show(it)}." } ?: "Not sent yet.", FmtTheme.type.body)
+        }
+        PlanRows(p, store, null)
+        if (sheets.isNotEmpty()) FmtGroup("Their worksheets") {
+            FmtText(sheets.joinToString(", ") { s -> ALL_SHEETS.flatMap { it.second }.firstOrNull { it.sheet == s }?.label ?: s } + ".", FmtTheme.type.small)
+            Row {
+                FmtButton("Print ${if (sheets.size == 1) "their worksheet" else "all ${sheets.size}"}", { store.printWorksheets(sheets) }, kind = ButtonKind.Primary, trailingChevron = true)
+            }
+        }
+        f.progress?.takeIf { it.isNotBlank() }?.let { FmtGroup("Their progress") { FmtText(it, FmtTheme.type.small) } }
     }
 }
 

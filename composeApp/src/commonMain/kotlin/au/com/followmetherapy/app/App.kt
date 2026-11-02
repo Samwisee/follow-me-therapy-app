@@ -187,6 +187,8 @@ private fun barFor(r: Route, store: AppStore, nav: Nav, planner: Boolean): Bar {
         Area.GrownUps -> Bar("For grown-ups", home)
         Area.PlanImport -> Bar("A plan from Simone", home)
         Area.Planner -> when (r.step) {
+            PLANNER_VIEW -> Bar("Family", { nav.go(Route(Area.Planner)) })
+            PLANNER_PRINT -> Bar("Print worksheets", { nav.go(Route(Area.Planner)) })
             PLANNER_EDIT -> Bar("Plan", { nav.go(Route(Area.Planner)) })
             PLANNER_SEND -> Bar("Send the plan", { nav.go(Route(Area.Planner, PLANNER_EDIT)) })
             PLANNER_REQUEST -> Bar("Request a change", { nav.go(Route(Area.Planner)) })
