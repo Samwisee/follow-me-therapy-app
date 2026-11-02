@@ -57,6 +57,20 @@ for (const [name, viewport] of [['phone', { width: 390, height: 844 }], ['laptop
     await page.close();
   }
 }
+// A first visit fetches each .wasm once: the preload in index.html (added at
+// build time, so the download starts with the page) is the fetch the app uses.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  const wasm = {}; const notes = [];
+  page.on('request', r => { const u = new URL(r.url()); if (u.pathname.endsWith('.wasm') && !u.search) wasm[u.pathname] = (wasm[u.pathname] || 0) + 1; });
+  page.on('console', m => /preload/i.test(m.text()) && notes.push(m.text()));
+  const t0 = Date.now();
+  await page.goto('http://localhost:8099/');
+  await opened(page);
+  report.firstVisit = { ms: Date.now() - t0, wasm, preloads: await page.evaluate(() => [...document.querySelectorAll('link[rel=preload][href$=".wasm"]')].length), notes };
+  await ctx.close();
+}
 // Installable and offline: the manifest and service worker are in place, and
 // after one visit the app opens with the network off.
 {
@@ -292,6 +306,8 @@ for (let round = 0; round < 4; round++) {
 const failures = [];
 const check = (ok, what) => { if (!ok) failures.push(what); };
 const KNOWN = /wasmExports. is deprecated/; // a Kotlin/Wasm notice, not an error of ours
+check(report.firstVisit && report.firstVisit.preloads > 0 && Object.keys(report.firstVisit.wasm).length > 0 && Object.values(report.firstVisit.wasm).every(n => n === 1) && !report.firstVisit.notes.length,
+  `a first visit fetches each .wasm once, from its preload (${JSON.stringify(report.firstVisit)})`);
 for (const [k, v] of Object.entries(report)) {
   if (v && Array.isArray(v.errors)) check(v.errors.every(e => KNOWN.test(e)), `${k} opens without errors (${v.errors.filter(e => !KNOWN.test(e)).join(' | ')})`);
 }

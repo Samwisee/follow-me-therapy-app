@@ -42,6 +42,10 @@ jobs:
           B="${GITHUB_SHA::7}"
           sed -i "s/__BUILD__/$B/g" "$D/index.html" "$D/planner.html"
           printf '{"build":"%s"}\n' "$B" > "$D/version.json"
+          # Start the app's .wasm downloads with the page, not after composeApp.js
+          # has loaded and asked for them (CI checks each is still fetched once).
+          links=$(cd "$D" && for w in *.wasm; do printf '<link rel="preload" href="%s" as="fetch" type="application/wasm" crossorigin>' "$w"; done)
+          sed -i "s#</head>#  $links\n</head>#" "$D/index.html" "$D/planner.html"
           # Every file of this build, for the service worker to keep on the phone.
           (cd "$D" && find . -type f ! -name version.json ! -name files.json ! -name sw.js ! -name '*.map' | sed 's#^\./##' | sort | python3 -c 'import json,sys; print(json.dumps({"build": sys.argv[1], "files": [l.strip() for l in sys.stdin if l.strip()]}))' "$B" > files.json)
           echo "::notice::files.json lists $(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["files"]))' "$D/files.json") files, $(du -sh $D | cut -f1)"
