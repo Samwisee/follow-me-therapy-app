@@ -244,7 +244,7 @@ fun FmtButton(
 
 /** A small turning arc (a button that's busy, a page loading); slower with reduced motion. */
 @Composable
-fun FmtSpinner(color: Color, size: Dp, modifier: Modifier = Modifier) {
+private fun FmtSpinner(color: Color, size: Dp, modifier: Modifier = Modifier) {
     val reduced = LocalFmtReducedMotion.current
     val turn = rememberInfiniteTransition()
     val angle by turn.animateFloat(0f, 360f, infiniteRepeatable(tween(if (reduced) FmtMotion.durSlower * 4 else FmtMotion.durSlower, easing = LinearEasing)))
