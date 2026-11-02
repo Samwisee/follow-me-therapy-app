@@ -33,6 +33,19 @@ private fun jsCopyText(text: String, onResult: (Boolean) -> Unit): Unit = js("""
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => onResult(true)).catch(() => onResult(false));
   else onResult(false);
 }""")
+// The device's own clock: a hidden <input type="time"> opened with showPicker (a dial on
+// Android, wheels on iPhone). Each change is passed on; it goes when it loses focus.
+private fun jsPickTime(current: String, onPicked: (String) -> Unit): Unit = js("""{
+  document.querySelectorAll('input[data-fmt-time]').forEach(e => e.remove());
+  const i = document.createElement('input');
+  i.type = 'time'; i.value = current; i.dataset.fmtTime = '1';
+  i.setAttribute('aria-hidden', 'true');
+  i.style.cssText = 'position:fixed;left:50%;top:50%;width:1px;height:1px;opacity:0;border:0;padding:0;';
+  document.body.appendChild(i);
+  i.addEventListener('change', () => { if (i.value) onPicked(i.value); });
+  i.addEventListener('blur', () => setTimeout(() => i.remove(), 400));
+  try { i.showPicker(); } catch (e) { i.focus(); i.click(); }
+}""")
 private fun jsReadClipboard(onText: (String) -> Unit): Unit = js("""{
   if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(t => onText(t || '')).catch(() => onText(''));
   else onText('');
@@ -108,6 +121,7 @@ private object WebPlatform : Platform {
     override fun shareText(title: String, text: String, onResult: (Boolean) -> Unit) = jsShareText(title, text, onResult)
     override fun copyText(text: String, onResult: (Boolean) -> Unit) = jsCopyText(text, onResult)
     override fun readClipboard(onText: (String?) -> Unit) = jsReadClipboard { onText(it.ifEmpty { null }) }
+    override fun pickTime(current: String, onPicked: (String) -> Unit) = jsPickTime(current, onPicked)
     override fun appUrl() = jsAppUrl()
     override fun qrCode(text: String): List<BooleanArray>? = jsQr(text).takeIf { it.isNotEmpty() }?.split(',')?.map { r -> BooleanArray(r.length) { r[it] == '1' } }
     override fun plannerEntry() = jsPlannerEntry()

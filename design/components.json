@@ -344,6 +344,28 @@
     "Tapping a star adds it with the same burst as the WeekCalendar (spring, twist, sparkles); not with reduced motion."
    ]
   },
+  "Field": {
+   "description": "A place to type on screens: a name, a note, a time. Paper uses writing lines (WriteLines) instead.",
+   "tokens": "field",
+   "rules": [
+    "A dashed outline on all sides (field line), corners radius-sm, paper inside, at least the 44px target tall, so it's clear it's somewhere to type.",
+    "While typing, the outline turns solid purple (line-focus).",
+    "A time field shows the time with a clock; tapping it opens the device's own clock to pick a time (the native time picker), never a typed time.",
+    "Times show as people say them: 7:30am, 4pm."
+   ],
+   "website": [],
+   "designSystem": {
+    "css": ".fmt-field",
+    "react": [
+     "Field",
+     "TimeField"
+    ]
+   },
+   "app": [
+    "WriteField",
+    "FmtTimeField"
+   ]
+  },
   "LetterTrace": {
    "description": "A letter (a–z, A–Z) or pre-writing shape to trace, on writing lines: the model with its start dot and numbered strokes, or a dashed copy to trace.",
    "tokens": "letter",
@@ -375,10 +397,10 @@
     "blue"
    ],
    "rules": [
-    "Days Monday to Sunday with their dates; today's column on lilac. Each row's stars sit between dashed rules, the activity's name above, as on the practice week (Tracker), but compact: icon-sized stars, each still a 44px target.",
+    "Days Monday to Sunday with their dates; today's column on lilac. Each activity: its name small above its stars, one dashed rule under the row, as on the practice week (Tracker) but compact: icon-sized stars in rows just taller than a star.",
     "Not planned: a small dot. Planned: a purple outline star. Partly done: a pale sun star. Done: a gold star outlined in sun-deep.",
-    "A row's name can link to its activity (a chevron after the name, a 44px target).",
-    "A row can be tapped to add or take away a star (practice); the others are read-only.",
+    "A row can link to its activity: the whole row (name and stars) is one link, a chevron after the name, read out as the name and each day.",
+    "A row can be tapped to add or take away a star (practice): its stars stay 44px targets. The others are read-only.",
     "Adding a star bursts: the star springs in with a twist and sparkles fly out (purple, teal, sun, pink). Not with reduced motion.",
     "Never colour alone: filled against outline, and each day is read out (Monday, Morning routine: done)."
    ],

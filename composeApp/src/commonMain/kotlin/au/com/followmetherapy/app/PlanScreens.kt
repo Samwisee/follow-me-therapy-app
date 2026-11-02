@@ -1,5 +1,8 @@
 package au.com.followmetherapy.app
 
+import au.com.followmetherapy.design.components.FmtTimeField
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Column
 import au.com.followmetherapy.design.tokens.FmtCategories
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -60,7 +63,13 @@ fun PlanTab(store: AppStore, nav: Nav, platform: Platform, inbox: PlanInbox) {
         PlanCalendar(store, nav)
         FmtPanel("Reminders and progress", Tone.Purple) {
             if (p.hasReminders) {
-                FmtText("Add a reminder to your phone's calendar for each activity, at its time.", FmtTheme.type.small)
+                FmtText("Add a reminder to your phone's calendar for each activity. Change a time to suit your family first: tap it.", FmtTheme.type.small)
+                p.routine?.takeIf { it.time != null && it.days.isNotEmpty() }?.let { r ->
+                    ReminderTime("Morning routine", r, platform) { store.setPlanTime(-1, it) }
+                }
+                p.practice.forEachIndexed { i, a ->
+                    if (a.time != null && a.days.isNotEmpty()) ReminderTime(a.name, a, platform) { store.setPlanTime(i, it) }
+                }
                 Row {
                     FmtButton("Add reminders to my calendar", {
                         platform.saveFile("follow-me-plan.ics", p.calendar(store.today, platform.now(), platform.appUrl()), "text/calendar")
@@ -142,6 +151,19 @@ private fun PlanCalendar(store: AppStore, nav: Nav) {
     FmtGroup {
         if (rows.isEmpty()) FmtText(if (offset > 0) "Nothing planned yet." else "Nothing done yet this week. What you do will show here, day by day.", FmtTheme.type.body)
         else FmtWeekCalendar(rows, dates.map { it.substringAfterLast('-').trimStart('0') }, today = if (offset == 0) store.weekday else null)
+    }
+}
+
+/** One reminder: what and which days, and its time to change (the device's own clock). */
+@Composable
+private fun ReminderTime(name: String, item: PlanItem, platform: Platform, onTime: (String) -> Unit) {
+    val time = item.time ?: return
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            FmtText(name, FmtTheme.type.body.copy(color = FmtColors.ink))
+            FmtText(Plan.showDays(item.days), FmtTheme.type.small)
+        }
+        FmtTimeField(Plan.showTime(time), "$name reminder time", { platform.pickTime(time) { onTime(it) } })
     }
 }
 

@@ -40,6 +40,8 @@ interface Platform {
     fun copyText(text: String, onResult: (Boolean) -> Unit) { onResult(false) }
     /** Reads what was copied (after a tap); null if the browser won't say. */
     fun readClipboard(onText: (String?) -> Unit) { onText(null) }
+    /** Opens the device's own clock at [current] ("07:30"); [onPicked] gets the time chosen, 24-hour. */
+    fun pickTime(current: String, onPicked: (String) -> Unit) {}
     /** A QR code of [text] (rows of dark modules), or null if it can't be made here. */
     fun qrCode(text: String): List<BooleanArray>? = null
     /** Opened from the Planner icon (Simone's planner), not the family app. */
@@ -225,6 +227,15 @@ class AppStore(private val p: Platform) {
     // ── The plan from Simone ──
     var plan by mutableStateOf<Plan?>(null)
         private set
+
+    /** The family's own time for an activity in the plan ([which]: -1 the routine, else a practice), "07:30". */
+    fun setPlanTime(which: Int, time: String) {
+        val p = plan ?: return
+        val next = if (which < 0) p.copy(routine = p.routine?.copy(time = time))
+            else p.copy(practice = p.practice.mapIndexed { i, it -> if (i == which) it.copy(time = time) else it })
+        plan = next
+        put("plan", next.toJson())
+    }
 
     /** Takes a plan from Simone. Its practice activities become this week's practice. */
     fun setPlan(p: Plan) {

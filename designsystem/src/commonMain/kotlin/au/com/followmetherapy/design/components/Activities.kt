@@ -1,6 +1,11 @@
 package au.com.followmetherapy.design.components
 
 import androidx.compose.animation.animateColorAsState
+import au.com.followmetherapy.design.tokens.FmtFieldTokens
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -212,8 +217,11 @@ fun Modifier.dashedBottom(color: Color = FmtColors.rule): Modifier = drawBehind 
 }
 
 /**
- * On paper these are lines to write on; on a screen they're a text field that
- * keeps the dashed rule underneath. [kid] uses the child-sized text.
+ * Somewhere to type on a screen (the shared Field; on paper it's writing
+ * lines): a dashed outline on all sides in the field's line colour, paper
+ * inside, solid purple with the focus ring while typing. [kid] uses the
+ * child-sized text; [underline] false drops the outline (inside a tracker
+ * row, which has its own line).
  */
 @Composable
 fun WriteField(
@@ -225,19 +233,63 @@ fun WriteField(
     underline: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
-    val style = if (kid) FmtTheme.type.kid else FmtTheme.type.body.copy(color = FmtColors.ink)
+    val t = FmtFieldTokens
+    val style = if (kid) FmtTheme.type.kid else FmtTheme.type.body.copy(color = t.ink)
+    val source = remember { MutableInteractionSource() }
+    val focused by source.collectIsFocusedAsState()
+    val shape = RoundedCornerShape(FmtRadius.sm)
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         textStyle = style,
         minLines = minLines,
-        cursorBrush = SolidColor(FmtColors.purple),
-        modifier = modifier.fillMaxWidth().heightIn(min = FmtSize.target).then(if (underline) Modifier.dashedBottom() else Modifier).padding(vertical = FmtSpace.s2),
+        cursorBrush = SolidColor(t.lineFocus),
+        interactionSource = source,
+        modifier = modifier.fillMaxWidth().heightIn(min = FmtSize.target)
+            .then(if (underline) Modifier.fmtFocusRing(focused, shape).fieldOutline(focused) else Modifier)
+            .then(if (underline) Modifier.padding(horizontal = FmtSpace.s3) else Modifier).padding(vertical = FmtSpace.s2),
         decorationBox = { inner ->
             Box(contentAlignment = Alignment.CenterStart) {
-                if (value.isEmpty()) FmtText(placeholder, style.copy(color = FmtColors.inkSoft))
+                if (value.isEmpty()) FmtText(placeholder, style.copy(color = t.placeholder))
                 inner()
             }
         },
     )
+}
+
+/** The field's box: paper inside, a dashed outline (solid purple while [focused]). */
+fun Modifier.fieldOutline(focused: Boolean): Modifier = drawBehind {
+    val t = FmtFieldTokens
+    val w = FmtBorder.outline.toPx()
+    val r = FmtRadius.sm.toPx()
+    drawRoundRect(t.fill, cornerRadius = CornerRadius(r))
+    drawRoundRect(
+        if (focused) t.lineFocus else t.line, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), cornerRadius = CornerRadius(r),
+        style = Stroke(w, pathEffect = if (focused) null else PathEffect.dashPathEffect(floatArrayOf(w * 3, w * 3))),
+    )
+}
+
+/**
+ * A time to pick (the shared Field's time field): the time as people say it
+ * ([text], "7:30am") beside a clock, in the field's dashed box. Tapping calls
+ * [onPick], which opens the device's own clock (the app's platform does that).
+ */
+@Composable
+fun FmtTimeField(text: String, label: String, onPick: () -> Unit, modifier: Modifier = Modifier) {
+    val t = FmtFieldTokens
+    val source = remember { MutableInteractionSource() }
+    val focused by source.collectIsFocusedAsState()
+    val shape = RoundedCornerShape(FmtRadius.sm)
+    Row(
+        modifier.heightIn(min = FmtSize.target)
+            .fmtFocusRing(focused, shape).fieldOutline(false)
+            .clickable(interactionSource = source, indication = null, role = Role.Button, onClickLabel = "Change the time") { onPick() }
+            .semantics { contentDescription = "$label, $text" }
+            .padding(horizontal = FmtSpace.s3, vertical = FmtSpace.s2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2),
+    ) {
+        FmtIcon(FmtIcons.clock, t.icon, FmtSize.icon)
+        FmtText(text, FmtTheme.type.body.copy(color = t.ink))
+    }
 }

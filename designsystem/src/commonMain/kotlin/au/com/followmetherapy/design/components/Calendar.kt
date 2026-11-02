@@ -1,5 +1,7 @@
 package au.com.followmetherapy.design.components
 
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.heightIn
@@ -51,8 +53,9 @@ private val LETTERS = listOf("M", "T", "W", "T", "F", "S", "S")
  * week's stars: the days across with their dates, today's column on lilac;
  * each activity's name, then its row of stars between dashed rules: not
  * planned (a dot), planned (a purple outline), partly done (a pale star),
- * done (gold), the stars icon-sized to keep the week compact (each still a
- * 44dp target). A row's name can link to its activity (a chevron). A row with onToggle is tapped like the practice week, and
+ * done (gold), the stars icon-sized to keep the week compact. Each row's
+ * name sits small above its stars, one dashed rule under the row; a row that
+ * links to its activity is one tap target (a chevron after the name). A row with onToggle (44dp stars) is tapped like the practice week, and
  * adding a star bursts. Each day is read out: "Monday, Morning routine: done".
  */
 @Composable
@@ -73,32 +76,35 @@ fun FmtWeekCalendar(rows: List<CalendarRow>, dates: List<String>, today: Int?, m
             }
         }
         rows.forEach { r ->
-            Column(Modifier.padding(top = FmtSpace.s1)) {
-                val open = r.onOpen
-                if (open == null) FmtText(r.label, FmtTheme.type.body, color = t.ink)
-                else Row(
-                    Modifier.fillMaxWidth().heightIn(min = FmtSize.target).clickable(role = Role.Button, onClickLabel = "Open", onClick = open),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(FmtSpace.s1),
-                ) {
-                    FmtText(r.label, FmtTheme.type.body, Modifier.weight(1f, fill = false), color = t.ink)
-                    FmtIcon(FmtIcons.chevron, t.planned, FmtSize.iconSm)
+            val open = r.onOpen
+            val toggle = r.onToggle
+            // Compact: the name small above its stars, one dashed rule under the row. A row
+            // that links is one tap target, name and stars (each day still read out).
+            val summary = r.days.mapIndexed { i, d -> "${FULL_DAYS[i]}: ${d.words}" }.joinToString(", ")
+            Column(
+                Modifier.fillMaxWidth().dashedBottom(t.rule).padding(top = FmtSpace.s2)
+                    .then(
+                        if (open != null && toggle == null) Modifier.clickable(role = Role.Button, onClickLabel = "Open", onClick = open)
+                            .clearAndSetSemantics { contentDescription = "${r.label}. $summary"; role = Role.Button }
+                        else Modifier,
+                    ),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtSpace.s1)) {
+                    FmtText(r.label, FmtTheme.type.small.copy(fontWeight = FontWeight.SemiBold), Modifier.weight(1f, fill = false), color = t.ink)
+                    if (open != null) FmtIcon(FmtIcons.chevron, t.planned, FmtSize.iconSm)
                 }
-                Row(Modifier.fillMaxWidth().dashedTop(t.rule).dashedBottom(t.rule)) {
+                Row(Modifier.fillMaxWidth()) {
                     r.days.forEachIndexed { i, day ->
                         val words = "${FULL_DAYS[i]}, ${r.label}"
-                        val toggle = r.onToggle
                         Box(
                             Modifier.weight(1f).background(todayBg(i))
-                                .then(if (toggle == null) Modifier.semantics(mergeDescendants = true) { contentDescription = "$words: ${day.words}" } else Modifier),
+                                .then(if (toggle == null) Modifier.heightIn(min = FmtSize.icon + FmtSpace.s2).semantics(mergeDescendants = true) { contentDescription = "$words: ${day.words}" } else Modifier),
                             contentAlignment = Alignment.Center,
                         ) {
                             when {
                                 toggle != null -> FmtStarToggle(day == CalendarDay.Done, words, iconSize = FmtSize.icon) { toggle(i) }
-                                day == CalendarDay.None -> Box(Modifier.size(FmtSize.target), contentAlignment = Alignment.Center) {
-                                    Box(Modifier.size(FmtSpace.s2).background(t.none, CircleShape))
-                                }
-                                else -> FmtStarMark(if (day == CalendarDay.Done) StarState.Done else if (day == CalendarDay.Partial) StarState.Partial else StarState.Planned, 0, iconSize = FmtSize.icon)
+                                day == CalendarDay.None -> Box(Modifier.size(FmtSpace.s2).background(t.none, CircleShape))
+                                else -> FmtStarMark(if (day == CalendarDay.Done) StarState.Done else if (day == CalendarDay.Partial) StarState.Partial else StarState.Planned, 0, Modifier.size(FmtSize.icon + FmtSpace.s2), iconSize = FmtSize.icon)
                             }
                         }
                     }
@@ -108,8 +114,3 @@ fun FmtWeekCalendar(rows: List<CalendarRow>, dates: List<String>, today: Int?, m
     }
 }
 
-/** A dashed rule along the top, like [dashedBottom]. */
-private fun Modifier.dashedTop(color: Color): Modifier = drawBehind {
-    val w = FmtBorder.outline.toPx()
-    drawLine(color, Offset(0f, w / 2), Offset(size.width, w / 2), w, pathEffect = PathEffect.dashPathEffect(floatArrayOf(w * 3, w * 3)))
-}

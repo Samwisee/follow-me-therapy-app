@@ -650,3 +650,19 @@ object FmtLetterTokens {
     val number: Color = FmtColors.ink
 }
 
+/** A place to type on screens (a name, a note, a time): a dashed outline on all sides, so it reads as somewhere to write. On paper it's writing lines instead (WriteLines). */
+object FmtFieldTokens {
+    /** Inside the field, on any ground. */
+    val fill: Color = FmtColors.paper
+    /** The dashed outline (4:1 on paper). */
+    val line: Color = FmtColors.rule
+    /** The outline while typing (solid). */
+    val lineFocus: Color = FmtColors.purple
+    /** What's typed. */
+    val ink: Color = FmtColors.ink
+    /** The hint before anything is typed. */
+    val placeholder: Color = FmtColors.inkSoft
+    /** The clock on a time field. */
+    val icon: Color = FmtColors.purple
+}
+
