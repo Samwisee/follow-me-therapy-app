@@ -163,7 +163,7 @@ private fun ReminderTime(name: String, item: PlanItem, platform: Platform, onTim
             FmtText(name, FmtTheme.type.body.copy(color = FmtColors.ink))
             FmtText(Plan.showDays(item.days), FmtTheme.type.small)
         }
-        FmtTimeField(Plan.showTime(time), "$name reminder time", { platform.pickTime(time) { onTime(it) } })
+        FmtTimeField(time, "$name reminder time", onTime)
     }
 }
 

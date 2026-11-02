@@ -1,5 +1,12 @@
 package au.com.followmetherapy.design.components
 
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.layout.Arrangement
@@ -38,5 +45,33 @@ fun FmtLockup(modifier: Modifier = Modifier, compact: Boolean = false) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalAlignment = Alignment.CenterVertically) {
         FmtMark(Dp(style.fontSize.value * 1.45f))
         BasicText("Follow Me Therapy", style = style, maxLines = 1, softWrap = false)
+    }
+}
+
+/**
+ * The lockup with its descriptor (the website's lockup-horizontal): the mark,
+ * then Follow Me Therapy over Paediatric Occupational Therapy. The two lines are
+ * one width (the descriptor's size is fitted to the name) and together the
+ * mark's height, as the Design System's Logo rule says.
+ */
+@Composable
+fun FmtLockupFull(modifier: Modifier = Modifier, label: String = "Follow Me Therapy, Paediatric Occupational Therapy") {
+    val name = FmtTheme.type.brand
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val descriptorBase = FmtTheme.type.small.copy(fontWeight = FontWeight.SemiBold, color = FmtColors.brandInk)
+    val sizes = remember(name, descriptorBase) {
+        val n = measurer.measure("Follow Me Therapy", name, maxLines = 1)
+        val d = measurer.measure("Paediatric Occupational Therapy", descriptorBase, maxLines = 1)
+        val fitted = descriptorBase.copy(fontSize = descriptorBase.fontSize * (n.size.width.toFloat() / d.size.width), lineHeight = descriptorBase.fontSize * (n.size.width.toFloat() / d.size.width))
+        val d2 = measurer.measure("Paediatric Occupational Therapy", fitted, maxLines = 1)
+        fitted to with(density) { (n.size.height + d2.size.height).toDp() }
+    }
+    Row(modifier.semantics(mergeDescendants = true) { contentDescription = label }, horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalAlignment = Alignment.CenterVertically) {
+        FmtMark(sizes.second)
+        Column {
+            BasicText("Follow Me Therapy", style = name, maxLines = 1, softWrap = false)
+            BasicText("Paediatric Occupational Therapy", style = sizes.first, maxLines = 1, softWrap = false)
+        }
     }
 }

@@ -349,8 +349,9 @@
    "tokens": "field",
    "rules": [
     "A dashed outline on all sides (field line), corners radius-sm, paper inside, at least the 44px target tall, so it's clear it's somewhere to type.",
-    "While typing, the outline turns solid purple (line-focus).",
-    "A time field shows the time with a clock; tapping it opens the device's own clock to pick a time (the native time picker), never a typed time.",
+    "While typing, the outline turns solid purple (line-focus): that's the focus mark, no extra ring.",
+    "The hint sits top left, in ink-hint (lighter than what's typed, still 7:1).",
+    "A time field shows the time with a clock; tapping it opens our clock (Picker), a date field our calendar. Never typed, never the device's own.",
     "Times show as people say them: 7:30am, 4pm."
    ],
    "website": [],
@@ -364,6 +365,28 @@
    "app": [
     "WriteField",
     "FmtTimeField"
+   ]
+  },
+  "Picker": {
+   "description": "Our clock and calendar, on a card: picking a time (TimePicker) or a date (DatePicker).",
+   "tokens": "picker",
+   "rules": [
+    "A paper card with a purple-line outline, the title at the top, Cancel and Done at the foot.",
+    "Clock: the time large at the top (tap the hour or the minutes to change that), am and pm as two chips, and a round dial (purple-tint) with the 12 hours, then the minutes in fives, each a 44px target; the chosen one is a purple circle joined to the centre by the hand.",
+    "Calendar: the month and year with ‹ › to move, Monday first, each day a 44px target; today has a purple ring, the chosen day is a purple circle with paper words.",
+    "Every number and day is a button read out in full (7 o'clock, Tuesday 4 November); nothing relies on colour alone."
+   ],
+   "website": [],
+   "designSystem": {
+    "css": ".fmt-picker",
+    "react": [
+     "TimePicker",
+     "DatePicker"
+    ]
+   },
+   "app": [
+    "FmtTimePicker",
+    "FmtDatePicker"
    ]
   },
   "LetterTrace": {
@@ -424,7 +447,8 @@
    },
    "app": [
     "FmtMark",
-    "FmtLockup"
+    "FmtLockup",
+    "FmtLockupFull"
    ],
    "rules": [
     "The horizontal lockup: Follow Me Therapy and Paediatric Occupational Therapy are one width, and together exactly the mark's height (the name's cap top with the mark's top, the descriptor's baseline with its foot). Built by tools/make_lockups.py; worksheet footers use it."

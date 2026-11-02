@@ -40,8 +40,6 @@ interface Platform {
     fun copyText(text: String, onResult: (Boolean) -> Unit) { onResult(false) }
     /** Reads what was copied (after a tap); null if the browser won't say. */
     fun readClipboard(onText: (String?) -> Unit) { onText(null) }
-    /** Opens the device's own clock at [current] ("07:30"); [onPicked] gets the time chosen, 24-hour. */
-    fun pickTime(current: String, onPicked: (String) -> Unit) {}
     /** Goes to [url] in this window (the app's own pages, like printing). */
     fun goTo(url: String) {}
     /** A QR code of [text] (rows of dark modules), or null if it can't be made here. */

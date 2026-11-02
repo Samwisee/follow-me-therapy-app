@@ -26,6 +26,7 @@
   --pink-line: #f6b6cb;
   --ink: #2b2540;
   --ink-soft: #504b5e;
+  --ink-hint: #5a5568;
   --deep: #2e2363;
   --paper: #ffffff;
   --live: #2fbf71;
@@ -491,8 +492,16 @@
   --field-line: var(--rule);
   --field-line-focus: var(--purple);
   --field-ink: var(--ink);
-  --field-placeholder: var(--ink-soft);
+  --field-placeholder: var(--ink-hint);
   --field-icon: var(--purple);
+  --picker-fill: var(--paper);
+  --picker-line: var(--purple-line);
+  --picker-ink: var(--ink);
+  --picker-soft: var(--ink-soft);
+  --picker-dial: var(--purple-tint);
+  --picker-selected: var(--purple);
+  --picker-on-selected: var(--paper);
+  --picker-today: var(--purple);
 }
 
 /* A4 handouts: semantic tokens in print units. */
@@ -564,6 +573,7 @@
   --pink-line: #f6b6cb;
   --ink: #2b2540;
   --ink-soft: #504b5e;
+  --ink-hint: #5a5568;
   --deep: #2e2363;
   --paper: #ffffff;
   --live: #2fbf71;
@@ -1029,8 +1039,16 @@
   --field-line: var(--rule);
   --field-line-focus: var(--purple);
   --field-ink: var(--ink);
-  --field-placeholder: var(--ink-soft);
+  --field-placeholder: var(--ink-hint);
   --field-icon: var(--purple);
+  --picker-fill: var(--paper);
+  --picker-line: var(--purple-line);
+  --picker-ink: var(--ink);
+  --picker-soft: var(--ink-soft);
+  --picker-dial: var(--purple-tint);
+  --picker-selected: var(--purple);
+  --picker-on-selected: var(--paper);
+  --picker-today: var(--purple);
 }
 
 /* A4 handouts: semantic tokens in print units. */
@@ -1382,17 +1400,37 @@ a.fmt-card:hover { transform: translateY(calc(-1 * var(--space-2))) rotate(1deg)
 .fmt-kid { font-family: var(--font-body); font-weight: 600; font-size: var(--text-kid); line-height: var(--leading-normal); color: var(--ink); }
 
 /* Lines to write on: dark enough for a mono printer. */
+/* Picker: our clock and calendar, on a card (never the device's own). */
+.fmt-picker { box-sizing: border-box; display: grid; gap: var(--group-gap); width: min(100%, calc(var(--size-target) * 7 + var(--card-pad) * 2 + var(--border-outline) * 2)); padding: var(--card-pad); border: var(--border-outline) solid var(--picker-line); border-radius: var(--radius-card); background: var(--picker-fill); box-shadow: var(--shadow-overlay); color: var(--picker-ink); font-family: var(--font-body); }
+.fmt-picker h2 { margin: 0; font-family: var(--font-display); font-size: var(--text-md); font-weight: 600; }
+.fmt-picker button:not(.fmt-btn, .fmt-chip, .fmt-iconbtn) { font: inherit; color: inherit; cursor: pointer; }
+.fmt-picker-time { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); font-family: var(--font-display); font-size: var(--text-3xl); font-weight: 600; }
+.fmt-picker-time > button { min-width: var(--size-target); min-height: var(--size-target); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-sm); background: transparent; font-family: var(--font-display); }
+.fmt-picker-time > button[aria-pressed="true"] { background: var(--picker-dial); }
+.fmt-picker-time .fmt-chips { margin-left: auto; font-size: var(--text-base); }
+.fmt-picker-dial { position: relative; width: calc(var(--size-target) * 6); max-width: 100%; aspect-ratio: 1; margin-inline: auto; border-radius: 50%; background: var(--picker-dial); }
+.fmt-picker-dial button { position: absolute; width: var(--size-target); height: var(--size-target); margin: calc(var(--size-target) / -2) 0 0 calc(var(--size-target) / -2); border: 0; border-radius: 50%; background: transparent; font-weight: 600; }
+.fmt-picker-dial button[aria-pressed="true"] { background: var(--picker-selected); color: var(--picker-on-selected); }
+.fmt-picker-hand { position: absolute; left: 50%; top: 50%; width: 40%; height: var(--border-outline); background: var(--picker-selected); transform-origin: 0 50%; }
+.fmt-picker-hand::before { content: ""; position: absolute; left: calc(var(--space-1) * -1); top: calc(var(--space-1) * -1 + var(--border-outline) / 2); width: var(--space-2); height: var(--space-2); border-radius: 50%; background: var(--picker-selected); }
+.fmt-picker-month { display: flex; align-items: center; justify-content: space-between; font-size: var(--text-md); }
+.fmt-picker-days { display: grid; grid-template-columns: repeat(7, var(--size-target)); justify-content: center; }
+.fmt-picker-days > span { display: grid; place-items: center; height: var(--size-target); font-size: var(--text-sm); font-weight: 600; color: var(--picker-soft); }
+.fmt-picker-days button { width: var(--size-target); height: var(--size-target); border: var(--border-outline) solid transparent; border-radius: 50%; background: transparent; }
+.fmt-picker-days button.is-today { border-color: var(--picker-today); }
+.fmt-picker-days button[aria-pressed="true"] { background: var(--picker-selected); color: var(--picker-on-selected); }
+.fmt-picker button:focus-visible { outline: var(--border-focus) solid var(--focus); outline-offset: var(--space-hair); }
+.fmt-picker-foot { display: flex; justify-content: flex-end; gap: var(--space-3); }
+
 /* Field: somewhere to type on screens (paper uses .fmt-write lines). A dashed
    outline on all sides; solid purple while typing. A time field shows the time
    with a clock and opens the device's own clock (<input type="time">). */
 .fmt-field { box-sizing: border-box; display: flex; align-items: center; gap: var(--space-2); min-height: var(--size-target); padding: var(--space-2) var(--space-3); border: var(--border-outline) dashed var(--field-line); border-radius: var(--radius-sm); background: var(--field-fill); color: var(--field-ink); font-family: var(--font-body); font-size: var(--text-base); cursor: text; }
-.fmt-field:focus-within { border-style: solid; border-color: var(--field-line-focus); outline: var(--border-focus) solid var(--focus); outline-offset: var(--border-focus); }
+.fmt-field:focus-within, .fmt-field:focus-visible { border-style: solid; border-color: var(--field-line-focus); outline: none; }
 .fmt-field :is(input, textarea) { flex: 1 1 auto; min-width: 0; margin: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; outline: none; resize: vertical; }
 .fmt-field ::placeholder { color: var(--field-placeholder); opacity: 1; }
-.fmt-field.is-time { position: relative; display: inline-flex; align-self: flex-start; cursor: pointer; }
-.fmt-field.is-time input { flex: none; cursor: pointer; }
-/* The browser's own clock button covers the whole field (our clock shows instead). */
-.fmt-field.is-time input::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: auto; height: auto; margin: 0; opacity: 0; cursor: pointer; }
+.fmt-field:has(textarea) { align-items: flex-start; }
+.fmt-field.is-time { display: inline-flex; align-self: flex-start; font-weight: 600; cursor: pointer; }
 .fmt-field svg { flex: none; width: var(--size-icon); height: var(--size-icon); fill: none; stroke: var(--field-icon); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .fmt-write { display: grid; }
 .fmt-write i { display: block; height: var(--rule-write); border-bottom: var(--border-outline) dashed var(--rule); }

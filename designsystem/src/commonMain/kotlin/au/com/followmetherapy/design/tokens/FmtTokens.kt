@@ -48,6 +48,8 @@ object FmtColors {
     val ink = Color(0xFF2B2540)
     /** Body copy on paper, purple-tint, teal-tint and butter (6.0:1 or better). AAA: darkened from #5b556b in Oct 2026 so every text use is 7:1 or better. */
     val inkSoft = Color(0xFF504B5E)
+    /** Hint (placeholder) text in a field: the lightest grey that still keeps AAA 7:1 on paper (7.2:1). */
+    val inkHint = Color(0xFF5A5568)
     /** Deep-purple footer and dark bands. Paper or purple-tint text on it. */
     val deep = Color(0xFF2E2363)
     /** Page and card background. */
@@ -656,13 +658,33 @@ object FmtFieldTokens {
     val fill: Color = FmtColors.paper
     /** The dashed outline (4:1 on paper). */
     val line: Color = FmtColors.rule
-    /** The outline while typing (solid). */
+    /** The outline while typing: solid purple (the only focus mark: no ring). */
     val lineFocus: Color = FmtColors.purple
     /** What's typed. */
     val ink: Color = FmtColors.ink
-    /** The hint before anything is typed. */
-    val placeholder: Color = FmtColors.inkSoft
+    /** The hint before anything is typed, top left, lighter than what's typed (7.2:1). */
+    val placeholder: Color = FmtColors.inkHint
     /** The clock on a time field. */
     val icon: Color = FmtColors.purple
+}
+
+/** The clock and the calendar: picking a time or a date on a card in our style (never the device's own). */
+object FmtPickerTokens {
+    /** The card. */
+    val fill: Color = FmtColors.paper
+    /** The card's outline. */
+    val line: Color = FmtColors.purpleLine
+    /** Numbers, days and the title. */
+    val ink: Color = FmtColors.ink
+    /** Weekday letters, the other month's days. */
+    val soft: Color = FmtColors.inkSoft
+    /** The clock face. */
+    val dial: Color = FmtColors.purpleTint
+    /** The chosen number or day, and the clock's hand. */
+    val selected: Color = FmtColors.purple
+    /** The chosen number or day's words (7.4:1). */
+    val onSelected: Color = FmtColors.paper
+    /** Today's ring on the calendar. */
+    val today: Color = FmtColors.purple
 }
 

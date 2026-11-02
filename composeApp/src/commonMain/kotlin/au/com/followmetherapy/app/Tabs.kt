@@ -1,5 +1,7 @@
 package au.com.followmetherapy.app
 
+import androidx.compose.ui.text.style.TextAlign
+import au.com.followmetherapy.design.components.FmtLockupFull
 import au.com.followmetherapy.design.tokens.FmtCategories
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -118,8 +120,11 @@ fun TodayTab(store: AppStore, nav: Nav) {
         FmtGroup("Did you practise today?") {
             practiceToday.forEach { (r, name) ->
                 val on = (r to store.weekday) in store.weekDone
+                // A link to the activity (how to do it), with today's star inside to tap.
+                val t = taskIndex(name)
                 FmtListRow(
                     title = name, subtitle = if (on) "Done today" else "Tap the star when it's done", tone = Kind.HomePractice.tone,
+                    onClick = t?.let { { nav.go(Route(Area.Task, it)) } },
                     trailing = { StarButton(on, "$name, ${days[store.weekday]}") { store.togglePractice(r, store.weekday) } },
                 )
             }
@@ -321,17 +326,10 @@ private fun ColumnScope.GrownUpsContent(store: AppStore, nav: Nav, platform: Pla
                 )
             }
         }
-        FmtListRow("The design system", "Colours, type and parts this app is built from", FmtIcons.blocks, Tone.Purple, onClick = { nav.go(Route(Area.DesignSystem)) })
-        // For Simone (and Sam): her Planner, on a phone or a computer. It opens only after setup and Face ID / Touch ID.
-        FmtListRow("For Simone: the Planner", "Families' plans, templates and requests. Opens with Face ID or Touch ID.", FmtIcons.calendar, Tone.Purple,
-            onClick = { platform.openPlanner() })
     }
-    // The sign-off, on the same text edge as everything above.
-    FmtGroup {
-        Row(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalAlignment = Alignment.CenterVertically) {
-            FmtIcon(FmtIcons.heart, FmtColors.purple, FmtSize.iconSm)
-            FmtText("Simone · Paediatric OT · followmetherapy.com.au", FmtTheme.type.small)
-        }
-        FmtText("Version ${store.build}", FmtTheme.type.small.copy(fontSize = FmtTheme.metrics.textXs))
+    // The sign-off: the logo with its descriptor, and the version, centred.
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(FmtTheme.metrics.groupGap)) {
+        FmtLockupFull()
+        FmtText("Version ${store.build}", FmtTheme.type.small.copy(fontSize = FmtTheme.metrics.textXs), align = TextAlign.Center)
     }
 }

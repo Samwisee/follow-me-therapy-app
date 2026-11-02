@@ -250,7 +250,7 @@ private fun PlannerEdit(store: AppStore, nav: Nav, platform: Platform, session: 
                 Row { FmtToggleChip("In the plan", routineOn, { routineOn = it }) }
                 if (routineOn) {
                     DayPicker(routineDays, Tone.Purple)
-                    FmtTimeField(routineTime, "Morning routine reminder time", { platform.pickTime(Plan.normaliseTime(routineTime) ?: "07:30") { routineTime = Plan.showTime(it) } })
+                    FmtTimeField(Plan.normaliseTime(routineTime) ?: "07:30", "Morning routine reminder time", { routineTime = Plan.showTime(it) })
                 }
             }
             FmtPanel("Calm-down plan", Tone.Teal) {
@@ -277,7 +277,7 @@ private fun PlannerEdit(store: AppStore, nav: Nav, platform: Platform, session: 
                 practice.forEach { d ->
                     FmtText(d.name, FmtTheme.type.groupTitle)
                     DayPicker(d.days, Tone.Sun)
-                    FmtTimeField(d.time, "${d.name} reminder time", { platform.pickTime(Plan.normaliseTime(d.time) ?: "16:00") { d.time = Plan.showTime(it) } })
+                    FmtTimeField(Plan.normaliseTime(d.time) ?: "16:00", "${d.name} reminder time", { d.time = Plan.showTime(it) })
                 }
             }
             FmtPanel("Their progress", Tone.Pink) {

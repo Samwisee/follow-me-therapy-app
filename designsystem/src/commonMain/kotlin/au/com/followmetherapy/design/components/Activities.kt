@@ -1,5 +1,8 @@
 package au.com.followmetherapy.design.components
 
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.animation.animateColorAsState
 import au.com.followmetherapy.design.tokens.FmtFieldTokens
 import androidx.compose.foundation.clickable
@@ -219,7 +222,7 @@ fun Modifier.dashedBottom(color: Color = FmtColors.rule): Modifier = drawBehind 
 /**
  * Somewhere to type on a screen (the shared Field; on paper it's writing
  * lines): a dashed outline on all sides in the field's line colour, paper
- * inside, solid purple with the focus ring while typing. [kid] uses the
+ * inside, solid purple while typing (that's the focus mark; no ring). [kid] uses the
  * child-sized text; [underline] false drops the outline (inside a tracker
  * row, which has its own line).
  */
@@ -237,7 +240,6 @@ fun WriteField(
     val style = if (kid) FmtTheme.type.kid else FmtTheme.type.body.copy(color = t.ink)
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(FmtRadius.sm)
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -246,10 +248,11 @@ fun WriteField(
         cursorBrush = SolidColor(t.lineFocus),
         interactionSource = source,
         modifier = modifier.fillMaxWidth().heightIn(min = FmtSize.target)
-            .then(if (underline) Modifier.fmtFocusRing(focused, shape).fieldOutline(focused) else Modifier)
+            .then(if (underline) Modifier.fieldOutline(focused) else Modifier)
             .then(if (underline) Modifier.padding(horizontal = FmtSpace.s3) else Modifier).padding(vertical = FmtSpace.s2),
         decorationBox = { inner ->
-            Box(contentAlignment = Alignment.CenterStart) {
+            // The hint sits top left (in a taller field too), lighter than what's typed.
+            Box(contentAlignment = Alignment.TopStart) {
                 if (value.isEmpty()) FmtText(placeholder, style.copy(color = t.placeholder))
                 inner()
             }
@@ -271,25 +274,26 @@ fun Modifier.fieldOutline(focused: Boolean): Modifier = drawBehind {
 
 /**
  * A time to pick (the shared Field's time field): the time as people say it
- * ([text], "7:30am") beside a clock, in the field's dashed box. Tapping calls
- * [onPick], which opens the device's own clock (the app's platform does that).
+ * ("7:30am") beside a clock, in the field's dashed box. Tapping opens our
+ * clock (FmtTimePicker); [time] and [onChange] are 24-hour, "07:30".
  */
 @Composable
-fun FmtTimeField(text: String, label: String, onPick: () -> Unit, modifier: Modifier = Modifier) {
+fun FmtTimeField(time: String, label: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
     val t = FmtFieldTokens
+    var open by remember { mutableStateOf(false) }
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(FmtRadius.sm)
+    val text = fmtShowTime(time)
     Row(
-        modifier.heightIn(min = FmtSize.target)
-            .fmtFocusRing(focused, shape).fieldOutline(false)
-            .clickable(interactionSource = source, indication = null, role = Role.Button, onClickLabel = "Change the time") { onPick() }
+        modifier.heightIn(min = FmtSize.target).fieldOutline(focused || open)
+            .clickable(interactionSource = source, indication = null, role = Role.Button, onClickLabel = "Change the time") { open = true }
             .semantics { contentDescription = "$label, $text" }
             .padding(horizontal = FmtSpace.s3, vertical = FmtSpace.s2),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2),
     ) {
         FmtIcon(FmtIcons.clock, t.icon, FmtSize.icon)
-        FmtText(text, FmtTheme.type.body.copy(color = t.ink))
+        FmtText(text, FmtTheme.type.body.copy(color = t.ink, fontWeight = FontWeight.SemiBold))
     }
+    if (open) FmtTimePicker(time, label, { onChange(it); open = false }, { open = false })
 }
