@@ -34,6 +34,7 @@ private fun jsCopyText(text: String, onResult: (Boolean) -> Unit): Unit = js("""
   else onResult(false);
 }""")
 private fun jsGoTo(url: String): Unit = js("{ window.location.href = url; }")
+private fun jsOnReturn(then: () -> Unit): Unit = js("{ window.addEventListener('pageshow', e => { if (e.persisted) then(); }); }")
 private fun jsReadClipboard(onText: (String) -> Unit): Unit = js("""{
   if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(t => onText(t || '')).catch(() => onText(''));
   else onText('');
@@ -110,6 +111,7 @@ private object WebPlatform : Platform {
     override fun copyText(text: String, onResult: (Boolean) -> Unit) = jsCopyText(text, onResult)
     override fun readClipboard(onText: (String?) -> Unit) = jsReadClipboard { onText(it.ifEmpty { null }) }
     override fun goTo(url: String) = jsGoTo(url)
+    override fun onReturn(then: () -> Unit) = jsOnReturn(then)
     override fun appUrl() = jsAppUrl()
     override fun qrCode(text: String): List<BooleanArray>? = jsQr(text).takeIf { it.isNotEmpty() }?.split(',')?.map { r -> BooleanArray(r.length) { r[it] == '1' } }
     override fun plannerEntry() = jsPlannerEntry()

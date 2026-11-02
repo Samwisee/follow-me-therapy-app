@@ -42,6 +42,8 @@ interface Platform {
     fun readClipboard(onText: (String?) -> Unit) { onText(null) }
     /** Goes to [url] in this window (the app's own pages, like printing). */
     fun goTo(url: String) {}
+    /** Calls [then] whenever this page is shown again from the browser's back/forward memory (Back from printing). */
+    fun onReturn(then: () -> Unit) {}
     /** A QR code of [text] (rows of dark modules), or null if it can't be made here. */
     fun qrCode(text: String): List<BooleanArray>? = null
     /** Opened from the Planner icon (Simone's planner), not the family app. */
@@ -112,6 +114,11 @@ private fun ints(s: String?): List<Int> = s?.split(",")?.mapNotNull { it.toIntOr
  */
 class AppStore(private val p: Platform) {
     /** The print page with these worksheets (resources/worksheets/print.html), in this window: one print job. */
+    /** Goes up each time the person comes Back to this page (from printing), so busy buttons reset. */
+    var returns by mutableStateOf(0)
+        private set
+    init { p.onReturn { returns++ } }
+
     fun printWorksheets(sheets: List<String>) { if (sheets.isNotEmpty()) p.goTo("worksheets/print.html?s=" + sheets.joinToString(",") + "&v=" + p.build()) }
 
     val today: String = p.today()

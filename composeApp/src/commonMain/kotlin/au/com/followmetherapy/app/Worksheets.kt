@@ -1,9 +1,15 @@
 package au.com.followmetherapy.app
 
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.MutableState
 import au.com.followmetherapy.design.tokens.FmtCategories
 import androidx.compose.ui.text.font.FontWeight
 import au.com.followmetherapy.design.components.FmtText
@@ -47,8 +53,8 @@ private val LETTER_SHEETS = listOf("a-d", "e-h", "i-l", "m-p", "q-t", "u-x", "y-
 @Composable
 fun PrintWorksheet(store: AppStore, sheet: String, optional: Boolean = false, label: String = "Print the worksheet") {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(FmtTheme.metrics.groupGap)) {
-        val busy = rememberPrintBusy()
-        FmtButton(if (busy.value) "Opening…" else label, { busy.value = true; store.printWorksheets(listOf(sheet)) }, kind = ButtonKind.Outline, trailingChevron = true, busy = busy.value)
+        val busy = rememberPrintBusy(store)
+        FmtButton(if (busy.on) "Opening…" else label, { busy.print(listOf(sheet)) }, kind = ButtonKind.Outline, trailingChevron = true, busy = busy.on)
         if (optional) FmtText("Optional: you can do it here in the app.", FmtTheme.type.small, Modifier.weight(1f, fill = false))
     }
 }
@@ -80,11 +86,11 @@ fun PrintSheets(store: AppStore, groups: List<Pair<String?, List<Sheet>>>, title
             }
         }
         Row {
-            val busy = rememberPrintBusy()
+            val busy = rememberPrintBusy(store)
             FmtButton(
-                if (busy.value) "Opening…" else if (chosen.isEmpty()) "Print" else "Print ${chosen.size} ${if (chosen.size == 1) "sheet" else "sheets"}",
-                { busy.value = true; store.printWorksheets(every.map { it.sheet }.filter { it in chosen }) },
-                kind = ButtonKind.Primary, trailingChevron = true, enabled = chosen.isNotEmpty(), busy = busy.value,
+                if (busy.on) "Opening…" else if (chosen.isEmpty()) "Print" else "Print ${chosen.size} ${if (chosen.size == 1) "sheet" else "sheets"}",
+                { busy.print(every.map { it.sheet }.filter { it in chosen }) },
+                kind = ButtonKind.Primary, trailingChevron = true, enabled = chosen.isNotEmpty(), busy = busy.on,
             )
         }
     }
@@ -114,12 +120,34 @@ fun PrintLetterSheets(store: AppStore) = PrintSheets(store, listOf(null to WRITI
 
 /**
  * A print button's "Opening…" (a spinner, not tappable twice) from the tap until
- * the print page takes over. If that takes longer, it's ready to tap again.
+ * the print page takes over. The page only changes once "Opening…" is on screen
+ * (going straight away left the old frame showing, so it only appeared on the way
+ * Back). Coming Back resets it; if the print page never opens, it's ready again.
  */
+class PrintBusy internal constructor(private val store: AppStore, private val scope: CoroutineScope) {
+    var on by mutableStateOf(false)
+        private set
+    private var job: Job? = null
+    fun print(sheets: List<String>) {
+        if (on || sheets.isEmpty()) return
+        on = true
+        job = scope.launch {
+            // Two frames: the first draws "Opening…", the second makes sure it's been shown.
+            withFrameNanos { }
+            withFrameNanos { }
+            store.printWorksheets(sheets)
+            delay(PRINT_BUSY_MS)
+            on = false
+        }
+    }
+    internal fun reset() { job?.cancel(); on = false }
+}
+
 @Composable
-fun rememberPrintBusy(): MutableState<Boolean> {
-    val busy = remember { mutableStateOf(false) }
-    LaunchedEffect(busy.value) { if (busy.value) { delay(PRINT_BUSY_MS); busy.value = false } }
+fun rememberPrintBusy(store: AppStore): PrintBusy {
+    val scope = rememberCoroutineScope()
+    val busy = remember(store) { PrintBusy(store, scope) }
+    LaunchedEffect(store.returns) { busy.reset() }
     return busy
 }
 

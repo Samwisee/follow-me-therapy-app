@@ -336,8 +336,8 @@ private fun PlannerView(store: AppStore, nav: Nav, session: PlannerSession) {
         if (sheets.isNotEmpty()) FmtGroup("Their worksheets") {
             FmtText(sheets.joinToString(", ") { s -> ALL_SHEETS.flatMap { it.second }.firstOrNull { it.sheet == s }?.label ?: s } + ".", FmtTheme.type.small)
             Row {
-                val busy = rememberPrintBusy()
-                FmtButton(if (busy.value) "Opening…" else "Print ${if (sheets.size == 1) "their worksheet" else "all ${sheets.size}"}", { busy.value = true; store.printWorksheets(sheets) }, kind = ButtonKind.Primary, trailingChevron = true, busy = busy.value)
+                val busy = rememberPrintBusy(store)
+                FmtButton(if (busy.on) "Opening…" else "Print ${if (sheets.size == 1) "their worksheet" else "all ${sheets.size}"}", { busy.print(sheets) }, kind = ButtonKind.Primary, trailingChevron = true, busy = busy.on)
             }
         }
         f.progress?.takeIf { it.isNotBlank() }?.let { FmtGroup("Their progress") { FmtText(it, FmtTheme.type.small) } }
