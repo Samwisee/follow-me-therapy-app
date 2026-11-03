@@ -1,5 +1,12 @@
 package au.com.followmetherapy.app
 
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.draw.alpha
+import androidx.compose.foundation.layout.Box
 import au.com.followmetherapy.design.tokens.FmtCategories
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -79,9 +86,14 @@ fun LettersFlow(store: AppStore, nav: Nav, step: Int) {
     FmtFlowScaffold(
         start = FmtAction("All letters", ButtonKind.Outline) { go(0) },
         end = FmtAction(if (nextStep(step) == 0) "Finish" else "Next", chevron = true, kind = if (done) ButtonKind.Teal else ButtonKind.Primary) { go(nextStep(step)) },
-        centre = true,
     ) {
-        FmtKidText(if (done) "You did it!" else "Start at the gold dot and follow the line.")
+        // The longer words hold the space, so the letter never moves when they change.
+        Box {
+            FmtKidText(TRACE_HINT, Modifier.alpha(0f).clearAndSetSemantics { })
+            FmtKidText(if (done) "You did it!" else TRACE_HINT, Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        }
         FmtLetterTrace(name, onDone = { done = true; store.markLetterTraced(name) })
     }
 }
+
+private const val TRACE_HINT = "Start at the gold dot and follow the arrow."

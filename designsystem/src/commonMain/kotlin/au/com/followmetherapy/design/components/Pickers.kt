@@ -48,6 +48,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.layout.height
 import au.com.followmetherapy.design.icons.FmtIcon
 import au.com.followmetherapy.design.icons.FmtIcons
 import au.com.followmetherapy.design.theme.FmtTheme
@@ -75,9 +77,10 @@ private fun PickerCard(title: String, onCancel: () -> Unit, onDone: () -> Unit, 
     val t = FmtPickerTokens
     val m = FmtTheme.metrics
     val shape = RoundedCornerShape(FmtRadius.card)
-    Dialog(onDismissRequest = onCancel) {
+    // Not the platform's narrow dialog width: a week of 44dp days has to fit across a small phone.
+    Dialog(onDismissRequest = onCancel, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(
-            Modifier.widthIn(max = FmtSize.target * 7 + m.cardPad * 2 + FmtBorder.outline * 2)
+            Modifier.padding(horizontal = FmtSpace.s2).widthIn(max = FmtSize.target * 7 + m.cardPad * 2 + FmtBorder.outline * 2)
                 .fmtShadow(FmtShadow.overlay, shape).background(t.fill, shape).border(FmtBorder.outline, t.line, shape)
                 .padding(m.cardPad),
             verticalArrangement = Arrangement.spacedBy(m.groupGap),
@@ -217,18 +220,18 @@ fun FmtDaysPicker(days: Set<Int>, title: String, onDone: (Set<Int>) -> Unit, onC
     val t = FmtPickerTokens
     var chosen by remember { mutableStateOf(days) }
     PickerCard(title, onCancel, { onDone(chosen) }) {
-        Column(Modifier.align(Alignment.CenterHorizontally)) {
-            Row {
+        Column(Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth()) {
                 listOf("M", "T", "W", "T", "F", "S", "S").forEach {
-                    Box(Modifier.size(FmtSize.target).clearAndSetSemantics { }, contentAlignment = Alignment.Center) {
+                    Box(Modifier.weight(1f).height(FmtSize.target).clearAndSetSemantics { }, contentAlignment = Alignment.Center) {
                         FmtText(it, FmtTheme.type.small.copy(fontWeight = FontWeight.SemiBold), color = t.soft)
                     }
                 }
             }
-            Row {
+            Row(Modifier.fillMaxWidth()) {
                 for (d in 0 until 7) {
                     val on = d in chosen
-                    Box(
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { Box(
                         Modifier.size(FmtSize.target)
                             .background(if (on) t.selected else t.fill.copy(alpha = 0f), CircleShape)
                             .border(FmtBorder.outline, if (on) t.selected else t.line, CircleShape)
@@ -236,7 +239,7 @@ fun FmtDaysPicker(days: Set<Int>, title: String, onDone: (Set<Int>) -> Unit, onC
                             .toggleable(on, role = Role.Checkbox) { chosen = if (it) chosen + d else chosen - d }
                             .semantics { contentDescription = WEEKDAYS[d] },
                         contentAlignment = Alignment.Center,
-                    ) { FmtText(DAY_SHORT[d].take(2), FmtTheme.type.small.copy(fontWeight = FontWeight.SemiBold), color = if (on) t.onSelected else t.ink) }
+                    ) { FmtText(DAY_SHORT[d].take(2), FmtTheme.type.small.copy(fontWeight = FontWeight.SemiBold), color = if (on) t.onSelected else t.ink) } }
                 }
             }
         }
@@ -283,18 +286,18 @@ fun FmtDatePicker(date: String, today: String, title: String, onDone: (String) -
         }
         val lead = ((daysFrom(year, month, 1) % 7 + 7 + 3) % 7) // 1970-01-01 was a Thursday; Monday = 0
         val days = monthDays(year, month)
-        Column(Modifier.align(Alignment.CenterHorizontally)) {
-            Row {
+        Column(Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth()) {
                 listOf("M", "T", "W", "T", "F", "S", "S").forEach {
-                    Box(Modifier.size(FmtSize.target).semantics { contentDescription = "" }, contentAlignment = Alignment.Center) {
+                    Box(Modifier.weight(1f).height(FmtSize.target).clearAndSetSemantics { }, contentAlignment = Alignment.Center) {
                         FmtText(it, FmtTheme.type.small.copy(fontWeight = FontWeight.SemiBold), color = t.soft)
                     }
                 }
             }
-            for (week in 0 until (lead + days + 6) / 7) Row {
-                for (col in 0 until 7) {
+            for (week in 0 until (lead + days + 6) / 7) Row(Modifier.fillMaxWidth()) {
+                for (col in 0 until 7) Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     val d = week * 7 + col - lead + 1
-                    if (d < 1 || d > days) { Spacer(Modifier.size(FmtSize.target)); continue }
+                    if (d < 1 || d > days) Spacer(Modifier.size(FmtSize.target)) else {
                     val id = iso(year, month, d)
                     val on = id == chosen
                     val isToday = id == today
@@ -306,6 +309,7 @@ fun FmtDatePicker(date: String, today: String, title: String, onDone: (String) -
                             .semantics { contentDescription = "${WEEKDAYS[col]} $d ${MONTHS[month - 1]}${if (isToday) ", today" else ""}"; selected = on },
                         contentAlignment = Alignment.Center,
                     ) { FmtText("$d", FmtTheme.type.body, color = if (on) t.onSelected else t.ink) }
+                    }
                 }
             }
         }
