@@ -244,6 +244,14 @@ class AppStore(private val p: Platform) {
         put("plan", next.toJson())
     }
 
+    fun setPlanDays(which: Int, days: Set<Int>) {
+        val p = plan ?: return
+        val next = if (which < 0) p.copy(routine = p.routine?.copy(days = days))
+            else p.copy(practice = p.practice.mapIndexed { i, it -> if (i == which) it.copy(days = days) else it })
+        plan = next
+        put("plan", next.toJson())
+    }
+
     /** Takes a plan from Simone. Its practice activities become this week's practice. */
     fun setPlan(p: Plan) {
         plan = p

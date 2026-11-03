@@ -1,6 +1,16 @@
 package au.com.followmetherapy.design.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import au.com.followmetherapy.design.tokens.FmtMotion
+import kotlin.math.abs
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -84,9 +94,10 @@ private fun PickerCard(title: String, onCancel: () -> Unit, onDone: () -> Unit, 
 
 /**
  * Our clock (the shared Picker's TimePicker): the time large at the top (tap
- * the hour or the minutes), am / pm chips, and a dial of the 12 hours, then
+ * the hour or the minutes), an am / pm switch, and a dial of the 12 hours, then
  * the minutes in fives, each a 44dp target; the chosen one a purple circle on
- * the hand. [time] and [onDone] are 24-hour, "07:30".
+ * the hand, which turns the short way round to each new choice (not with
+ * reduced motion). [time] and [onDone] are 24-hour, "07:30".
  */
 @Composable
 fun FmtTimePicker(time: String, title: String, onDone: (String) -> Unit, onCancel: () -> Unit) {
@@ -105,37 +116,69 @@ fun FmtTimePicker(time: String, title: String, onDone: (String) -> Unit, onCance
             FmtText(":", big, color = t.ink)
             TimePart(minute.toString().padStart(2, '0'), minutes, "Minutes, $minute") { minutes = true }
             Spacer(Modifier.weight(1f))
-            FmtToggleChip("am", !pm, { pm = false })
-            FmtToggleChip("pm", pm, { pm = true })
+            AmPm(pm) { pm = it }
         }
         // The dial: numbers round a circle, the hand from the centre to the chosen one.
         val chosen = if (minutes) minute / 5 else hour
+        val reduced = LocalFmtReducedMotion.current
+        val angle = remember { Animatable(chosen * 30f) }
+        LaunchedEffect(chosen) {
+            // The short way round: 11 → 1 goes past 12, not back through 6.
+            val turn = ((chosen * 30f - angle.value) % 360f + 540f) % 360f - 180f
+            if (reduced) angle.snapTo(angle.value + turn)
+            else angle.animateTo(angle.value + turn, tween(FmtMotion.durBase, easing = FmtMotion.easeStandard))
+        }
         BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f).widthIn(max = FmtSize.target * 6).align(Alignment.CenterHorizontally)) {
             val side = maxWidth
             val r = side * 0.4f
             Canvas(Modifier.size(side)) {
                 drawCircle(t.dial)
-                val a = (chosen * 30 - 90) * PI / 180
+                val a = (angle.value - 90) * PI / 180
                 val end = center + Offset((cos(a) * r.toPx()).toFloat(), (sin(a) * r.toPx()).toFloat())
                 drawLine(t.selected, center, end, FmtBorder.outline.toPx())
                 drawCircle(t.selected, FmtSpace.s1.toPx(), center)
+                drawCircle(t.selected, FmtSize.target.toPx() / 2, end)
             }
             for (i in 0 until 12) {
                 val a = (i * 30 - 90) * PI / 180
                 val on = i == chosen
+                // The number is in paper while the hand's circle is over it.
+                val under = abs(((angle.value - i * 30f) % 360f + 540f) % 360f - 180f) < 15f
                 val words = if (minutes) "${i * 5} minutes" else "${if (i == 0) 12 else i} o'clock"
                 Box(
                     Modifier.offset(side / 2 + r * cos(a).toFloat() - FmtSize.target / 2, side / 2 + r * sin(a).toFloat() - FmtSize.target / 2)
                         .size(FmtSize.target)
-                        .background(if (on) t.selected else t.dial.copy(alpha = 0f), CircleShape)
+                        .clip(CircleShape)
                         .clickable(role = Role.Button, onClickLabel = "Choose") { if (minutes) minute = i * 5 else { hour = i; minutes = true } }
                         .semantics { contentDescription = words; selected = on },
                     contentAlignment = Alignment.Center,
                 ) {
                     FmtText(if (minutes) (i * 5).toString().padStart(2, '0') else if (i == 0) "12" else "$i",
-                        FmtTheme.type.body.copy(fontWeight = FontWeight.SemiBold), color = if (on) t.onSelected else t.ink)
+                        FmtTheme.type.body.copy(fontWeight = FontWeight.SemiBold), color = if (under) t.onSelected else t.ink)
                 }
             }
+        }
+    }
+}
+
+/**
+ * am over pm, one switch: two equal pill segments in a purple-line pill, the
+ * chosen one purple with paper words (and read out as selected).
+ */
+@Composable
+private fun AmPm(pm: Boolean, onPm: (Boolean) -> Unit) {
+    val t = FmtPickerTokens
+    val pill = RoundedCornerShape(FmtRadius.pill)
+    Column(Modifier.border(FmtBorder.outline, t.line, pill).padding(FmtBorder.outline).selectableGroup()) {
+        listOf(false to "am", true to "pm").forEach { (isPm, word) ->
+            val on = pm == isPm
+            Box(
+                Modifier.size(FmtSize.target * 1.4f, FmtSize.target)
+                    .background(if (on) t.selected else t.fill, pill)
+                    .clip(pill)
+                    .selectable(on, role = Role.RadioButton) { onPm(isPm) },
+                contentAlignment = Alignment.Center,
+            ) { FmtText(word, FmtTheme.type.body.copy(fontWeight = FontWeight.SemiBold), color = if (on) t.onSelected else t.ink) }
         }
     }
 }
@@ -150,6 +193,58 @@ private fun TimePart(text: String, on: Boolean, words: String, onClick: () -> Un
             .semantics { contentDescription = words; selected = on },
         contentAlignment = Alignment.Center,
     ) { FmtText(text, FmtTheme.type.title.copy(fontSize = FmtTheme.metrics.text3xl), color = t.ink, align = TextAlign.Center) }
+}
+
+private val DAY_SHORT = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+/** Days of the week (0 = Monday) as people say them: "Weekdays", "Mon, Wed, Fri". */
+fun fmtShowDays(days: Set<Int>): String = when (days) {
+    emptySet<Int>() -> "No days"
+    (0..6).toSet() -> "Every day"
+    (0..4).toSet() -> "Weekdays"
+    setOf(5, 6) -> "Weekends"
+    else -> days.sorted().joinToString(", ") { DAY_SHORT[it] }
+}
+
+/**
+ * Our calendar's week (the shared Picker's DaysPicker): which days of the week,
+ * Monday first, as the calendar's days: each a 44dp circle, the chosen ones
+ * purple with paper words, as many as you like; Weekdays and Every day a tap
+ * away. Days are 0 (Monday) to 6.
+ */
+@Composable
+fun FmtDaysPicker(days: Set<Int>, title: String, onDone: (Set<Int>) -> Unit, onCancel: () -> Unit) {
+    val t = FmtPickerTokens
+    var chosen by remember { mutableStateOf(days) }
+    PickerCard(title, onCancel, { onDone(chosen) }) {
+        Column(Modifier.align(Alignment.CenterHorizontally)) {
+            Row {
+                listOf("M", "T", "W", "T", "F", "S", "S").forEach {
+                    Box(Modifier.size(FmtSize.target).clearAndSetSemantics { }, contentAlignment = Alignment.Center) {
+                        FmtText(it, FmtTheme.type.small.copy(fontWeight = FontWeight.SemiBold), color = t.soft)
+                    }
+                }
+            }
+            Row {
+                for (d in 0 until 7) {
+                    val on = d in chosen
+                    Box(
+                        Modifier.size(FmtSize.target)
+                            .background(if (on) t.selected else t.fill.copy(alpha = 0f), CircleShape)
+                            .border(FmtBorder.outline, if (on) t.selected else t.line, CircleShape)
+                            .clip(CircleShape)
+                            .toggleable(on, role = Role.Checkbox) { chosen = if (it) chosen + d else chosen - d }
+                            .semantics { contentDescription = WEEKDAYS[d] },
+                        contentAlignment = Alignment.Center,
+                    ) { FmtText(DAY_SHORT[d].take(2), FmtTheme.type.small.copy(fontWeight = FontWeight.SemiBold), color = if (on) t.onSelected else t.ink) }
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), modifier = Modifier.align(Alignment.CenterHorizontally)) {
+            FmtToggleChip("Weekdays", chosen == (0..4).toSet(), { chosen = (0..4).toSet() })
+            FmtToggleChip("Every day", chosen == (0..6).toSet(), { chosen = (0..6).toSet() })
+        }
+    }
 }
 
 private val MONTHS = listOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")

@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import au.com.followmetherapy.design.components.FmtTimeField
+import au.com.followmetherapy.design.components.FmtDaysField
 import au.com.followmetherapy.design.components.ButtonKind
 import au.com.followmetherapy.design.components.FmtAction
 import au.com.followmetherapy.design.components.FmtButton
@@ -165,13 +166,13 @@ private fun PlannerList(store: AppStore, nav: Nav, session: PlannerSession) {
 
 // ── A family's plan ──
 
+/** Which days, on our calendar's week, beside the reminder time. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DayPicker(days: SnapshotStateList<Int>, tone: Tone) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
-        Plan.DAY_SHORT.forEachIndexed { i, d ->
-            FmtToggleChip(d, i in days, { on -> if (on) { if (i !in days) days.add(i) } else days.remove(i) }, tone)
-        }
+private fun DaysAndTime(name: String, days: SnapshotStateList<Int>, time: String, onTime: (String) -> Unit) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s3), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
+        FmtDaysField(days.toSet(), "$name days", { days.clear(); days.addAll(it.sorted()) })
+        FmtTimeField(time, "$name reminder time", onTime)
     }
 }
 
@@ -249,8 +250,7 @@ private fun PlannerEdit(store: AppStore, nav: Nav, platform: Platform, session: 
             FmtPanel("Morning routine", Tone.Purple) {
                 Row { FmtToggleChip("In the plan", routineOn, { routineOn = it }) }
                 if (routineOn) {
-                    DayPicker(routineDays, Tone.Purple)
-                    FmtTimeField(Plan.normaliseTime(routineTime) ?: "07:30", "Morning routine reminder time", { routineTime = Plan.showTime(it) })
+                    DaysAndTime("Morning routine", routineDays, Plan.normaliseTime(routineTime) ?: "07:30") { routineTime = Plan.showTime(it) }
                 }
             }
             FmtPanel("Calm-down plan", Tone.Teal) {
@@ -276,8 +276,7 @@ private fun PlannerEdit(store: AppStore, nav: Nav, platform: Platform, session: 
                 }
                 practice.forEach { d ->
                     FmtText(d.name, FmtTheme.type.groupTitle)
-                    DayPicker(d.days, Tone.Sun)
-                    FmtTimeField(Plan.normaliseTime(d.time) ?: "16:00", "${d.name} reminder time", { d.time = Plan.showTime(it) })
+                    DaysAndTime(d.name, d.days, Plan.normaliseTime(d.time) ?: "16:00") { d.time = Plan.showTime(it) }
                 }
             }
             FmtPanel("Their progress", Tone.Pink) {

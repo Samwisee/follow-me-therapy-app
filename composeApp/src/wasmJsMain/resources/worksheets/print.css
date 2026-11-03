@@ -1413,17 +1413,24 @@ a.fmt-card:hover { transform: translateY(calc(-1 * var(--space-2))) rotate(1deg)
 .fmt-picker-time { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); font-family: var(--font-display); font-size: var(--text-3xl); font-weight: 600; }
 .fmt-picker-time > button { min-width: var(--size-target); min-height: var(--size-target); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-sm); background: transparent; font-family: var(--font-display); }
 .fmt-picker-time > button[aria-pressed="true"] { background: var(--picker-dial); }
-.fmt-picker-time .fmt-chips { margin-left: auto; font-size: var(--text-base); }
+.fmt-picker-ampm { display: grid; margin-left: auto; padding: var(--border-outline); border: var(--border-outline) solid var(--picker-line); border-radius: var(--radius-pill); font-family: var(--font-body); font-size: var(--text-base); }
+.fmt-picker-ampm button { width: calc(var(--size-target) * 1.4); height: var(--size-target); border: 0; border-radius: var(--radius-pill); background: var(--picker-fill); font-weight: 600; }
+.fmt-picker-ampm button[aria-checked="true"] { background: var(--picker-selected); color: var(--picker-on-selected); }
 .fmt-picker-dial { position: relative; width: calc(var(--size-target) * 6); max-width: 100%; aspect-ratio: 1; margin-inline: auto; border-radius: 50%; background: var(--picker-dial); }
 .fmt-picker-dial button { position: absolute; width: var(--size-target); height: var(--size-target); margin: calc(var(--size-target) / -2) 0 0 calc(var(--size-target) / -2); border: 0; border-radius: 50%; background: transparent; font-weight: 600; }
-.fmt-picker-dial button[aria-pressed="true"] { background: var(--picker-selected); color: var(--picker-on-selected); }
-.fmt-picker-hand { position: absolute; left: 50%; top: 50%; width: 40%; height: var(--border-outline); background: var(--picker-selected); transform-origin: 0 50%; }
+.fmt-picker-dial button { transition: color var(--dur-base) var(--ease-standard); }
+.fmt-picker-dial button[aria-pressed="true"] { color: var(--picker-on-selected); }
+.fmt-picker-hand { position: absolute; left: 50%; top: 50%; width: 40%; height: var(--border-outline); background: var(--picker-selected); transform-origin: 0 50%; transition: transform var(--dur-base) var(--ease-standard); }
+.fmt-picker-hand::after { content: ""; position: absolute; right: calc(var(--size-target) / -2); top: 50%; width: var(--size-target); height: var(--size-target); border-radius: 50%; background: var(--picker-selected); transform: translateY(-50%); }
+@media (prefers-reduced-motion: reduce) { .fmt-picker-hand, .fmt-picker-dial button { transition: none; } }
 .fmt-picker-hand::before { content: ""; position: absolute; left: calc(var(--space-1) * -1); top: calc(var(--space-1) * -1 + var(--border-outline) / 2); width: var(--space-2); height: var(--space-2); border-radius: 50%; background: var(--picker-selected); }
 .fmt-picker-month { display: flex; align-items: center; justify-content: space-between; font-size: var(--text-md); }
 .fmt-picker-days { display: grid; grid-template-columns: repeat(7, var(--size-target)); justify-content: center; }
 .fmt-picker-days > span { display: grid; place-items: center; height: var(--size-target); font-size: var(--text-sm); font-weight: 600; color: var(--picker-soft); }
 .fmt-picker-days button { width: var(--size-target); height: var(--size-target); border: var(--border-outline) solid transparent; border-radius: 50%; background: transparent; }
 .fmt-picker-days button.is-today { border-color: var(--picker-today); }
+.fmt-picker-days.is-week button { border-color: var(--picker-line); font-size: var(--text-sm); font-weight: 600; }
+.fmt-picker-quick { justify-content: center; }
 .fmt-picker-days button[aria-pressed="true"] { background: var(--picker-selected); color: var(--picker-on-selected); }
 .fmt-picker button:focus-visible { outline: var(--border-focus) solid var(--focus); outline-offset: var(--space-hair); }
 .fmt-picker-foot { display: flex; justify-content: flex-end; gap: var(--space-3); }

@@ -1,6 +1,7 @@
 package au.com.followmetherapy.app
 
 import au.com.followmetherapy.design.components.FmtTimeField
+import au.com.followmetherapy.design.components.FmtDaysField
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Column
 import au.com.followmetherapy.design.tokens.FmtCategories
@@ -65,10 +66,10 @@ fun PlanTab(store: AppStore, nav: Nav, platform: Platform, inbox: PlanInbox) {
             if (p.hasReminders) {
                 FmtText("Add a reminder to your phone's calendar for each activity. Change a time to suit your family first: tap it.", FmtTheme.type.small)
                 p.routine?.takeIf { it.time != null && it.days.isNotEmpty() }?.let { r ->
-                    ReminderTime("Morning routine", r, platform) { store.setPlanTime(-1, it) }
+                    ReminderTime("Morning routine", r, { store.setPlanDays(-1, it) }) { store.setPlanTime(-1, it) }
                 }
                 p.practice.forEachIndexed { i, a ->
-                    if (a.time != null && a.days.isNotEmpty()) ReminderTime(a.name, a, platform) { store.setPlanTime(i, it) }
+                    if (a.time != null) ReminderTime(a.name, a, { store.setPlanDays(i, it) }) { store.setPlanTime(i, it) }
                 }
                 Row {
                     FmtButton("Add reminders to my calendar", {
@@ -154,16 +155,17 @@ private fun PlanCalendar(store: AppStore, nav: Nav) {
     }
 }
 
-/** One reminder: what and which days, and its time to change (the device's own clock). */
+/** One reminder: what, its days (our calendar's week) and its time (our clock), each a tap to change. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ReminderTime(name: String, item: PlanItem, platform: Platform, onTime: (String) -> Unit) {
+private fun ReminderTime(name: String, item: PlanItem, onDays: (Set<Int>) -> Unit, onTime: (String) -> Unit) {
     val time = item.time ?: return
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            FmtText(name, FmtTheme.type.body.copy(color = FmtColors.ink))
-            FmtText(Plan.showDays(item.days), FmtTheme.type.small)
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
+        FmtText(name, FmtTheme.type.body.copy(color = FmtColors.ink))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(FmtSpace.s3), verticalArrangement = Arrangement.spacedBy(FmtSpace.s2)) {
+            FmtDaysField(item.days, "$name days", onDays)
+            FmtTimeField(time, "$name reminder time", onTime)
         }
-        FmtTimeField(time, "$name reminder time", onTime)
     }
 }
 

@@ -297,3 +297,29 @@ fun FmtTimeField(time: String, label: String, onChange: (String) -> Unit, modifi
     }
     if (open) FmtTimePicker(time, label, { onChange(it); open = false }, { open = false })
 }
+
+/**
+ * Days of the week to pick (the shared Field's days field): "Mon, Wed, Fri"
+ * beside a calendar, in the field's dashed box. Tapping opens our calendar's
+ * week (FmtDaysPicker); days are 0 (Monday) to 6.
+ */
+@Composable
+fun FmtDaysField(days: Set<Int>, label: String, onChange: (Set<Int>) -> Unit, modifier: Modifier = Modifier) {
+    val t = FmtFieldTokens
+    var open by remember { mutableStateOf(false) }
+    val source = remember { MutableInteractionSource() }
+    val focused by source.collectIsFocusedAsState()
+    val text = fmtShowDays(days)
+    Row(
+        modifier.heightIn(min = FmtSize.target).fieldOutline(focused || open)
+            .clickable(interactionSource = source, indication = null, role = Role.Button, onClickLabel = "Change the days") { open = true }
+            .semantics { contentDescription = "$label, $text" }
+            .padding(horizontal = FmtSpace.s3, vertical = FmtSpace.s2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(FmtSpace.s2),
+    ) {
+        FmtIcon(FmtIcons.calendar, t.icon, FmtSize.icon)
+        FmtText(text, FmtTheme.type.body.copy(color = t.ink, fontWeight = FontWeight.SemiBold))
+    }
+    if (open) FmtDaysPicker(days, label, { onChange(it); open = false }, { open = false })
+}

@@ -352,7 +352,7 @@
     "A dashed outline on all sides (field line), corners radius-sm, paper inside, at least the 44px target tall, so it's clear it's somewhere to type.",
     "While typing, the outline turns solid purple (line-focus): that's the focus mark, no extra ring.",
     "The hint sits top left, in ink-hint (lighter than what's typed, still 7:1).",
-    "A time field shows the time with a clock; tapping it opens our clock (Picker), a date field our calendar. Never typed, never the device's own.",
+    "A time field shows the time with a clock; tapping it opens our clock (Picker). A days field shows the days (Weekdays, Mon, Wed, Fri) with a calendar and opens our calendar's week; a date field our calendar. Never typed, never the device's own.",
     "Times show as people say them: 7:30am, 4pm."
    ],
    "website": [],
@@ -360,34 +360,40 @@
     "css": ".fmt-field",
     "react": [
      "Field",
-     "TimeField"
+     "TimeField",
+     "DaysField"
     ]
    },
    "app": [
     "WriteField",
-    "FmtTimeField"
+    "FmtTimeField",
+    "FmtDaysField"
    ]
   },
   "Picker": {
-   "description": "Our clock and calendar, on a card: picking a time (TimePicker) or a date (DatePicker).",
+   "description": "Our clock and calendar, on a card: picking a time (TimePicker), a date (DatePicker) or days of the week (DaysPicker).",
    "tokens": "picker",
    "rules": [
     "A paper card with a purple-line outline, the title at the top, Cancel and Done at the foot.",
-    "Clock: the time large at the top (tap the hour or the minutes to change that), am and pm as two chips, and a round dial (purple-tint) with the 12 hours, then the minutes in fives, each a 44px target; the chosen one is a purple circle joined to the centre by the hand.",
+    "Clock: the time large at the top (tap the hour or the minutes to change that), am over pm as one switch (two equal pill segments in a purple-line pill, the chosen one purple with paper words), and a round dial (purple-tint) with the 12 hours, then the minutes in fives, each a 44px target; the chosen one is a purple circle joined to the centre by the hand.",
+    "The hand turns the short way round to each new choice (duration base, ease standard), its circle carrying the paper number with it. Not with reduced motion.",
     "Calendar: the month and year with ‹ › to move, Monday first, each day a 44px target; today has a purple ring, the chosen day is a purple circle with paper words.",
-    "Every number and day is a button read out in full (7 o'clock, Tuesday 4 November); nothing relies on colour alone."
+    "Days of the week: the calendar's week, Monday first, each day a 44px circle (purple-line ring), as many chosen as you like (purple with paper words), with Weekdays and Every day chips underneath.",
+    "Every number and day is a button read out in full (7 o'clock, Tuesday 4 November, Wednesday); nothing relies on colour alone."
    ],
    "website": [],
    "designSystem": {
     "css": ".fmt-picker",
     "react": [
      "TimePicker",
-     "DatePicker"
+     "DatePicker",
+     "DaysPicker"
     ]
    },
    "app": [
     "FmtTimePicker",
-    "FmtDatePicker"
+    "FmtDatePicker",
+    "FmtDaysPicker"
    ]
   },
   "LetterTrace": {
