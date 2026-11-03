@@ -1,6 +1,12 @@
 package au.com.followmetherapy.design.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.graphics.lerp
+import au.com.followmetherapy.design.tokens.FmtMotion
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
@@ -40,9 +46,10 @@ import kotlin.math.PI
 /**
  * A letter (or pre-writing shape) to trace with a finger (the shared
  * LetterTrace): writing lines across, the letter dashed, a gold dot where to
- * start. Following a stroke from its start, the way it goes, turns it purple;
- * then the next stroke's dot shows. When every stroke is done a star bursts
- * and [onDone] is called. Shapes come from design/letters.json (FmtLetters).
+ * start, an arrow the way to go. Following a stroke from its start turns it
+ * purple; then the next stroke's dot shows. Lifting the finger part-way isn't
+ * a mistake: what's traced after it takes the next lift colour. When every
+ * stroke is done the colours fade into purple, a star bursts and [onDone] is called. Shapes come from design/letters.json (FmtLetters).
  */
 @Composable
 fun FmtLetterTrace(name: String, onDone: () -> Unit = {}, modifier: Modifier = Modifier, height: Dp = FmtSpace.s30 * 2.4f) {
@@ -53,7 +60,16 @@ fun FmtLetterTrace(name: String, onDone: () -> Unit = {}, modifier: Modifier = M
     var along by remember(name) { mutableFloatStateOf(0f) }  // and how far on to the next (0..1): the dot glides, not hops
     var tracing by remember(name) { mutableStateOf(false) }
     var bursts by remember(name) { mutableIntStateOf(0) }
+    // Where each colour starts: (stroke, position along it, colour: 0 purple, then the lift colours).
+    val pieces = remember(name) { mutableStateListOf(Piece(0, 0f, 0)) }
     val done = stroke >= glyph.strokes.size
+    val reduced = LocalFmtReducedMotion.current
+    val resolve = remember(name) { Animatable(0f) }
+    LaunchedEffect(done) {
+        if (!done) resolve.snapTo(0f)
+        else if (reduced) resolve.snapTo(1f)
+        else resolve.animateTo(1f, tween(FmtMotion.durSlower, easing = FmtMotion.easeInOut))
+    }
     val words = if (name.length > 1) "Shape to trace: $name." else "Letter $name."
     Box(
         modifier.fillMaxWidth().height(height)
@@ -98,9 +114,14 @@ fun FmtLetterTrace(name: String, onDone: () -> Unit = {}, modifier: Modifier = M
                         if (reached >= pts.lastIndex - 1 && along > 0.8f) {
                             stroke++; reached = 0; along = 0f; tracing = false
                             if (stroke >= glyph.strokes.size) { bursts++; onDone() }
+                            else pieces.add(Piece(stroke, 0f, pieces.last().ink))
                             break
                         }
                     }
+                    // Lifted part-way, having traced some: carry on in the next colour.
+                    val here = reached + along
+                    if (tracing && stroke < glyph.strokes.size && pieces.last().let { it.stroke != stroke || here > it.from + 0.5f })
+                        pieces.add(Piece(stroke, here, pieces.last().ink + 1))
                     tracing = false
                 }
             },
@@ -115,12 +136,14 @@ fun FmtLetterTrace(name: String, onDone: () -> Unit = {}, modifier: Modifier = M
             across(FmtLetters.BASE, t.base, 1.2f)
             across(FmtLetters.DESCENDER, t.guide, 0.8f)
             glyph.strokes.forEachIndexed { i, pts ->
-                when {
-                    i < stroke -> drawStroke(g, pts, pts.lastIndex, t.model, 5f)
-                    else -> {
-                        drawStroke(g, pts, pts.lastIndex, t.trace, 2.6f, dashed = true)
-                        if (i == stroke && (reached > 0 || along > 0f)) drawStroke(g, pts, reached, t.model, 5f, tip = g.point(pts, reached, along))
-                    }
+                if (i >= stroke) drawStroke(g, pts, pts.lastIndex, t.trace, 2.6f, dashed = true)
+                if (i > stroke) return@forEachIndexed
+                // What's been traced, each stretch in its colour (fading to purple once done).
+                val end = if (i < stroke) pts.lastIndex.toFloat() else reached + along
+                val mine = pieces.filter { it.stroke == i }
+                mine.forEachIndexed { k, p ->
+                    val to = mine.getOrNull(k + 1)?.from ?: end
+                    if (to > p.from) drawSpan(g, pts, p.from, to, lerp(inkOf(p.ink), t.model, resolve.value), 5f)
                 }
             }
             if (!done) {
@@ -208,4 +231,26 @@ private fun DrawScope.drawWayArrow(g: Geometry, pts: List<Pair<Float, Float>>, f
         val a = dir + PI.toFloat() + side * 0.6f
         drawLine(color, tip, tip + Offset(cos(a) * head, sin(a) * head), w, cap = StrokeCap.Round)
     }
+}
+
+/** From [from] (a stroke's point index plus how far on to the next) on, the trace is colour [ink]. */
+private data class Piece(val stroke: Int, val from: Float, val ink: Int)
+
+/** 0: purple (traced in one go); then a lift colour for each lift, round again after the fifth. */
+private fun inkOf(n: Int): androidx.compose.ui.graphics.Color {
+    val t = FmtLetterTokens
+    return if (n == 0) t.model else listOf(t.lift1, t.lift2, t.lift3, t.lift4, t.lift5)[(n - 1) % 5]
+}
+
+/** The stroke from position [a] to [b] (point index plus how far on to the next), solid. */
+private fun DrawScope.drawSpan(g: Geometry, pts: List<Pair<Float, Float>>, a: Float, b: Float, color: androidx.compose.ui.graphics.Color, width: Float) {
+    val ia = a.toInt().coerceAtMost(pts.lastIndex)
+    val ib = b.toInt().coerceAtMost(pts.lastIndex)
+    val path = Path()
+    val p0 = g.point(pts, ia, a - ia)
+    path.moveTo(g.x(p0.first), g.y(p0.second))
+    for (i in ia + 1..ib) path.lineTo(g.x(pts[i].first), g.y(pts[i].second))
+    val p1 = g.point(pts, ib, b - ib)
+    path.lineTo(g.x(p1.first), g.y(p1.second))
+    drawPath(path, color, style = Stroke(width * g.scale, cap = StrokeCap.Round, join = StrokeJoin.Round))
 }

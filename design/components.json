@@ -403,7 +403,7 @@
     "Shapes come from design/letters.json (tools/build_letters.py): Victorian foundation style, strokes in the order taught, each from its start point. Never hand-drawn per product.",
     "Writing lines: top, waist (dashed) and descender in the light guide colour, the baseline darker.",
     "Model: solid purple strokes, a gold start dot and the stroke's number at each start, and an arrow showing the way. Copies to trace: dashed, with the start dot.",
-    "In the app the child traces with a finger: a short purple arrow just ahead of the gold dot, following the stroke's curve, shows which way to go; the stroke turns purple as it's followed (only from its start, in its direction), the next stroke's dot and arrow appear, and a finished letter bursts a star (not with reduced motion). The words above stay the same size, so the letter never moves.",
+    "In the app the child traces with a finger: a short purple arrow just ahead of the gold dot, following the stroke's curve, shows which way to go; the stroke turns purple as it's followed (only from its start, in its direction), the next stroke's dot and arrow appear, and a finished letter bursts a star (not with reduced motion). Lifting the finger part-way through a stroke isn't a mistake: what's traced after it takes the next lift colour (teal, pink, blue, green, sun-deep, then round again), and when the letter is done every colour fades into purple. The words above stay the same size, so the letter never moves.",
     "Each letter is read out: \"Letter a. 1 stroke.\""
    ],
    "website": {

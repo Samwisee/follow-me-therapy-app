@@ -488,6 +488,11 @@
   --letter-start: var(--sun);
   --letter-start-line: var(--sun-deep);
   --letter-number: var(--ink);
+  --letter-lift-1: var(--teal);
+  --letter-lift-2: var(--pink);
+  --letter-lift-3: var(--blue);
+  --letter-lift-4: var(--green);
+  --letter-lift-5: var(--sun-deep);
   --field-fill: var(--paper);
   --field-line: var(--rule);
   --field-line-focus: var(--purple);
@@ -1035,6 +1040,11 @@
   --letter-start: var(--sun);
   --letter-start-line: var(--sun-deep);
   --letter-number: var(--ink);
+  --letter-lift-1: var(--teal);
+  --letter-lift-2: var(--pink);
+  --letter-lift-3: var(--blue);
+  --letter-lift-4: var(--green);
+  --letter-lift-5: var(--sun-deep);
   --field-fill: var(--paper);
   --field-line: var(--rule);
   --field-line-focus: var(--purple);

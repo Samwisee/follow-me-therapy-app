@@ -650,6 +650,16 @@ object FmtLetterTokens {
     val startLine: Color = FmtColors.sunDeep
     /** Stroke order numbers on the model. */
     val number: Color = FmtColors.ink
+    /** In the app, the part traced after the child lifts their finger mid-stroke takes the next of these (lift-1 … lift-5, then round again); all of it turns model purple when the letter is done. */
+    val lift1: Color = FmtColors.teal
+    /** The colour after lift 1. */
+    val lift2: Color = FmtColors.pink
+    /** The colour after lift 2. */
+    val lift3: Color = FmtColors.blue
+    /** The colour after lift 3. */
+    val lift4: Color = FmtColors.green
+    /** The colour after lift 4. */
+    val lift5: Color = FmtColors.sunDeep
 }
 
 /** A place to type on screens (a name, a note, a time): a dashed outline on all sides, so it reads as somewhere to write. On paper it's writing lines instead (WriteLines). */
